@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Force sRGB / Hex compatibility for html2canvas */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -10,8 +12,30 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Force HEX colors to fix html2canvas 'lab' error */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+
+  --color-amber-500: #f59e0b;
+  --color-red-600: #dc2626;
+  --color-green-50: #f0fdf4;
 }
 
+/* Explicitly override dark mode to avoid Oklch/Lab */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

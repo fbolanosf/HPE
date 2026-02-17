@@ -1,65 +1,126 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { BarChart3, Calculator, FileText, Server } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gray-50 font-sans">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <div className="bg-[#01A982] w-10 h-10 flex items-center justify-center text-white font-bold rounded">HPE</div>
+            <h1 className="text-xl font-bold text-gray-900">Sales Specialist Toolkit</h1>
+          </div>
+          <div className="text-sm text-gray-500">v1.0.0</div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      {/* Hero Section */}
+      <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
+            Channel <span className="text-[#01A982]">Virtualization</span> and Data Solutions Sales Toolkit
+          </h2>
+          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
+            Herramientas para evaluación y mapeo de soluciones de virtualizacion, storage y data HPE.
+          </p>
+          <p className="mt-3 text-xs text-gray-400 tracking-widest uppercase">By Francisco Bolaños</p>
+        </div>
+
+        {/* Modules Grid */}
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+
+          {/* Assessment Module */}
+          <Link href="/assessment" className="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#01A982] rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-100 hover:border-[#01A982]">
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-green-50 text-[#01A982] ring-4 ring-white">
+                <BarChart3 className="h-6 w-6" aria-hidden="true" />
+              </span>
+            </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-medium">
+                <span className="absolute inset-0" aria-hidden="true" />
+                Evaluación de Necesidades (Análisis GAP)
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Wizard interactivo por industria que evalúa el estado actual de su infraestructura IT e identifica brechas y oportunidades de optimización con soluciones HPE.
+              </p>
+            </div>
+            <span className="pointer-events-none absolute top-6 right-6 text-gray-300 group-hover:text-gray-400" aria-hidden="true">
+              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
+              </svg>
+            </span>
+          </Link>
+
+          {/* Financial Module */}
+          <Link href="/financial" className="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-100 hover:border-blue-500">
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-blue-50 text-blue-600 ring-4 ring-white">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+            </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                <span className="absolute inset-0" aria-hidden="true" />
+                Análisis Financiero (TCO/ROI)
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Proyección de TCO a 5 años comparando infraestructura tradicional vs Nube Pública vs soluciones HPE (GreenLake, Morpheus, VM Essentials, Zerto, OpsRamp).
+              </p>
+            </div>
+          </Link>
+
+          {/* Comparator Module */}
+          <Link href="/comparator" className="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-purple-500 rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-100 hover:border-purple-500">
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-purple-50 text-purple-600 ring-4 ring-white">
+                <Server className="h-6 w-6" aria-hidden="true" />
+              </span>
+            </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-medium text-gray-900 group-hover:text-purple-600 transition-colors">
+                <span className="absolute inset-0" aria-hidden="true" />
+                Comparador de Soluciones
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Matriz competitiva de HPE vs competidores con comparación por categorías y diagramas de topología arquitectónica lado a lado.
+              </p>
+            </div>
+          </Link>
+
+          {/* Reports Module */}
+          <Link href="/reports" className="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-orange-500 rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-100 hover:border-orange-500">
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-orange-50 text-orange-600 ring-4 ring-white">
+                <FileText className="h-6 w-6" aria-hidden="true" />
+              </span>
+            </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-medium text-gray-900 group-hover:text-orange-600 transition-colors">
+                <span className="absolute inset-0" aria-hidden="true" />
+                Generación de Propuesta
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Genera un informe ejecutivo en Word (.docx) consolidando los resultados del análisis GAP y la proyección financiera para presentar al cliente.
+              </p>
+            </div>
+          </Link>
+
         </div>
       </main>
+
+      {/* Footer - IP Notice */}
+      <footer className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="border-t border-gray-200 pt-6 flex flex-col items-center space-y-1">
+          <p className="text-[10px] text-gray-400 tracking-wide">
+            © {new Date().getFullYear()} Francisco Bolaños · Todos los derechos reservados
+          </p>
+          <p className="text-[9px] text-gray-300 max-w-lg text-center leading-relaxed">
+            Esta plataforma y su contenido constituyen propiedad intelectual protegida. Queda prohibida su reproducción, distribución o uso no autorizado sin consentimiento expreso del autor.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
