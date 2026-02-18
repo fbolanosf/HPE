@@ -282,7 +282,10 @@ export const HPE_SOLUTIONS: Record<string, HPESolution> = {
                 },
                 comparisons: [
                     { category: 'Técnico', feature: 'Arquitectura de Datos', hpe: 'Hardware Acelerado', competitor: 'Software Defined puro', hpeAdvantage: 'La tarjeta aceleradora libera a la CPU de tareas de I/O intensivas.', hpeIsBetter: true },
-                    { category: 'Financiero', feature: 'Licenciamiento', hpe: 'Incluido/Perpetuo', competitor: 'Suscripción (Core-based)', hpeAdvantage: 'Modelo de costos predecible sin renovación forzosa de suscripción de software.', hpeIsBetter: true }
+                    { category: 'Negocio', feature: 'Dependencia de Vendor', hpe: 'Stack HPE Integrado', competitor: 'Multi-Vendor (NX, Dell, HPE DX)', hpeAdvantage: 'Un solo fabricante para HW y SW con soporte unificado.', hpeIsBetter: true },
+                    { category: 'Funcional', feature: 'Backup Integrado', hpe: 'Nativo (Incluido)', competitor: 'Requiere software de terceros', hpeAdvantage: 'Backup y restauración en segundos sin necesidad de Veeam u otras licencias.', hpeIsBetter: true },
+                    { category: 'Financiero', feature: 'Licenciamiento', hpe: 'Incluido/Perpetuo', competitor: 'Suscripción (Core-based)', hpeAdvantage: 'Modelo de costos predecible sin renovación forzosa de suscripción de software.', hpeIsBetter: true },
+                    { category: 'Precios', feature: 'Overhead de Recursos', hpe: 'Mínimo (FPGA offload)', competitor: 'Alto (CVM consume CPU/RAM)', hpeAdvantage: 'Más recursos disponibles para VMs del cliente al no requerir Controller VM por nodo.', hpeIsBetter: true }
                 ]
             },
             {
@@ -300,7 +303,10 @@ export const HPE_SOLUTIONS: Record<string, HPESolution> = {
                 },
                 comparisons: [
                     { category: 'Negocio', feature: 'Futuro del Producto', hpe: 'Roadmap Claro (HPE)', competitor: 'Incierto (Alianza Nutanix)', hpeAdvantage: 'La alianza Cisco-Nutanix pone en duda la longevidad de HyperFlex.', hpeIsBetter: true },
-                    { category: 'Técnico', feature: 'File System', hpe: 'Dedupe Global In-line', competitor: 'Log-structured (Logfs)', hpeAdvantage: 'SimpliVity nació para la eficiencia de datos; HyperFlex adaptó tecnología (Springpath).', hpeIsBetter: true }
+                    { category: 'Funcional', feature: 'Gestión', hpe: 'vCenter + InfoSight (On-Prem)', competitor: 'Intersight (Cloud Obligatorio)', hpeAdvantage: 'Gestión completa sin dependencia de conectividad a internet.', hpeIsBetter: true },
+                    { category: 'Financiero', feature: 'Costo de Infraestructura', hpe: 'Solo servidores + switch estándar', competitor: 'Fabric Interconnects obligatorios', hpeAdvantage: 'Sin necesidad de hardware de red propietario costoso (FI).', hpeIsBetter: true },
+                    { category: 'Técnico', feature: 'File System', hpe: 'Dedupe Global In-line', competitor: 'Log-structured (Logfs)', hpeAdvantage: 'SimpliVity nació para la eficiencia de datos; HyperFlex adaptó tecnología (Springpath).', hpeIsBetter: true },
+                    { category: 'Precios', feature: 'Dependencia de Red', hpe: 'Switches Ethernet estándar', competitor: 'Fabric Interconnects propietarios', hpeAdvantage: 'Elimina el costo y complejidad de los Fabric Interconnects obligatorios de Cisco.', hpeIsBetter: true }
                 ]
             },
             {
