@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { saveAssessmentResults } from '@/lib/storage';
+import { saveAssessmentResults, saveChartImage } from '@/lib/storage';
 import { ASSESSMENT_QUESTIONS, Question } from '@/lib/assessment-data';
 import { Radar } from 'react-chartjs-2';
 import {
@@ -40,6 +40,7 @@ export default function AssessmentResults({ answers, onReset }: AssessmentResult
     const dashboardRef = useRef<HTMLDivElement>(null);
     const eisenhowerRef = useRef<EisenhowerMatrixRef>(null);
     const eisenhowerContainerRef = useRef<HTMLDivElement>(null);
+    const radarChartRef = useRef<any>(null);
     const [isExporting, setIsExporting] = useState(false); // To handle loading state
 
     // Categories mapping
@@ -149,6 +150,45 @@ export default function AssessmentResults({ answers, onReset }: AssessmentResult
                 },
             });
         }
+    }, [answers]);
+
+    // Auto-capture chart images for DOCX proposal
+    useEffect(() => {
+        const captureTimer = setTimeout(async () => {
+            // Capture Radar chart via Chart.js API
+            if (radarChartRef.current) {
+                try {
+                    const chartInstance = radarChartRef.current;
+                    const base64 = chartInstance.toBase64Image('image/png', 1);
+                    if (base64 && base64.length > 100) {
+                        saveChartImage('assessment_radar', base64);
+                    }
+                } catch (e) {
+                    console.warn('Could not capture radar chart:', e);
+                }
+            }
+
+            // Capture Eisenhower Matrix via html2canvas
+            if (eisenhowerContainerRef.current) {
+                try {
+                    const { default: html2canvasLib } = await import('html2canvas');
+                    const canvas = await html2canvasLib(eisenhowerContainerRef.current, {
+                        backgroundColor: '#ffffff',
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                    });
+                    const base64 = canvas.toDataURL('image/png');
+                    if (base64 && base64.length > 100) {
+                        saveChartImage('assessment_eisenhower', base64);
+                    }
+                } catch (e) {
+                    console.warn('Could not capture Eisenhower matrix:', e);
+                }
+            }
+        }, 2000); // Wait for charts to render
+
+        return () => clearTimeout(captureTimer);
     }, [answers]);
 
     // Chart Data
@@ -439,7 +479,7 @@ export default function AssessmentResults({ answers, onReset }: AssessmentResult
             <div className="grid lg:grid-cols-2 gap-12 mb-12">
                 <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 flex flex-col justify-center">
                     <div className="h-[450px] w-full">
-                        <Radar data={chartData} options={chartOptions as any} />
+                        <Radar ref={radarChartRef} data={chartData} options={chartOptions as any} />
                     </div>
                 </div>
 

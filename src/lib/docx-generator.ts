@@ -1,6 +1,6 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, BorderStyle, WidthType, AlignmentType, ShadingType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, BorderStyle, WidthType, AlignmentType, ShadingType, ImageRun } from 'docx';
 import { saveAs } from 'file-saver';
-import { getAssessmentResults, getFinancialResults, getComparatorResults } from './storage';
+import { getAssessmentResults, getFinancialResults, getComparatorResults, getAllChartImages } from './storage';
 
 export interface ProposalOptions {
     includeGap: boolean;
@@ -28,6 +28,7 @@ export async function generateProposalDocument(options: ProposalOptions) {
     const assessment = options.includeGap ? getAssessmentResults() : null;
     const financial = options.includeFinancial ? getFinancialResults() : null;
     const comparator = options.includeComparator ? getComparatorResults() : null;
+    const chartImages = getAllChartImages();
     const dateStr = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
 
     let sectionNumber = 0;
@@ -138,6 +139,15 @@ export async function generateProposalDocument(options: ProposalOptions) {
             emptyParagraph(100),
         );
 
+        // ── Radar Chart Image ───────────────────────────────────────────
+        if (chartImages['assessment_radar']) {
+            children.push(
+                styledParagraph('Gráfica de Radar — Score de Madurez', { bold: true, size: 22, spacingAfter: 60, color: GRAY_600 }),
+                chartImageParagraph(chartImages['assessment_radar'], 550, 400),
+                emptyParagraph(200),
+            );
+        }
+
         // ── Radar Chart Data as Score Table ─────────────────────────────
         if (assessment.radarData) {
             const rd = assessment.radarData;
@@ -240,6 +250,15 @@ export async function generateProposalDocument(options: ProposalOptions) {
         );
 
         children.push(createTable([gapHeader, ...gapRows]));
+
+        // ── Eisenhower Matrix Image ──────────────────────────────────
+        if (chartImages['assessment_eisenhower']) {
+            children.push(
+                emptyParagraph(200),
+                styledParagraph('Matriz de Priorización (Eisenhower)', { bold: true, size: 22, spacingAfter: 60, color: GRAY_600 }),
+                chartImageParagraph(chartImages['assessment_eisenhower'], 560, 420),
+            );
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -274,6 +293,15 @@ export async function generateProposalDocument(options: ProposalOptions) {
             }),
             emptyParagraph(200),
         );
+
+        // ── Financial Line Chart Image ───────────────────────────────
+        if (chartImages['financial_line']) {
+            children.push(
+                styledParagraph('Gráfica de Proyección de Costos Acumulados', { bold: true, size: 22, spacingAfter: 60, color: GRAY_600 }),
+                chartImageParagraph(chartImages['financial_line'], 560, 340),
+                emptyParagraph(200),
+            );
+        }
 
         // ── Yearly Comparison Table ──────────────────────────────────
         if (financial.yearlyData?.length) {
@@ -363,6 +391,15 @@ export async function generateProposalDocument(options: ProposalOptions) {
             bodyText(`Comparativa técnico-comercial entre HPE ${comparator.solutionName} y ${comparator.competitorName} ${comparator.competitorSolution}. Se evalúan criterios en las categorías de: Negocio, Funcional, Financiero, Técnico y Precios.`),
             emptyParagraph(100),
         );
+
+        // ── Comparator Matrix Image ─────────────────────────────────
+        if (chartImages['comparator_matrix']) {
+            children.push(
+                emptyParagraph(200),
+                styledParagraph('Captura Visual — Matriz Competitiva', { bold: true, size: 22, spacingAfter: 60, color: GRAY_600 }),
+                chartImageParagraph(chartImages['comparator_matrix'], 560, 400),
+            );
+        }
 
         // ── Comparison Table ─────────────────────────────────────────
         children.push(
@@ -518,6 +555,43 @@ export async function generateProposalDocument(options: ProposalOptions) {
 
 function formatCurrency(v: number): string {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
+}
+
+function base64ToUint8Array(dataUri: string): Uint8Array {
+    const base64 = dataUri.replace(/^data:image\/\w+;base64,/, '');
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+
+function chartImageParagraph(dataUri: string, widthPx: number, heightPx: number) {
+    try {
+        const imageData = base64ToUint8Array(dataUri);
+        return new Paragraph({
+            children: [
+                new ImageRun({
+                    data: imageData,
+                    transformation: {
+                        width: widthPx,
+                        height: heightPx,
+                    },
+                    type: 'png',
+                }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+        });
+    } catch (e) {
+        console.warn('Failed to embed chart image:', e);
+        return new Paragraph({
+            children: [new TextRun({ text: '[Gráfica no disponible — visite el módulo para capturar las gráficas]', italics: true, size: 18, color: GRAY_400 })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+        });
+    }
 }
 
 function emptyParagraph(spacingAfter: number) {

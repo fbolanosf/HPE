@@ -4,14 +4,15 @@ import CompetitiveMatrix from '@/components/charts/CompetitiveMatrix';
 import TopologyDiagram from '@/components/charts/TopologyDiagram';
 import Link from 'next/link';
 import { ArrowLeft, Server, Network } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { HPE_SOLUTIONS } from '@/lib/comparator-data';
-import { saveComparatorResults } from '@/lib/storage';
+import { saveComparatorResults, saveChartImage } from '@/lib/storage';
 
 export default function ComparatorPage() {
     const [activeTab, setActiveTab] = useState<'matrix' | 'topology'>('matrix');
     const [selectedSolutionId, setSelectedSolutionId] = useState<string>('morpheus');
     const [selectedCompetitorId, setSelectedCompetitorId] = useState<string>('');
+    const contentRef = useRef<HTMLDivElement>(null);
 
     const currentSolution = HPE_SOLUTIONS[selectedSolutionId];
 
@@ -38,6 +39,30 @@ export default function ComparatorPage() {
             }
         }
     }, [selectedSolutionId, selectedCompetitorId, currentSolution]);
+
+    // Auto-capture chart image for DOCX proposal
+    useEffect(() => {
+        const captureTimer = setTimeout(async () => {
+            if (contentRef.current) {
+                try {
+                    const html2canvas = (await import('html2canvas')).default;
+                    const canvas = await html2canvas(contentRef.current, {
+                        backgroundColor: '#ffffff',
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                    });
+                    const base64 = canvas.toDataURL('image/png');
+                    if (base64 && base64.length > 100) {
+                        saveChartImage('comparator_matrix', base64);
+                    }
+                } catch (e) {
+                    console.warn('Could not capture comparator chart:', e);
+                }
+            }
+        }, 2500);
+        return () => clearTimeout(captureTimer);
+    }, [selectedSolutionId, selectedCompetitorId, activeTab]);
 
     return (
         <div className="min-h-screen bg-gray-50 py-12">
@@ -83,7 +108,7 @@ export default function ComparatorPage() {
                 </div>
 
                 {/* Content */}
-                <div className="transition-all duration-300 ease-in-out">
+                <div ref={contentRef} className="transition-all duration-300 ease-in-out">
                     {activeTab === 'matrix' ? (
                         <CompetitiveMatrix
                             selectedSolutionId={selectedSolutionId}

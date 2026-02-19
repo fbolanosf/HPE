@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -14,6 +14,7 @@ import {
     Filler,
 } from 'chart.js';
 import { FinancialResult, ROIMetrics } from '@/lib/financial-calculations';
+import { saveChartImage } from '@/lib/storage';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -37,8 +38,26 @@ interface FinancialResultsDashboardProps {
 
 export default function FinancialResultsDashboard({ yearlyData, metrics }: FinancialResultsDashboardProps) {
     const dashboardRef = useRef<HTMLDivElement>(null);
+    const lineChartRef = useRef<any>(null);
 
     const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+
+    // Auto-capture line chart image for DOCX proposal
+    useEffect(() => {
+        const captureTimer = setTimeout(() => {
+            if (lineChartRef.current) {
+                try {
+                    const base64 = lineChartRef.current.toBase64Image('image/png', 1);
+                    if (base64 && base64.length > 100) {
+                        saveChartImage('financial_line', base64);
+                    }
+                } catch (e) {
+                    console.warn('Could not capture financial chart:', e);
+                }
+            }
+        }, 2000);
+        return () => clearTimeout(captureTimer);
+    }, [yearlyData]);
 
     const handleExportPDF = async () => {
         if (!dashboardRef.current) return;
@@ -406,7 +425,7 @@ export default function FinancialResultsDashboard({ yearlyData, metrics }: Finan
             <div className="bg-white p-4 rounded-xl border border-gray-100 mb-8">
                 <h3 className="text-gray-900 font-bold mb-4 ml-2">Proyección de Flujo de Efectivo Acumulado</h3>
                 <div className="h-[450px] w-full"> {/* Increased height for better visibility */}
-                    <Line options={options} data={chartData} />
+                    <Line ref={lineChartRef} options={options} data={chartData} />
                 </div>
             </div>
 
