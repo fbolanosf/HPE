@@ -1,6 +1,7 @@
 export const STORAGE_KEYS = {
     ASSESSMENT_RESULTS: 'hpe_toolkit_assessment',
     FINANCIAL_RESULTS: 'hpe_toolkit_financial',
+    COMPARATOR_RESULTS: 'hpe_toolkit_comparator',
 };
 
 export function saveAssessmentResults(data: any) {
@@ -26,6 +27,20 @@ export function saveFinancialResults(data: any) {
 export function getFinancialResults() {
     if (typeof window !== 'undefined') {
         const data = localStorage.getItem(STORAGE_KEYS.FINANCIAL_RESULTS);
+        return data ? JSON.parse(data) : null;
+    }
+    return null;
+}
+
+export function saveComparatorResults(data: any) {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.COMPARATOR_RESULTS, JSON.stringify(data));
+    }
+}
+
+export function getComparatorResults() {
+    if (typeof window !== 'undefined') {
+        const data = localStorage.getItem(STORAGE_KEYS.COMPARATOR_RESULTS);
         return data ? JSON.parse(data) : null;
     }
     return null;

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Server, Network } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { HPE_SOLUTIONS } from '@/lib/comparator-data';
+import { saveComparatorResults } from '@/lib/storage';
 
 export default function ComparatorPage() {
     const [activeTab, setActiveTab] = useState<'matrix' | 'topology'>('matrix');
@@ -20,6 +21,23 @@ export default function ComparatorPage() {
             setSelectedCompetitorId(currentSolution.competitors[0].id);
         }
     }, [selectedSolutionId, currentSolution]);
+
+    // Auto-save comparator data for proposal generation
+    useEffect(() => {
+        if (currentSolution && selectedCompetitorId) {
+            const competitor = currentSolution.competitors.find(c => c.id === selectedCompetitorId);
+            if (competitor) {
+                saveComparatorResults({
+                    solutionName: currentSolution.name,
+                    solutionDescription: currentSolution.description,
+                    competitorName: competitor.name,
+                    competitorSolution: competitor.solution,
+                    comparisons: competitor.comparisons,
+                    timestamp: new Date().toISOString(),
+                });
+            }
+        }
+    }, [selectedSolutionId, selectedCompetitorId, currentSolution]);
 
     return (
         <div className="min-h-screen bg-gray-50 py-12">
