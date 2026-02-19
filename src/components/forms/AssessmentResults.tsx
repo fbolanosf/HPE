@@ -134,7 +134,20 @@ export default function AssessmentResults({ answers, onReset }: AssessmentResult
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            saveAssessmentResults({ answers, scores, detailedResults });
+            saveAssessmentResults({
+                answers,
+                scores,
+                detailedResults,
+                // Enriched data for DOCX proposal generation
+                radarData: {
+                    categories: categories.map(c => c.label),
+                    currentScores: normScores,
+                    industryAvg,
+                    targetScores,
+                    overallScore,
+                    horizon,
+                },
+            });
         }
     }, [answers]);
 

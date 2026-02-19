@@ -16,6 +16,12 @@ const GRAY_400 = '9CA3AF';
 const WHITE = 'FFFFFF';
 const TABLE_HEADER_BG = '0D2137';
 const TABLE_ALT_BG = 'F0FAF7';
+const RED_LIGHT = 'FEE2E2';
+const RED_TEXT = 'DC2626';
+const YELLOW_LIGHT = 'FEF3C7';
+const YELLOW_TEXT = '92400E';
+const GREEN_LIGHT = 'D1FAE5';
+const GREEN_TEXT = '065F46';
 
 // ── Main Export Function ─────────────────────────────────────────────
 export async function generateProposalDocument(options: ProposalOptions) {
@@ -47,6 +53,35 @@ export async function generateProposalDocument(options: ProposalOptions) {
     );
 
     // ═══════════════════════════════════════════════════════════════════
+    // TABLE OF CONTENTS (text-based)
+    // ═══════════════════════════════════════════════════════════════════
+    children.push(
+        sectionTitle('Contenido', true),
+    );
+    let tocNum = 0;
+    if (assessment?.detailedResults?.length) {
+        tocNum++;
+        children.push(tocEntry(`${tocNum}. Análisis de Brecha (GAP Analysis)`));
+        children.push(tocEntry(`   ${tocNum}.1 Score de Madurez por Dimensión`));
+        children.push(tocEntry(`   ${tocNum}.2 Hallazgos Detallados y Soluciones HPE`));
+    }
+    if (financial?.metrics) {
+        tocNum++;
+        children.push(tocEntry(`${tocNum}. Análisis Financiero (TCO & ROI)`));
+        children.push(tocEntry(`   ${tocNum}.1 Métricas Clave`));
+        children.push(tocEntry(`   ${tocNum}.2 Proyección de Costos Acumulados`));
+    }
+    if (comparator?.comparisons?.length) {
+        tocNum++;
+        children.push(tocEntry(`${tocNum}. Análisis Competitivo`));
+        children.push(tocEntry(`   ${tocNum}.1 Comparativa por Criterio`));
+        children.push(tocEntry(`   ${tocNum}.2 Resumen de Ventajas`));
+    }
+    tocNum++;
+    children.push(tocEntry(`${tocNum}. Conclusión y Próximos Pasos`));
+    children.push(emptyParagraph(200));
+
+    // ═══════════════════════════════════════════════════════════════════
     // EXECUTIVE SUMMARY
     // ═══════════════════════════════════════════════════════════════════
     children.push(
@@ -55,55 +90,106 @@ export async function generateProposalDocument(options: ProposalOptions) {
         emptyParagraph(100),
     );
 
-    // List included sections
-    if (assessment) {
+    if (assessment?.detailedResults?.length) {
         children.push(bulletPoint('Análisis de Brecha (GAP)', 'Identificación de áreas críticas de mejora y soluciones HPE alineadas.'));
     }
-    if (financial) {
+    if (financial?.metrics) {
         children.push(bulletPoint('Análisis Financiero (TCO/ROI)', 'Proyección de costos comparativa y retorno de inversión.'));
     }
-    if (comparator) {
+    if (comparator?.comparisons?.length) {
         children.push(bulletPoint('Análisis Competitivo', `Comparativa técnica: HPE ${comparator.solutionName} vs ${comparator.competitorName} ${comparator.competitorSolution}.`));
     }
 
-    // Quick summary stats
+    // Quick summary stats box
     children.push(emptyParagraph(200));
-    const statsRuns: TextRun[] = [];
-    if (assessment?.detailedResults) {
+    const summaryRows: TableRow[] = [];
+    if (assessment?.detailedResults?.length) {
         const solutions = [...new Set(assessment.detailedResults.map((r: any) => r.solution))] as string[];
-        statsRuns.push(
-            new TextRun({ text: `Brechas identificadas: `, bold: true, size: 20 }),
-            new TextRun({ text: `${assessment.detailedResults.length}`, color: HPE_GREEN, bold: true, size: 20 }),
-            new TextRun({ text: `  ·  Soluciones HPE: `, bold: true, size: 20 }),
-            new TextRun({ text: `${solutions.length}`, color: HPE_GREEN, bold: true, size: 20 }),
-        );
+        const overallScore = assessment.radarData?.overallScore ?? '—';
+        summaryRows.push(summaryStatRow('Brechas Detectadas', String(assessment.detailedResults.length), 'Soluciones HPE', String(solutions.length)));
+        summaryRows.push(summaryStatRow('Score General', `${overallScore}%`, 'Horizonte', `${assessment.radarData?.horizon ?? '—'} meses`));
     }
     if (financial?.metrics) {
-        const fmt = formatCurrency;
-        if (statsRuns.length > 0) statsRuns.push(new TextRun({ text: '  ·  ', size: 20 }));
-        statsRuns.push(
-            new TextRun({ text: `Ahorro 5Y: `, bold: true, size: 20 }),
-            new TextRun({ text: fmt(financial.metrics.totalSavings), color: HPE_GREEN, bold: true, size: 20 }),
-            new TextRun({ text: `  ·  ROI: `, bold: true, size: 20 }),
-            new TextRun({ text: `${financial.metrics.roi.toFixed(1)}%`, color: HPE_GREEN, bold: true, size: 20 }),
-        );
+        summaryRows.push(summaryStatRow('Ahorro Total 5Y', formatCurrency(financial.metrics.totalSavings), 'ROI', `${financial.metrics.roi.toFixed(1)}%`));
+        summaryRows.push(summaryStatRow('VPN', formatCurrency(financial.metrics.npv), 'Payback', 'Inmediato (OpEx)'));
     }
-    if (statsRuns.length > 0) {
-        children.push(new Paragraph({ children: statsRuns, spacing: { after: 300 }, shading: { type: ShadingType.SOLID, color: 'F0FAF7', fill: 'F0FAF7' } }));
+    if (comparator?.comparisons?.length) {
+        const hpeWins = comparator.comparisons.filter((c: any) => c.hpeIsBetter).length;
+        summaryRows.push(summaryStatRow('Ventajas HPE', `${hpeWins} de ${comparator.comparisons.length}`, 'vs.', `${comparator.competitorName} ${comparator.competitorSolution}`));
+    }
+    if (summaryRows.length > 0) {
+        children.push(
+            new Table({
+                rows: summaryRows,
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                borders: thinBorders('E5E7EB'),
+            }),
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // SECTION 1: GAP ANALYSIS
+    // SECTION: GAP ANALYSIS
     // ═══════════════════════════════════════════════════════════════════
     if (assessment?.detailedResults?.length) {
         sectionNumber++;
         children.push(
             sectionTitle(`${sectionNumber}. Análisis de Brecha (GAP Analysis)`, true),
-            bodyText('El análisis GAP evalúa la distancia entre el estado actual de la infraestructura y el estado futuro deseado. A continuación se detallan los hallazgos con las soluciones HPE recomendadas para cerrar cada brecha.'),
+            bodyText('El análisis GAP evalúa la distancia entre el estado actual de la infraestructura y el estado futuro deseado. Se identifican brechas críticas y se recomiendan soluciones HPE específicas para cerrar cada una.'),
             emptyParagraph(100),
         );
 
-        // Summary by solution
+        // ── Radar Chart Data as Score Table ─────────────────────────────
+        if (assessment.radarData) {
+            const rd = assessment.radarData;
+            children.push(
+                styledParagraph(`${sectionNumber}.1 Score de Madurez por Dimensión`, { bold: true, size: 24, spacingAfter: 100 }),
+                bodyText(`Puntuación general: ${rd.overallScore}% — Horizonte de mejora: ${rd.horizon} meses`),
+                emptyParagraph(60),
+            );
+
+            const radarHeader = new TableRow({
+                tableHeader: true,
+                children: [
+                    headerCell('Dimensión', 30),
+                    headerCell('Estado Actual', 18),
+                    headerCell('Prom. Industria', 18),
+                    headerCell(`Objetivo HPE (${rd.horizon}m)`, 18),
+                    headerCell('Brecha', 16),
+                ],
+            });
+
+            const radarRows = rd.categories.map((cat: string, idx: number) => {
+                const current = Math.round(rd.currentScores[idx]);
+                const industry = Math.round(rd.industryAvg[idx]);
+                const target = Math.round(rd.targetScores[idx]);
+                const gap = target - current;
+                const gapColor = gap > 30 ? RED_TEXT : gap > 15 ? YELLOW_TEXT : GREEN_TEXT;
+                const gapBg = gap > 30 ? RED_LIGHT : gap > 15 ? YELLOW_LIGHT : GREEN_LIGHT;
+
+                return new TableRow({
+                    children: [
+                        dataCell(cat, true, idx % 2 === 1),
+                        scoreCell(current, idx % 2 === 1),
+                        scoreCell(industry, idx % 2 === 1),
+                        scoreCell(target, idx % 2 === 1, HPE_GREEN),
+                        new TableCell({
+                            children: [new Paragraph({
+                                children: [new TextRun({ text: `+${gap}pp`, bold: true, size: 18, color: gapColor })],
+                                alignment: AlignmentType.CENTER,
+                                spacing: { before: 20, after: 20 },
+                            })],
+                            shading: { type: ShadingType.SOLID, color: gapBg, fill: gapBg },
+                            margins: cellMargins(),
+                        }),
+                    ],
+                });
+            });
+
+            children.push(createTable([radarHeader, ...radarRows]));
+            children.push(emptyParagraph(200));
+        }
+
+        // ── Summary by Solution ─────────────────────────────────────────
         const solutionCounts: Record<string, number> = {};
         assessment.detailedResults.forEach((r: any) => {
             solutionCounts[r.solution] = (solutionCounts[r.solution] || 0) + 1;
@@ -112,25 +198,25 @@ export async function generateProposalDocument(options: ProposalOptions) {
         children.push(
             styledParagraph('Resumen por Solución HPE:', { bold: true, size: 20, spacingAfter: 100 }),
         );
-
         Object.entries(solutionCounts).forEach(([solution, count]) => {
-            children.push(
-                new Paragraph({
-                    children: [
-                        new TextRun({ text: '●  ', color: HPE_GREEN, size: 20 }),
-                        new TextRun({ text: solution, bold: true, size: 20 }),
-                        new TextRun({ text: ` — ${count} brecha${count > 1 ? 's' : ''} identificada${count > 1 ? 's' : ''}`, size: 20, color: GRAY_600 }),
-                    ],
-                    spacing: { after: 60 },
-                    indent: { left: 360 },
-                })
-            );
+            children.push(new Paragraph({
+                children: [
+                    new TextRun({ text: '●  ', color: HPE_GREEN, size: 20 }),
+                    new TextRun({ text: solution, bold: true, size: 20 }),
+                    new TextRun({ text: ` — ${count} brecha${count > 1 ? 's' : ''}`, size: 20, color: GRAY_600 }),
+                ],
+                spacing: { after: 60 },
+                indent: { left: 360 },
+            }));
         });
-
         children.push(emptyParagraph(200));
 
-        // Detail table
-        const headerRow = new TableRow({
+        // ── Detail Table ────────────────────────────────────────────────
+        children.push(
+            styledParagraph(`${sectionNumber}.2 Hallazgos Detallados y Soluciones HPE`, { bold: true, size: 24, spacingAfter: 100 }),
+        );
+
+        const gapHeader = new TableRow({
             tableHeader: true,
             children: [
                 headerCell('#', 6),
@@ -141,7 +227,7 @@ export async function generateProposalDocument(options: ProposalOptions) {
             ],
         });
 
-        const dataRows = assessment.detailedResults.map((item: any, idx: number) =>
+        const gapRows = assessment.detailedResults.map((item: any, idx: number) =>
             new TableRow({
                 children: [
                     dataCell(String(idx + 1), true, idx % 2 === 1),
@@ -153,32 +239,30 @@ export async function generateProposalDocument(options: ProposalOptions) {
             })
         );
 
-        children.push(createTable([headerRow, ...dataRows]));
+        children.push(createTable([gapHeader, ...gapRows]));
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // SECTION 2: FINANCIAL ANALYSIS
+    // SECTION: FINANCIAL ANALYSIS
     // ═══════════════════════════════════════════════════════════════════
     if (financial?.metrics) {
         sectionNumber++;
-        const fmt = formatCurrency;
-
         children.push(
             sectionTitle(`${sectionNumber}. Análisis Financiero (TCO & ROI)`, true),
-            bodyText('El siguiente análisis compara el Costo Total de Propiedad (TCO) de la infraestructura actual, una migración completa a nube pública, y la propuesta HPE GreenLake como modelo "as-a-Service" on-premise.'),
+            bodyText('El siguiente análisis compara el Costo Total de Propiedad (TCO) de tres escenarios: infraestructura tradicional on-premise, migración completa a nube pública, y la propuesta HPE GreenLake como modelo "as-a-Service".'),
             emptyParagraph(100),
         );
 
-        // Key Metrics Box
+        // ── Key Metrics Cards ────────────────────────────────────────
         children.push(
-            styledParagraph('Métricas Clave:', { bold: true, size: 22, spacingAfter: 100 }),
+            styledParagraph(`${sectionNumber}.1 Métricas Clave`, { bold: true, size: 24, spacingAfter: 100 }),
         );
 
         const metricsRow = new TableRow({
             children: [
-                metricCell('Ahorro Total (5 Años)', fmt(financial.metrics.totalSavings)),
+                metricCell('Ahorro Total (5 Años)', formatCurrency(financial.metrics.totalSavings)),
                 metricCell('ROI', `${financial.metrics.roi.toFixed(1)}%`),
-                metricCell('VPN', fmt(financial.metrics.npv)),
+                metricCell('Valor Presente Neto', formatCurrency(financial.metrics.npv)),
             ],
         });
 
@@ -186,24 +270,26 @@ export async function generateProposalDocument(options: ProposalOptions) {
             new Table({
                 rows: [metricsRow],
                 width: { size: 100, type: WidthType.PERCENTAGE },
-                borders: noBorders(),
+                borders: thinBorders('E5E7EB'),
             }),
             emptyParagraph(200),
         );
 
-        // Yearly comparison table
+        // ── Yearly Comparison Table ──────────────────────────────────
         if (financial.yearlyData?.length) {
             children.push(
-                styledParagraph('Proyección de Costos Acumulados:', { bold: true, size: 20, spacingAfter: 100 }),
+                styledParagraph(`${sectionNumber}.2 Proyección de Costos Acumulados`, { bold: true, size: 24, spacingAfter: 100 }),
             );
 
             const yearHeader = new TableRow({
                 tableHeader: true,
                 children: [
-                    headerCell('Año', 15),
-                    headerCell('Infraestructura Tradicional', 28),
-                    headerCell('Nube Pública', 28),
-                    headerCell('HPE GreenLake', 29),
+                    headerCell('Año', 10),
+                    headerCell('Infraestructura Tradicional', 22),
+                    headerCell('Nube Pública', 22),
+                    headerCell('HPE GreenLake', 22),
+                    headerCell('Ahorro vs Trad.', 12),
+                    headerCell('Ahorro vs Cloud', 12),
                 ],
             });
 
@@ -211,15 +297,55 @@ export async function generateProposalDocument(options: ProposalOptions) {
                 new TableRow({
                     children: [
                         dataCell(`Año ${yr.year}`, true, idx % 2 === 1),
-                        dataCell(fmt(yr.traditionalCumulative), false, idx % 2 === 1),
-                        dataCell(fmt(yr.cloudCumulative), false, idx % 2 === 1),
-                        dataCell(fmt(yr.greenlakeCumulative), true, idx % 2 === 1, HPE_GREEN),
+                        dataCell(formatCurrency(yr.traditionalCumulative), false, idx % 2 === 1),
+                        dataCell(formatCurrency(yr.cloudCumulative), false, idx % 2 === 1),
+                        dataCell(formatCurrency(yr.greenlakeCumulative), true, idx % 2 === 1, HPE_GREEN),
+                        dataCell(formatCurrency(yr.savingsVsTraditional), false, idx % 2 === 1, GREEN_TEXT),
+                        dataCell(formatCurrency(yr.savingsVsCloud), false, idx % 2 === 1, GREEN_TEXT),
                     ],
                 })
             );
 
             children.push(createTable([yearHeader, ...yearRows]));
             children.push(emptyParagraph(100));
+
+            // Show additional solutions if selected
+            const lastYear = financial.yearlyData[financial.yearlyData.length - 1];
+            const selectedSols = lastYear?.selectedSolutions || financial.metrics.selectedSolutions || [];
+            if (selectedSols.length > 0) {
+                children.push(
+                    styledParagraph('Soluciones Adicionales Incluidas (Costo Acumulado Final):', { bold: true, size: 20, spacingAfter: 100 }),
+                );
+
+                const solLabels: Record<string, string> = {
+                    'morpheus': 'HPE Morpheus',
+                    'vmEssentials': 'HPE VM Essentials',
+                    'zerto': 'HPE Zerto',
+                    'opsRamp': 'HPE OpsRamp',
+                };
+
+                const solValues: Record<string, number> = {
+                    'morpheus': lastYear.morpheusCumulative,
+                    'vmEssentials': lastYear.vmEssentialsCumulative,
+                    'zerto': lastYear.zertoCumulative,
+                    'opsRamp': lastYear.opsRampCumulative,
+                };
+
+                selectedSols.forEach((sol: string) => {
+                    if (solLabels[sol] && solValues[sol] !== undefined) {
+                        children.push(new Paragraph({
+                            children: [
+                                new TextRun({ text: '●  ', color: HPE_GREEN, size: 20 }),
+                                new TextRun({ text: solLabels[sol], bold: true, size: 20 }),
+                                new TextRun({ text: `: ${formatCurrency(solValues[sol])}`, size: 20, color: GRAY_600 }),
+                            ],
+                            spacing: { after: 60 },
+                            indent: { left: 360 },
+                        }));
+                    }
+                });
+                children.push(emptyParagraph(100));
+            }
         }
 
         children.push(
@@ -228,63 +354,127 @@ export async function generateProposalDocument(options: ProposalOptions) {
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // SECTION 3: COMPETITIVE ANALYSIS
+    // SECTION: COMPETITIVE ANALYSIS
     // ═══════════════════════════════════════════════════════════════════
     if (comparator?.comparisons?.length) {
         sectionNumber++;
         children.push(
             sectionTitle(`${sectionNumber}. Análisis Competitivo`, true),
-            bodyText(`A continuación se presenta la comparativa técnico-comercial entre la solución HPE ${comparator.solutionName} y ${comparator.competitorName} ${comparator.competitorSolution}.`),
+            bodyText(`Comparativa técnico-comercial entre HPE ${comparator.solutionName} y ${comparator.competitorName} ${comparator.competitorSolution}. Se evalúan criterios en las categorías de: Negocio, Funcional, Financiero, Técnico y Precios.`),
             emptyParagraph(100),
         );
 
-        // Competition table
+        // ── Comparison Table ─────────────────────────────────────────
+        children.push(
+            styledParagraph(`${sectionNumber}.1 Comparativa por Criterio`, { bold: true, size: 24, spacingAfter: 100 }),
+        );
+
         const compHeader = new TableRow({
             tableHeader: true,
             children: [
                 headerCell('Categoría', 14),
-                headerCell('Criterio', 16),
-                headerCell(`HPE ${comparator.solutionName}`, 25),
-                headerCell(`${comparator.competitorName} (${comparator.competitorSolution})`, 25),
-                headerCell('Ventaja HPE', 20),
+                headerCell('Criterio', 14),
+                headerCell(`HPE ${comparator.solutionName}`, 22),
+                headerCell(`${comparator.competitorName} (${comparator.competitorSolution})`, 22),
+                headerCell('Ventaja HPE', 28),
             ],
         });
 
-        const compRows = comparator.comparisons.map((comp: any, idx: number) =>
-            new TableRow({
+        const compRows = comparator.comparisons.map((comp: any, idx: number) => {
+            const isHPE = comp.hpeIsBetter;
+            return new TableRow({
                 children: [
-                    dataCell(comp.category || '', true, idx % 2 === 1),
+                    categoryBadgeCell(comp.category || '', idx % 2 === 1),
                     dataCell(comp.feature || '', true, idx % 2 === 1),
-                    dataCell(comp.hpe || '', false, idx % 2 === 1, comp.hpeIsBetter ? HPE_GREEN : undefined),
-                    dataCell(comp.competitor || '', false, idx % 2 === 1),
+                    new TableCell({
+                        children: [new Paragraph({
+                            children: [
+                                new TextRun({ text: isHPE ? '✓ ' : '', color: HPE_GREEN, size: 18, bold: true }),
+                                new TextRun({ text: comp.hpe || '', size: 18, color: isHPE ? HPE_GREEN : '333333', bold: isHPE }),
+                            ],
+                            spacing: { before: 20, after: 20 },
+                        })],
+                        shading: cellShading(idx % 2 === 1),
+                        margins: cellMargins(),
+                    }),
+                    new TableCell({
+                        children: [new Paragraph({
+                            children: [
+                                new TextRun({ text: !isHPE ? '✓ ' : '', color: RED_TEXT, size: 18, bold: true }),
+                                new TextRun({ text: comp.competitor || '', size: 18, color: !isHPE ? RED_TEXT : '333333', bold: !isHPE }),
+                            ],
+                            spacing: { before: 20, after: 20 },
+                        })],
+                        shading: cellShading(idx % 2 === 1),
+                        margins: cellMargins(),
+                    }),
                     dataCell(comp.hpeAdvantage || '', false, idx % 2 === 1),
                 ],
-            })
-        );
+            });
+        });
 
         children.push(createTable([compHeader, ...compRows]));
-        children.push(emptyParagraph(100));
+        children.push(emptyParagraph(200));
 
-        // Count advantages
+        // ── Summary ──────────────────────────────────────────────────
+        children.push(
+            styledParagraph(`${sectionNumber}.2 Resumen de Ventajas`, { bold: true, size: 24, spacingAfter: 100 }),
+        );
+
         const hpeWins = comparator.comparisons.filter((c: any) => c.hpeIsBetter).length;
         const total = comparator.comparisons.length;
+
+        // Score box
+        const scoreRow = new TableRow({
+            children: [
+                metricCell('Criterios Evaluados', String(total)),
+                metricCell('Ventajas HPE', `${hpeWins} / ${total}`),
+                metricCell('Tasa de Superioridad', `${Math.round((hpeWins / total) * 100)}%`),
+            ],
+        });
         children.push(
-            new Paragraph({
+            new Table({
+                rows: [scoreRow],
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                borders: thinBorders('E5E7EB'),
+            }),
+            emptyParagraph(200),
+        );
+
+        // Category breakdown
+        const categoryBreakdown: Record<string, { wins: number; total: number }> = {};
+        comparator.comparisons.forEach((c: any) => {
+            if (!categoryBreakdown[c.category]) categoryBreakdown[c.category] = { wins: 0, total: 0 };
+            categoryBreakdown[c.category].total++;
+            if (c.hpeIsBetter) categoryBreakdown[c.category].wins++;
+        });
+
+        children.push(styledParagraph('Desglose por Categoría:', { bold: true, size: 20, spacingAfter: 100 }));
+        Object.entries(categoryBreakdown).forEach(([cat, data]) => {
+            const pct = Math.round((data.wins / data.total) * 100);
+            children.push(new Paragraph({
                 children: [
-                    new TextRun({ text: `HPE ${comparator.solutionName} demuestra ventajas claras en `, size: 20 }),
-                    new TextRun({ text: `${hpeWins} de ${total}`, bold: true, size: 20, color: HPE_GREEN }),
-                    new TextRun({ text: ` criterios evaluados, posicionándose como la alternativa superior para este escenario.`, size: 20 }),
+                    new TextRun({ text: pct === 100 ? '✓ ' : '○ ', color: pct === 100 ? HPE_GREEN : GRAY_400, size: 20, bold: true }),
+                    new TextRun({ text: cat, bold: true, size: 20 }),
+                    new TextRun({ text: ` — ${data.wins}/${data.total} criterios favorables (${pct}%)`, size: 20, color: GRAY_600 }),
                 ],
-                spacing: { after: 200 },
-            })
+                spacing: { after: 60 },
+                indent: { left: 360 },
+            }));
+        });
+
+        children.push(
+            emptyParagraph(100),
+            bodyText(`HPE ${comparator.solutionName} demuestra ventajas claras en ${hpeWins} de ${total} criterios evaluados, posicionándose como la alternativa superior para este escenario.`),
         );
     }
 
     // ═══════════════════════════════════════════════════════════════════
     // CONCLUSION
     // ═══════════════════════════════════════════════════════════════════
+    sectionNumber++;
     children.push(
-        sectionTitle('Conclusión y Próximos Pasos', true),
+        sectionTitle(`${sectionNumber}. Conclusión y Próximos Pasos`, true),
         bodyText('Basándose en los hallazgos de este análisis, recomendamos los siguientes pasos:'),
         emptyParagraph(60),
         numberedStep(1, 'Validación técnica mediante una Prueba de Concepto (PoC) con las soluciones priorizadas.'),
@@ -310,7 +500,7 @@ export async function generateProposalDocument(options: ProposalOptions) {
         sections: [{
             properties: {
                 page: {
-                    margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 }, // 1 inch = 1440 twips
+                    margin: { top: 1440, bottom: 1440, left: 1296, right: 1296 },
                 },
             },
             children,
@@ -322,7 +512,9 @@ export async function generateProposalDocument(options: ProposalOptions) {
     saveAs(blob, `Propuesta_HPE_${safeDateStr}.docx`);
 }
 
-// ── Helper Functions ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS
+// ══════════════════════════════════════════════════════════════════════
 
 function formatCurrency(v: number): string {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
@@ -399,7 +591,55 @@ function numberedStep(num: number, text: string) {
     });
 }
 
+function tocEntry(text: string) {
+    return new Paragraph({
+        children: [new TextRun({ text, size: 20, color: GRAY_600 })],
+        spacing: { after: 60 },
+        indent: { left: text.startsWith('   ') ? 720 : 360 },
+    });
+}
+
+function summaryStatRow(label1: string, value1: string, label2: string, value2: string) {
+    return new TableRow({
+        children: [
+            new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: label1, size: 18, color: GRAY_600 })], spacing: { before: 20, after: 20 } })],
+                width: { size: 25, type: WidthType.PERCENTAGE },
+                shading: { type: ShadingType.SOLID, color: 'F9FAFB', fill: 'F9FAFB' },
+                margins: cellMargins(),
+            }),
+            new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: value1, bold: true, size: 18, color: HPE_GREEN })], spacing: { before: 20, after: 20 } })],
+                width: { size: 25, type: WidthType.PERCENTAGE },
+                shading: { type: ShadingType.SOLID, color: 'F9FAFB', fill: 'F9FAFB' },
+                margins: cellMargins(),
+            }),
+            new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: label2, size: 18, color: GRAY_600 })], spacing: { before: 20, after: 20 } })],
+                width: { size: 25, type: WidthType.PERCENTAGE },
+                shading: { type: ShadingType.SOLID, color: 'F9FAFB', fill: 'F9FAFB' },
+                margins: cellMargins(),
+            }),
+            new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: value2, bold: true, size: 18, color: HPE_GREEN })], spacing: { before: 20, after: 20 } })],
+                width: { size: 25, type: WidthType.PERCENTAGE },
+                shading: { type: ShadingType.SOLID, color: 'F9FAFB', fill: 'F9FAFB' },
+                margins: cellMargins(),
+            }),
+        ],
+    });
+}
+
 // ── Table Helpers ────────────────────────────────────────────────────
+
+function cellMargins() {
+    return { top: 30, bottom: 30, left: 80, right: 80 };
+}
+
+function cellShading(alt: boolean) {
+    const bg = alt ? TABLE_ALT_BG : WHITE;
+    return { type: ShadingType.SOLID, color: bg, fill: bg };
+}
 
 function headerCell(text: string, widthPct: number) {
     return new TableCell({
@@ -409,19 +649,51 @@ function headerCell(text: string, widthPct: number) {
         })],
         width: { size: widthPct, type: WidthType.PERCENTAGE },
         shading: { type: ShadingType.SOLID, color: TABLE_HEADER_BG, fill: TABLE_HEADER_BG },
-        margins: { top: 40, bottom: 40, left: 80, right: 80 },
+        margins: cellMargins(),
     });
 }
 
 function dataCell(text: string, bold: boolean = false, altRow: boolean = false, color?: string) {
-    const bg = altRow ? TABLE_ALT_BG : WHITE;
     return new TableCell({
         children: [new Paragraph({
             children: [new TextRun({ text, bold, size: 18, color: color || '333333', font: 'Calibri' })],
             spacing: { before: 20, after: 20 },
         })],
-        shading: { type: ShadingType.SOLID, color: bg, fill: bg },
-        margins: { top: 30, bottom: 30, left: 80, right: 80 },
+        shading: cellShading(altRow),
+        margins: cellMargins(),
+    });
+}
+
+function scoreCell(value: number, altRow: boolean, color?: string) {
+    return new TableCell({
+        children: [new Paragraph({
+            children: [new TextRun({ text: `${value}%`, bold: true, size: 18, color: color || '333333' })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 20, after: 20 },
+        })],
+        shading: cellShading(altRow),
+        margins: cellMargins(),
+    });
+}
+
+function categoryBadgeCell(text: string, altRow: boolean) {
+    const categoryColors: Record<string, { bg: string; text: string }> = {
+        'Negocio': { bg: 'DBEAFE', text: '1D4ED8' },
+        'Funcional': { bg: 'E0E7FF', text: '4338CA' },
+        'Financiero': { bg: 'D1FAE5', text: '065F46' },
+        'Técnico': { bg: 'FEF3C7', text: '92400E' },
+        'Precios': { bg: 'FCE7F3', text: '9D174D' },
+    };
+    const colors = categoryColors[text] || { bg: altRow ? TABLE_ALT_BG : WHITE, text: '333333' };
+
+    return new TableCell({
+        children: [new Paragraph({
+            children: [new TextRun({ text, bold: true, size: 16, color: colors.text })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 20, after: 20 },
+        })],
+        shading: { type: ShadingType.SOLID, color: colors.bg, fill: colors.bg },
+        margins: cellMargins(),
     });
 }
 
@@ -441,12 +713,6 @@ function metricCell(label: string, value: string) {
         width: { size: 33, type: WidthType.PERCENTAGE },
         shading: { type: ShadingType.SOLID, color: 'F9FAFB', fill: 'F9FAFB' },
         margins: { top: 120, bottom: 120, left: 80, right: 80 },
-        borders: {
-            top: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-            bottom: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-            left: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-            right: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-        },
     });
 }
 
@@ -454,24 +720,17 @@ function createTable(rows: TableRow[]) {
     return new Table({
         rows,
         width: { size: 100, type: WidthType.PERCENTAGE },
-        borders: {
-            top: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-            bottom: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-            left: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-            right: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-            insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-            insideVertical: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
-        },
+        borders: thinBorders('E5E7EB'),
     });
 }
 
-function noBorders() {
+function thinBorders(color: string) {
     return {
-        top: { style: BorderStyle.NONE, size: 0 },
-        bottom: { style: BorderStyle.NONE, size: 0 },
-        left: { style: BorderStyle.NONE, size: 0 },
-        right: { style: BorderStyle.NONE, size: 0 },
-        insideHorizontal: { style: BorderStyle.NONE, size: 0 },
-        insideVertical: { style: BorderStyle.NONE, size: 0 },
+        top: { style: BorderStyle.SINGLE, size: 1, color },
+        bottom: { style: BorderStyle.SINGLE, size: 1, color },
+        left: { style: BorderStyle.SINGLE, size: 1, color },
+        right: { style: BorderStyle.SINGLE, size: 1, color },
+        insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color },
+        insideVertical: { style: BorderStyle.SINGLE, size: 1, color },
     };
 }
