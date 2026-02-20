@@ -401,6 +401,16 @@ export async function generateProposalDocument(options: ProposalOptions) {
             );
         }
 
+        // ── Topology Diagram Image ──────────────────────────────────
+        if (chartImages['comparator_topology']) {
+            children.push(
+                emptyParagraph(200),
+                styledParagraph('Captura Visual — Diagrama Topológico', { bold: true, size: 22, spacingAfter: 60, color: GRAY_600 }),
+                chartImageParagraph(chartImages['comparator_topology'], 560, 400),
+                bodyText(`La arquitectura de ${comparator.solutionName} está diseñada para reducir la complejidad mediante la unificación de capas, mientras que ${comparator.competitorName} a menudo requiere componentes discretos adicionales para lograr la misma funcionalidad, aumentando los puntos de falla y la complejidad de gestión.`),
+            );
+        }
+
         // ── Comparison Table ─────────────────────────────────────────
         children.push(
             styledParagraph(`${sectionNumber}.1 Comparativa por Criterio`, { bold: true, size: 24, spacingAfter: 100 }),

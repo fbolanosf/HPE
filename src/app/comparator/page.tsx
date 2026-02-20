@@ -13,6 +13,7 @@ export default function ComparatorPage() {
     const [selectedSolutionId, setSelectedSolutionId] = useState<string>('morpheus');
     const [selectedCompetitorId, setSelectedCompetitorId] = useState<string>('');
     const contentRef = useRef<HTMLDivElement>(null);
+    const topologyRef = useRef<HTMLDivElement>(null);
 
     const currentSolution = HPE_SOLUTIONS[selectedSolutionId];
 
@@ -43,9 +44,11 @@ export default function ComparatorPage() {
     // Auto-capture chart image for DOCX proposal
     useEffect(() => {
         const captureTimer = setTimeout(async () => {
+            const html2canvas = (await import('html2canvas')).default;
+
+            // Capture visible content (Matrix or Topology)
             if (contentRef.current) {
                 try {
-                    const html2canvas = (await import('html2canvas')).default;
                     const canvas = await html2canvas(contentRef.current, {
                         backgroundColor: '#ffffff',
                         scale: 2,
@@ -54,13 +57,32 @@ export default function ComparatorPage() {
                     });
                     const base64 = canvas.toDataURL('image/png');
                     if (base64 && base64.length > 100) {
-                        saveChartImage('comparator_matrix', base64);
+                        const imageKey = activeTab === 'matrix' ? 'comparator_matrix' : 'comparator_topology';
+                        saveChartImage(imageKey, base64);
                     }
                 } catch (e) {
                     console.warn('Could not capture comparator chart:', e);
                 }
             }
-        }, 2500);
+
+            // Capture hidden topology (Always capture it regardless of tab to ensure it updates)
+            if (topologyRef.current) {
+                try {
+                    const canvas = await html2canvas(topologyRef.current, {
+                        backgroundColor: '#ffffff',
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                    });
+                    const base64 = canvas.toDataURL('image/png');
+                    if (base64 && base64.length > 100) {
+                        saveChartImage('comparator_topology', base64);
+                    }
+                } catch (e) {
+                    console.warn('Could not capture hidden topology chart:', e);
+                }
+            }
+        }, 1500); // Reduced delay slightly to match likely user interaction speed
         return () => clearTimeout(captureTimer);
     }, [selectedSolutionId, selectedCompetitorId, activeTab]);
 
@@ -122,6 +144,32 @@ export default function ComparatorPage() {
                             selectedCompetitorId={selectedCompetitorId}
                         />
                     )}
+                </div>
+
+                {/* Hidden Topology capture for DOCX generation */}
+                {/* 
+                    STRATEGY: Render far off-screen to the right. 
+                    This ensures it is fully "visible" and opaque to the rendering engine, 
+                    but outside the user's viewport.
+                */}
+                <div
+                    ref={topologyRef}
+                    className="hidden-topology-wrapper"
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: '3000px', // Far off-screen
+                        width: '1200px',
+                        backgroundColor: '#ffffff',
+                        zIndex: 100, // Ensure it's not covered by anything if the window is huge
+                    }}
+                >
+                    <div className="p-8">
+                        <TopologyDiagram
+                            selectedSolutionId={selectedSolutionId}
+                            selectedCompetitorId={selectedCompetitorId}
+                        />
+                    </div>
                 </div>
 
             </div>
