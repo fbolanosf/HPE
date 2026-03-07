@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BarChart3, Calculator, FileText, Server } from 'lucide-react';
+import { BarChart3, Calculator, FileText, Server, Network } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -104,6 +104,29 @@ export default function Home() {
               <p className="mt-2 text-sm text-gray-500">
                 Genera un informe ejecutivo en Word (.docx) consolidando los resultados del análisis GAP y la proyección financiera para presentar al cliente.
               </p>
+            </div>
+          </Link>
+
+          {/* Partner Intelligence Module */}
+          <Link href="/partner-intelligence" className="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-100 hover:border-indigo-500">
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-indigo-50 text-indigo-600 ring-4 ring-white">
+                <Network className="h-6 w-6" aria-hidden="true" />
+              </span>
+            </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                <span className="absolute inset-0" aria-hidden="true" />
+                Partner Intelligence (IT + OT)
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Mapa global de integradores IT y OT. Scoring automático de oportunidades HPE, análisis de ecosistemas de virtualización, automatización industrial e infraestructura edge.
+              </p>
+              <div className="mt-3 flex gap-1 flex-wrap">
+                <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">IT Ecosystem</span>
+                <span className="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-medium">OT / SCADA</span>
+                <span className="text-[10px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded font-medium">IIoT / Edge</span>
+              </div>
             </div>
           </Link>
 
