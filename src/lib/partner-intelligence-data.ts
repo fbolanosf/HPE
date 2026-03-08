@@ -663,3 +663,36 @@ export const addPartnerToDatabase = (partner: Partner) => {
         }
     }
 };
+
+export const updatePartnerInDatabase = (id: string, updatedFields: Partial<Partner>) => {
+    // 1. Update RAM memory List
+    const index = PARTNER_DATABASE.findIndex(p => p.id === id);
+    if (index !== -1) {
+        PARTNER_DATABASE[index] = { ...PARTNER_DATABASE[index], ...updatedFields };
+    }
+
+    // 2. Persist to LocalStorage (Overwrite)
+    if (typeof window !== 'undefined') {
+        try {
+            const stored = localStorage.getItem('hpe_custom_partners');
+            if (stored) {
+                let custom: Partner[] = JSON.parse(stored);
+                const customIndex = custom.findIndex(p => p.id === id);
+                if (customIndex !== -1) {
+                    custom[customIndex] = { ...custom[customIndex], ...updatedFields };
+                    localStorage.setItem('hpe_custom_partners', JSON.stringify(custom));
+                } else if (index !== -1) {
+                    // Si el partner era del base mock inicial pero el usuario lo editó
+                    // lo clonamos hacia los custom_partners para que la edición sobreviva recargas.
+                    custom.unshift(PARTNER_DATABASE[index]);
+                    localStorage.setItem('hpe_custom_partners', JSON.stringify(custom));
+                }
+            } else if (index !== -1) {
+                // Instanciar local storage si el primero que editaron fue un mock base
+                localStorage.setItem('hpe_custom_partners', JSON.stringify([PARTNER_DATABASE[index]]));
+            }
+        } catch (e) {
+            console.error('Error updating LocalStorage', e);
+        }
+    }
+};

@@ -3,9 +3,9 @@
 import React, { useState, useMemo } from 'react';
 import {
     Partner, PartnerFilters, PARTNER_DATABASE, DOMAIN_LABEL, PARTNER_TYPE_LABEL,
-    UNIQUE_COUNTRIES, UNIQUE_REGIONS, searchPartners, scorePartner,
+    UNIQUE_COUNTRIES, UNIQUE_REGIONS, searchPartners, scorePartner, updatePartnerInDatabase
 } from '@/lib/partner-intelligence-data';
-import { Search, Download, Filter } from 'lucide-react';
+import { Search, Download, Filter, Edit2, X, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const DOMAIN_COLORS = {
@@ -65,7 +65,37 @@ export default function PartnerDatabase() {
     const [filters, setFilters] = useState<PartnerFilters>({});
     const [showFilters, setShowFilters] = useState(false);
 
-    const results = useMemo(() => searchPartners(PARTNER_DATABASE, filters), [filters]);
+    // Edit Modal State
+    const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
+    const [editProfile, setEditProfile] = useState<Partial<Partner>>({});
+
+    // Force re-render trick on save
+    const [tick, setTick] = useState(0);
+
+    const results = useMemo(() => searchPartners(PARTNER_DATABASE, filters), [filters, tick]);
+
+    const handleEditClick = (p: Partner) => {
+        setEditingPartner(p);
+        setEditProfile({ ...p });
+    };
+
+    const handleSaveEdit = () => {
+        if (editingPartner && editProfile) {
+            updatePartnerInDatabase(editingPartner.id, editProfile);
+            setEditingPartner(null);
+            setTick(t => t + 1); // trigger re-render
+        }
+    };
+
+    const toggleBool = (key: keyof Partner) => {
+        setEditProfile(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const vendorsIT = ['vmware_partner', 'vxrail_partner', 'hpe_partner', 'dell_partner', 'nutanix_partner', 'cisco_partner', 'microsoft_partner', 'aws_partner', 'google_cloud_partner', 'veeam_partner', 'purestorage_partner', 'juniper_partner'] as const;
+    const vendorsOT = ['siemens_partner', 'rockwell_partner', 'schneider_partner', 'abb_partner', 'honeywell_partner', 'emerson_partner', 'aveva_partner'] as const;
+    const virtSolutions = ['virtualization', 'hci', 'datacenter_infrastructure', 'hybrid_cloud', 'cloud_migration', 'backup_and_disaster_recovery', 'container_platforms'] as const;
+    const industries = ['telecommunications', 'finance', 'healthcare', 'retail', 'public_sector', 'manufacturing', 'energy', 'oil_and_gas', 'mining'] as const;
+    const formatKey = (key: string) => key.replace(/_/g, ' ').replace('partner', '').trim().toUpperCase();
 
     function handleExportXLS() {
         const headers = [
@@ -234,6 +264,7 @@ export default function PartnerDatabase() {
                             <th className="text-left px-4 py-3 font-semibold text-gray-700">Virtualización</th>
                             <th className="text-right px-4 py-3 font-semibold text-gray-700">Score HPE</th>
                             <th className="text-left px-4 py-3 font-semibold text-gray-700">Oportunidad</th>
+                            <th className="text-center px-4 py-3 font-semibold text-gray-700">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -287,12 +318,128 @@ export default function PartnerDatabase() {
                                     <td className="px-4 py-3">
                                         <Badge className={TIER_COLORS[tier]}>{tier}</Badge>
                                     </td>
+                                    <td className="px-4 py-3 text-center">
+                                        <button
+                                            onClick={() => handleEditClick(p)}
+                                            className="p-1.5 text-gray-400 hover:text-[#01A982] hover:bg-emerald-50 rounded-md transition-colors"
+                                            title="Editar Capacidades"
+                                        >
+                                            <Edit2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
                                 </tr>
                             );
                         })}
                     </tbody>
                 </table>
             </div>
+
+            {/* Edit Modal */}
+            {editingPartner && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200">
+
+                        {/* Modal Header */}
+                        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Actualizar Partner</h3>
+                                <p className="text-sm text-gray-500">{editingPartner.company_name} ({editingPartner.country})</p>
+                            </div>
+                            <button onClick={() => setEditingPartner(null)} className="p-2 text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-6">
+
+                            {/* Company Attributes */}
+                            <div>
+                                <h4 className="text-xs font-bold uppercase text-gray-500 mb-3 border-b pb-1">Atributos Generales</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">Tamaño de Empresa</label>
+                                        <select
+                                            value={editProfile.company_size || 'Medium'}
+                                            onChange={e => setEditProfile(prev => ({ ...prev, company_size: e.target.value as any }))}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-[#01A982]"
+                                        >
+                                            <option value="Small">Small</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="Large">Large</option>
+                                            <option value="Enterprise">Enterprise</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">Empleados (Aprox)</label>
+                                        <input
+                                            type="number"
+                                            value={editProfile.estimated_employees || 0}
+                                            onChange={e => setEditProfile(prev => ({ ...prev, estimated_employees: parseInt(e.target.value) || 0 }))}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-[#01A982]"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Matrix */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {/* IT */}
+                                <div className="space-y-2">
+                                    <h4 className="text-xs font-bold uppercase text-gray-500 border-b pb-1">IT & Cloud</h4>
+                                    {vendorsIT.map(v => (
+                                        <label key={v} className="flex items-center gap-2 cursor-pointer group">
+                                            <input type="checkbox" checked={!!editProfile[v]} onChange={() => toggleBool(v)} className="rounded text-[#01A982] focus:ring-[#01A982]" />
+                                            <span className={`text-sm group-hover:text-[#01A982] ${editProfile[v] ? 'text-gray-900 font-semibold' : 'text-gray-600'}`}>{formatKey(v)}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {/* OT */}
+                                <div className="space-y-2">
+                                    <h4 className="text-xs font-bold uppercase text-gray-500 border-b pb-1">OT / Industrial</h4>
+                                    {vendorsOT.map(v => (
+                                        <label key={v} className="flex items-center gap-2 cursor-pointer group">
+                                            <input type="checkbox" checked={!!editProfile[v]} onChange={() => toggleBool(v)} className="rounded text-orange-500 focus:ring-orange-500" />
+                                            <span className={`text-sm group-hover:text-orange-500 ${editProfile[v] ? 'text-gray-900 font-semibold' : 'text-gray-600'}`}>{formatKey(v)}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {/* Virt/DC */}
+                                <div className="space-y-2">
+                                    <h4 className="text-xs font-bold uppercase text-gray-500 border-b pb-1">Data Center</h4>
+                                    {virtSolutions.map(v => (
+                                        <label key={v} className="flex items-center gap-2 cursor-pointer group">
+                                            <input type="checkbox" checked={!!editProfile[v]} onChange={() => toggleBool(v)} className="rounded text-indigo-500 focus:ring-indigo-500" />
+                                            <span className={`text-sm group-hover:text-indigo-500 ${editProfile[v] ? 'text-gray-900 font-semibold' : 'text-gray-600'}`}>{formatKey(v)}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {/* Industries */}
+                                <div className="space-y-2">
+                                    <h4 className="text-xs font-bold uppercase text-gray-500 border-b pb-1">Verticales</h4>
+                                    {industries.map(v => (
+                                        <label key={v} className="flex items-center gap-2 cursor-pointer group">
+                                            <input type="checkbox" checked={!!editProfile[v]} onChange={() => toggleBool(v)} className="rounded text-pink-500 focus:ring-pink-500" />
+                                            <span className={`text-sm group-hover:text-pink-500 ${editProfile[v] ? 'text-gray-900 font-semibold' : 'text-gray-600'}`}>{formatKey(v)}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex items-center justify-end gap-3 z-10">
+                            <button onClick={() => setEditingPartner(null)} className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+                                Cancelar
+                            </button>
+                            <button onClick={handleSaveEdit} className="flex items-center gap-2 px-5 py-2 bg-[#01A982] hover:bg-[#008f6b] text-white rounded-lg text-sm font-bold transition-colors">
+                                <Save className="w-4 h-4" /> Guardar Cambios
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
