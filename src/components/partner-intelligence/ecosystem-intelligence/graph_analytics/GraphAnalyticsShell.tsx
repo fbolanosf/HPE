@@ -36,7 +36,7 @@ export default function GraphAnalyticsShell() {
         if (mode !== 'queries' || queryFilters.vendor === 'ALL') return undefined;
         const nodes = new Set<string>();
         nodes.add(`Vendor:${queryFilters.vendor}`);
-        queryResults.forEach(p => nodes.add(`Partner:${p.id}`));
+        queryResults.forEach(p => nodes.add(`Partner:${p.company_name}`));
         return nodes;
     }, [mode, queryFilters.vendor, queryResults]);
 

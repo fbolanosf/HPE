@@ -23,7 +23,7 @@ const LOCAL_VENDOR_COLORS: Record<string, string> = {
     'Schneider Electric': '#3dcd58',
     'ABB': '#ff0000',
     'Honeywell': '#e5261f',
-    'VMware': '#717074',
+    'VMware': '#0095D3', // Corporate Blue
     'HPE': '#01A982',
     'Dell': '#007db8',
     'Cisco': '#0096d6',
