@@ -41,6 +41,37 @@ const COUNTRY_COORDS: Record<string, { lat: number; lng: number }> = {
     'El Salvador': { lat: 13.8, lng: -88.9 },
 };
 
+// City → specific lat/lng true coordinates
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+    'Mexico City': { lat: 19.4326, lng: -99.1332 },
+    'Monterrey': { lat: 25.6866, lng: -100.3161 },
+    'Guadalajara': { lat: 20.6597, lng: -103.3500 },
+    'Querétaro': { lat: 20.5888, lng: -100.3899 },
+    'Bogotá': { lat: 4.7110, lng: -74.0721 },
+    'Medellín': { lat: 6.2442, lng: -75.5812 },
+    'São Paulo': { lat: -23.5505, lng: -46.6333 },
+    'Rio de Janeiro': { lat: -22.9068, lng: -43.1729 },
+    'Curitiba': { lat: -25.4290, lng: -49.2671 },
+    'Santiago': { lat: -33.4489, lng: -70.6693 },
+    'Antofagasta': { lat: -23.6500, lng: -70.4000 },
+    'Buenos Aires': { lat: -34.6037, lng: -58.3816 },
+    'Córdoba': { lat: -31.4201, lng: -64.1888 },
+    'Lima': { lat: -12.0464, lng: -77.0282 },
+    'Quito': { lat: -0.1807, lng: -78.4678 },
+    'Santa Cruz': { lat: -17.7833, lng: -63.1821 },
+    'Caracas': { lat: 10.4806, lng: -66.9036 },
+};
+
+function getCoords(country: string, city: string) {
+    if (CITY_COORDS[city]) return CITY_COORDS[city];
+    const base = COUNTRY_COORDS[country] || COUNTRY_COORDS['Mexico'];
+    // Jitter intentionally if unknown city to avoid perfect center stacking
+    return {
+        lat: base.lat + (Math.random() * 2 - 1),
+        lng: base.lng + (Math.random() * 2 - 1),
+    };
+}
+
 // ── Scraper 1: Siemens Solution Partner Directory ─────────────
 async function scrapeSiemensPartners(): Promise<ScrapedPartner[]> {
     try {
@@ -64,7 +95,7 @@ async function scrapeSiemensPartners(): Promise<ScrapedPartner[]> {
                 website: p.website ?? '',
                 vendor: 'Siemens',
                 source_url: 'https://new.siemens.com/global/en/products/automation/partner-programs/siemens-solution-partner.html',
-                ...COUNTRY_COORDS[p.country ?? 'Mexico'],
+                ...getCoords(p.country ?? 'Mexico', p.city ?? ''),
             }));
         }
     } catch {
@@ -92,7 +123,7 @@ async function scrapeRockwellPartners(): Promise<ScrapedPartner[]> {
                 website: p.website ?? '',
                 vendor: 'Rockwell Automation',
                 source_url: 'https://partnernetwork.rockwellautomation.com',
-                ...COUNTRY_COORDS[p.country ?? 'Mexico'],
+                ...getCoords(p.country ?? 'Mexico', p.city ?? ''),
             }));
         }
     } catch {
@@ -119,7 +150,7 @@ async function scrapeSchneiderPartners(): Promise<ScrapedPartner[]> {
                 website: p.website ?? '',
                 vendor: 'Schneider Electric',
                 source_url: 'https://exchange.se.com',
-                ...COUNTRY_COORDS[p.country ?? 'Mexico'],
+                ...getCoords(p.country ?? 'Mexico', p.city ?? ''),
             }));
         }
     } catch {
@@ -151,7 +182,7 @@ async function scrapeVMwarePartners(): Promise<ScrapedPartner[]> {
                 website: p.website ?? '',
                 vendor: 'VMware',
                 source_url: 'https://partnerconnect.vmware.com',
-                ...COUNTRY_COORDS[p.country ?? 'Mexico'],
+                ...getCoords(p.country ?? 'Mexico', p.city ?? ''),
             }));
         }
     } catch {
@@ -181,7 +212,7 @@ async function scrapeABBPartners(): Promise<ScrapedPartner[]> {
                     website: '',
                     vendor: 'ABB',
                     source_url: 'https://new.abb.com/channel-partners',
-                    ...COUNTRY_COORDS['Mexico'],
+                    ...getCoords('Mexico', city),
                 });
             }
         });
@@ -195,44 +226,44 @@ async function scrapeABBPartners(): Promise<ScrapedPartner[]> {
 // These are verifiable public companies active in LATAM automation
 const VERIFIED_LATAM_PARTNERS: ScrapedPartner[] = [
     // Mexico
-    { company_name: 'Grupo IFSA', country: 'Mexico', city: 'Monterrey', website: 'ifsa.com.mx', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'Informa Automatismos', country: 'Mexico', city: 'Mexico City', website: 'informa.mx', vendor: 'Siemens', source_url: 'https://new.siemens.com/mx', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'Sistemas Industriales del Norte (SIN)', country: 'Mexico', city: 'Monterrey', website: 'sinnl.mx', vendor: 'Siemens', source_url: 'https://new.siemens.com/mx', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'Solintec', country: 'Mexico', city: 'Guadalajara', website: 'solintec.com.mx', vendor: 'Schneider Electric', source_url: 'https://exchange.se.com', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'AMC Ingeniería', country: 'Mexico', city: 'Mexico City', website: 'amcingenieria.com.mx', vendor: 'ABB', source_url: 'https://new.abb.com/channel-partners', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'Ingeniería y Control Integral (ICI)', country: 'Mexico', city: 'Querétaro', website: 'icisa.com.mx', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'Axtel Enterprises', country: 'Mexico', city: 'Monterrey', website: 'axtel.com.mx', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'Logicalis Mexico', country: 'Mexico', city: 'Mexico City', website: 'la.logicalis.com', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'SOINTEC Industrial', country: 'Mexico', city: 'Monterrey', website: 'sointec.com.mx', vendor: 'Siemens', source_url: 'https://new.siemens.com/mx', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'ARIS Automation', country: 'Mexico', city: 'Mexico City', website: 'aris.com.mx', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...COUNTRY_COORDS['Mexico'] },
-    { company_name: 'BML Networking', country: 'Mexico', city: 'Mexico City', website: 'bml.com.mx', vendor: 'HPE', source_url: 'https://partner.hpe.com', ...COUNTRY_COORDS['Mexico'] },
+    { company_name: 'Grupo IFSA', country: 'Mexico', city: 'Monterrey', website: 'ifsa.com.mx', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...getCoords('Mexico', 'Monterrey') },
+    { company_name: 'Informa Automatismos', country: 'Mexico', city: 'Mexico City', website: 'informa.mx', vendor: 'Siemens', source_url: 'https://new.siemens.com/mx', ...getCoords('Mexico', 'Mexico City') },
+    { company_name: 'Sistemas Industriales del Norte (SIN)', country: 'Mexico', city: 'Monterrey', website: 'sinnl.mx', vendor: 'Siemens', source_url: 'https://new.siemens.com/mx', ...getCoords('Mexico', 'Monterrey') },
+    { company_name: 'Solintec', country: 'Mexico', city: 'Guadalajara', website: 'solintec.com.mx', vendor: 'Schneider Electric', source_url: 'https://exchange.se.com', ...getCoords('Mexico', 'Guadalajara') },
+    { company_name: 'AMC Ingeniería', country: 'Mexico', city: 'Mexico City', website: 'amcingenieria.com.mx', vendor: 'ABB', source_url: 'https://new.abb.com/channel-partners', ...getCoords('Mexico', 'Mexico City') },
+    { company_name: 'Ingeniería y Control Integral (ICI)', country: 'Mexico', city: 'Querétaro', website: 'icisa.com.mx', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...getCoords('Mexico', 'Querétaro') },
+    { company_name: 'Axtel Enterprises', country: 'Mexico', city: 'Monterrey', website: 'axtel.com.mx', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...getCoords('Mexico', 'Monterrey') },
+    { company_name: 'Logicalis Mexico', country: 'Mexico', city: 'Mexico City', website: 'la.logicalis.com', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...getCoords('Mexico', 'Mexico City') },
+    { company_name: 'SOINTEC Industrial', country: 'Mexico', city: 'Monterrey', website: 'sointec.com.mx', vendor: 'Siemens', source_url: 'https://new.siemens.com/mx', ...getCoords('Mexico', 'Monterrey') },
+    { company_name: 'ARIS Automation', country: 'Mexico', city: 'Mexico City', website: 'aris.com.mx', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...getCoords('Mexico', 'Mexico City') },
+    { company_name: 'BML Networking', country: 'Mexico', city: 'Mexico City', website: 'bml.com.mx', vendor: 'HPE', source_url: 'https://partner.hpe.com', ...getCoords('Mexico', 'Mexico City') },
     // Colombia
-    { company_name: 'IDS Ingeniería', country: 'Colombia', city: 'Medellín', website: 'ids.com.co', vendor: 'Siemens', source_url: 'https://new.siemens.com/co', ...COUNTRY_COORDS['Colombia'] },
-    { company_name: 'Teknoreset', country: 'Colombia', city: 'Bogotá', website: 'teknoreset.co', vendor: 'Schneider Electric', source_url: 'https://exchange.se.com', ...COUNTRY_COORDS['Colombia'] },
-    { company_name: 'Automata Industrial', country: 'Colombia', city: 'Bogotá', website: 'automata.com.co', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...COUNTRY_COORDS['Colombia'] },
-    { company_name: 'Grupo Assa Colombia', country: 'Colombia', city: 'Bogotá', website: 'grupoassa.com', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...COUNTRY_COORDS['Colombia'] },
-    { company_name: 'Ingram Micro Colombia', country: 'Colombia', city: 'Bogotá', website: 'ingrammicro.com', vendor: 'HPE', source_url: 'https://partner.hpe.com', ...COUNTRY_COORDS['Colombia'] },
+    { company_name: 'IDS Ingeniería', country: 'Colombia', city: 'Medellín', website: 'ids.com.co', vendor: 'Siemens', source_url: 'https://new.siemens.com/co', ...getCoords('Colombia', 'Medellín') },
+    { company_name: 'Teknoreset', country: 'Colombia', city: 'Bogotá', website: 'teknoreset.co', vendor: 'Schneider Electric', source_url: 'https://exchange.se.com', ...getCoords('Colombia', 'Bogotá') },
+    { company_name: 'Automata Industrial', country: 'Colombia', city: 'Bogotá', website: 'automata.com.co', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...getCoords('Colombia', 'Bogotá') },
+    { company_name: 'Grupo Assa Colombia', country: 'Colombia', city: 'Bogotá', website: 'grupoassa.com', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...getCoords('Colombia', 'Bogotá') },
+    { company_name: 'Ingram Micro Colombia', country: 'Colombia', city: 'Bogotá', website: 'ingrammicro.com', vendor: 'HPE', source_url: 'https://partner.hpe.com', ...getCoords('Colombia', 'Bogotá') },
     // Brazil
-    { company_name: 'Process Solutions Brazil', country: 'Brazil', city: 'Rio de Janeiro', website: 'processsolutions.com.br', vendor: 'Honeywell', source_url: 'https://hpsglobalpartner.honeywell.com', ...COUNTRY_COORDS['Brazil'] },
-    { company_name: 'Xytech Industrial', country: 'Brazil', city: 'Curitiba', website: 'xytech.ind.br', vendor: 'Siemens', source_url: 'https://new.siemens.com/br', ...COUNTRY_COORDS['Brazil'] },
-    { company_name: 'Ingrammicro Brazil', country: 'Brazil', city: 'São Paulo', website: 'ingrammicro.com', vendor: 'HPE', source_url: 'https://partner.hpe.com', ...COUNTRY_COORDS['Brazil'] },
+    { company_name: 'Process Solutions Brazil', country: 'Brazil', city: 'Rio de Janeiro', website: 'processsolutions.com.br', vendor: 'Honeywell', source_url: 'https://hpsglobalpartner.honeywell.com', ...getCoords('Brazil', 'Rio de Janeiro') },
+    { company_name: 'Xytech Industrial', country: 'Brazil', city: 'Curitiba', website: 'xytech.ind.br', vendor: 'Siemens', source_url: 'https://new.siemens.com/br', ...getCoords('Brazil', 'Curitiba') },
+    { company_name: 'Ingrammicro Brazil', country: 'Brazil', city: 'São Paulo', website: 'ingrammicro.com', vendor: 'HPE', source_url: 'https://partner.hpe.com', ...getCoords('Brazil', 'São Paulo') },
     // Chile
-    { company_name: 'Intelcon Industrial', country: 'Chile', city: 'Santiago', website: 'intelcon.cl', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...COUNTRY_COORDS['Chile'] },
-    { company_name: 'Pacific Edge Solutions', country: 'Chile', city: 'Antofagasta', website: 'pacificedge.cl', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...COUNTRY_COORDS['Chile'] },
-    { company_name: 'Nexxt Solutions Chile', country: 'Chile', city: 'Santiago', website: 'nexxt.com.co', vendor: 'Siemens', source_url: 'https://new.siemens.com/cl', ...COUNTRY_COORDS['Chile'] },
+    { company_name: 'Intelcon Industrial', country: 'Chile', city: 'Santiago', website: 'intelcon.cl', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...getCoords('Chile', 'Santiago') },
+    { company_name: 'Pacific Edge Solutions', country: 'Chile', city: 'Antofagasta', website: 'pacificedge.cl', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...getCoords('Chile', 'Antofagasta') },
+    { company_name: 'Nexxt Solutions Chile', country: 'Chile', city: 'Santiago', website: 'nexxt.com.co', vendor: 'Siemens', source_url: 'https://new.siemens.com/cl', ...getCoords('Chile', 'Santiago') },
     // Argentina
-    { company_name: 'DigitalPlant Argentina', country: 'Argentina', city: 'Córdoba', website: 'digitalplant.com.ar', vendor: 'Schneider Electric', source_url: 'https://exchange.se.com', ...COUNTRY_COORDS['Argentina'] },
-    { company_name: 'Tecnomatic Argentina', country: 'Argentina', city: 'Buenos Aires', website: 'tecnomatic.com.ar', vendor: 'ABB', source_url: 'https://new.abb.com/channel-partners', ...COUNTRY_COORDS['Argentina'] },
-    { company_name: 'Globant Infrastructure', country: 'Argentina', city: 'Buenos Aires', website: 'globant.com', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...COUNTRY_COORDS['Argentina'] },
+    { company_name: 'DigitalPlant Argentina', country: 'Argentina', city: 'Córdoba', website: 'digitalplant.com.ar', vendor: 'Schneider Electric', source_url: 'https://exchange.se.com', ...getCoords('Argentina', 'Córdoba') },
+    { company_name: 'Tecnomatic Argentina', country: 'Argentina', city: 'Buenos Aires', website: 'tecnomatic.com.ar', vendor: 'ABB', source_url: 'https://new.abb.com/channel-partners', ...getCoords('Argentina', 'Buenos Aires') },
+    { company_name: 'Globant Infrastructure', country: 'Argentina', city: 'Buenos Aires', website: 'globant.com', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...getCoords('Argentina', 'Buenos Aires') },
     // Peru
-    { company_name: 'Wara Technologies', country: 'Peru', city: 'Lima', website: 'waratec.pe', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...COUNTRY_COORDS['Peru'] },
-    { company_name: 'Infracloud Perú', country: 'Peru', city: 'Lima', website: 'infracloud.pe', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...COUNTRY_COORDS['Peru'] },
+    { company_name: 'Wara Technologies', country: 'Peru', city: 'Lima', website: 'waratec.pe', vendor: 'Rockwell Automation', source_url: 'https://partnernetwork.rockwellautomation.com', ...getCoords('Peru', 'Lima') },
+    { company_name: 'Infracloud Perú', country: 'Peru', city: 'Lima', website: 'infracloud.pe', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...getCoords('Peru', 'Lima') },
     // Ecuador
-    { company_name: 'Ingetech Ecuador', country: 'Ecuador', city: 'Quito', website: 'ingetech.ec', vendor: 'Siemens', source_url: 'https://new.siemens.com/ec', ...COUNTRY_COORDS['Ecuador'] },
+    { company_name: 'Ingetech Ecuador', country: 'Ecuador', city: 'Quito', website: 'ingetech.ec', vendor: 'Siemens', source_url: 'https://new.siemens.com/ec', ...getCoords('Ecuador', 'Quito') },
     // Bolivia
-    { company_name: 'Datalink Bolivia', country: 'Bolivia', city: 'Santa Cruz', website: 'datalink.bo', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...COUNTRY_COORDS['Bolivia'] },
+    { company_name: 'Datalink Bolivia', country: 'Bolivia', city: 'Santa Cruz', website: 'datalink.bo', vendor: 'VMware', source_url: 'https://partnerconnect.vmware.com', ...getCoords('Bolivia', 'Santa Cruz') },
     // Venezuela
-    { company_name: 'Systemia Venezuela', country: 'Venezuela', city: 'Caracas', website: 'systemia.com.ve', vendor: 'Siemens', source_url: 'https://new.siemens.com/ve', ...COUNTRY_COORDS['Venezuela'] },
+    { company_name: 'Systemia Venezuela', country: 'Venezuela', city: 'Caracas', website: 'systemia.com.ve', vendor: 'Siemens', source_url: 'https://new.siemens.com/ve', ...getCoords('Venezuela', 'Caracas') },
 ];
 
 // ── Classify vendor type (IT or OT) ──────────────────────────
