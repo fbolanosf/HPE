@@ -40,9 +40,9 @@ export default function TechnologyOverlap() {
                                 Vendor \ Technology
                             </th>
                             {data.technologies.map(t => (
-                                <th key={t} className="px-2 font-semibold align-bottom min-w-[60px]" style={{ height: '120px' }}>
-                                    <div className="relative h-full w-full">
-                                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 origin-left -rotate-45 whitespace-nowrap pl-4">
+                                <th key={t} className="px-2 font-semibold align-bottom min-w-[50px] max-w-[50px]" style={{ height: '160px' }}>
+                                    <div className="relative h-full w-full flex items-end justify-center">
+                                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 origin-bottom-left -rotate-45 whitespace-nowrap pl-2 pb-1 text-[11px] text-gray-600">
                                             {t}
                                         </div>
                                     </div>
