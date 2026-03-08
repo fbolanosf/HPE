@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import ForceGraph2D, { ForceGraphMethods } from 'react-force-graph-2d';
 import { ECOSYSTEM_RELATIONSHIPS } from '@/lib/ecosystem-data';
-import { Maximize2, ZoomIn, ZoomOut } from 'lucide-react';
+import { Maximize2, Minimize2, ZoomIn, ZoomOut } from 'lucide-react';
 
 const LOCAL_VENDOR_COLORS: Record<string, string> = {
     'Siemens': '#009999',
@@ -30,6 +30,7 @@ const TYPE_COLORS: Record<string, string> = {
 export default function RelationshipGraph() {
     const fgRef = useRef<ForceGraphMethods>(null);
     const [graphWidth, setGraphWidth] = useState(800);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Prepare Node/Link data
@@ -75,7 +76,12 @@ export default function RelationshipGraph() {
         const handleResize = () => {
             if (containerRef.current) setGraphWidth(containerRef.current.offsetWidth);
         };
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+
         window.addEventListener('resize', handleResize);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
 
         // Increase repulsion for better layout spacing at mount
         setTimeout(() => {
@@ -85,7 +91,10 @@ export default function RelationshipGraph() {
             }
         }, 100);
 
-        return () => window.removeEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        };
     }, []);
 
     const zoomIn = () => {
@@ -98,8 +107,12 @@ export default function RelationshipGraph() {
         fgRef.current?.zoom(currentZoom / 1.5, 400);
     };
 
-    const fitGraph = () => {
-        fgRef.current?.zoomToFit(400, 20);
+    const toggleFullscreen = async () => {
+        if (!document.fullscreenElement) {
+            await containerRef.current?.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
     };
 
     return (
@@ -112,7 +125,9 @@ export default function RelationshipGraph() {
                 <div className="flex gap-2">
                     <button onClick={zoomIn} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"><ZoomIn className="w-4 h-4" /></button>
                     <button onClick={zoomOut} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"><ZoomOut className="w-4 h-4" /></button>
-                    <button onClick={fitGraph} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"><Maximize2 className="w-4 h-4" /></button>
+                    <button onClick={toggleFullscreen} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600">
+                        {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                    </button>
                 </div>
             </div>
 
@@ -125,11 +140,18 @@ export default function RelationshipGraph() {
                 ))}
             </div>
 
-            <div ref={containerRef} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden relative min-h-[500px]">
+            <div ref={containerRef} className={`flex-1 bg-slate-50 relative ${isFullscreen ? 'w-screen h-screen' : 'border border-slate-200 rounded-xl overflow-hidden min-h-[500px]'}`}>
+                {isFullscreen && (
+                    <div className="absolute top-4 right-4 z-50 flex gap-2 bg-white/80 backdrop-blur p-1 rounded-lg shadow-sm border border-gray-200">
+                        <button onClick={zoomIn} className="p-1.5 hover:bg-gray-100 rounded text-gray-700"><ZoomIn className="w-5 h-5" /></button>
+                        <button onClick={zoomOut} className="p-1.5 hover:bg-gray-100 rounded text-gray-700"><ZoomOut className="w-5 h-5" /></button>
+                        <button onClick={toggleFullscreen} className="p-1.5 hover:bg-gray-100 rounded text-gray-700"><Minimize2 className="w-5 h-5" /></button>
+                    </div>
+                )}
                 <ForceGraph2D
                     ref={fgRef as any}
                     width={graphWidth}
-                    height={500}
+                    height={isFullscreen ? window.innerHeight : 500}
                     graphData={graphData}
                     nodeLabel={(node: any) => `${node.group}: ${node.name}`}
                     nodeColor={(node: any) => {
