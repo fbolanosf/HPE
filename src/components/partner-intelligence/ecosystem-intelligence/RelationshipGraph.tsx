@@ -12,6 +12,7 @@ interface RelationshipGraphProps {
     communities?: CommunityMap;
     bridges?: BridgeNode[];
     shortestPath?: string[]; // Array of node IDs in path
+    highlightNodes?: Set<string>; // Nodes to highlight, others fade out
     onNodeClick?: (nodeId: string) => void;
     language?: 'es' | 'en';
 }
@@ -46,6 +47,7 @@ export default function RelationshipGraph({
     communities,
     bridges,
     shortestPath,
+    highlightNodes,
     onNodeClick,
     language = 'es'
 }: RelationshipGraphProps) {
@@ -201,6 +203,14 @@ export default function RelationshipGraph({
                     }}
                     nodeRelSize={4}
                     linkColor={(link: any) => {
+                        // Highlighting mode (Buscador Relacional)
+                        if (highlightNodes && highlightNodes.size > 0) {
+                            const srcId = typeof link.source === 'object' ? link.source.id : link.source;
+                            const tgtId = typeof link.target === 'object' ? link.target.id : link.target;
+                            const isHighlightedLink = highlightNodes.has(srcId) && highlightNodes.has(tgtId);
+                            return isHighlightedLink ? '#94a3b8' : 'rgba(203, 213, 225, 0.1)';
+                        }
+
                         if (analyticsMode === 'path' && shortestPath) {
                             const isPath = shortestPath.includes(link.source.id) && shortestPath.includes(link.target.id);
                             return isPath ? '#01A982' : 'rgba(203, 213, 225, 0.2)';
@@ -208,11 +218,16 @@ export default function RelationshipGraph({
                         if (analyticsMode !== 'default') return 'rgba(203, 213, 225, 0.3)';
                         return '#cbd5e1';
                     }}
-                    linkDirectionalArrowLength={analyticsMode === 'default' ? 2 : 0}
+                    linkDirectionalArrowLength={analyticsMode === 'default' && (!highlightNodes || highlightNodes.size === 0) ? 2 : 0}
                     linkDirectionalArrowRelPos={1}
                     linkWidth={(link: any) => {
                         if (analyticsMode === 'path' && shortestPath) {
                             return shortestPath.includes(link.source.id) && shortestPath.includes(link.target.id) ? 3 : 0.5;
+                        }
+                        if (highlightNodes && highlightNodes.size > 0) {
+                            const srcId = typeof link.source === 'object' ? link.source.id : link.source;
+                            const tgtId = typeof link.target === 'object' ? link.target.id : link.target;
+                            return highlightNodes.has(srcId) && highlightNodes.has(tgtId) ? 1.5 : 0.2;
                         }
                         return 0.5;
                     }}
@@ -246,7 +261,18 @@ export default function RelationshipGraph({
                         let hasBorder = false;
                         let borderColor = '#000';
 
-                        if (analyticsMode === 'clusters' && communities) {
+                        // Priority 1: Highlighting specific nodes (Buscador Relacional)
+                        if (highlightNodes && highlightNodes.size > 0) {
+                            if (!highlightNodes.has(node.id)) {
+                                isFaded = true;
+                                fillColor = 'rgba(226, 232, 240, 0.2)'; // Very light gray for noise
+                            } else {
+                                hasBorder = true;
+                                borderColor = '#64748b';
+                            }
+                        }
+                        // Priority 2: Analytics Modes
+                        else if (analyticsMode === 'clusters' && communities) {
                             // Hue based on Community ID
                             const commId = communities[node.id] || 0;
                             fillColor = `hsl(${(commId * 137.5) % 360}, 70%, 50%)`;
@@ -282,7 +308,7 @@ export default function RelationshipGraph({
                         }
 
                         // Draw text
-                        if (analyticsMode === 'default' || !isFaded || (analyticsMode === 'influence' && sizeFactor > 15)) {
+                        if ((analyticsMode === 'default' && !isFaded) || (analyticsMode === 'influence' && sizeFactor > 15) || (highlightNodes && highlightNodes.has(node.id))) {
                             ctx.font = `${node.group === 'Vendor' ? 'bold ' : ''}${fontSize}px Inter, Sans-Serif`;
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';

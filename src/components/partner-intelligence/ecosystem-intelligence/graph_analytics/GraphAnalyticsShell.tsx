@@ -31,6 +31,15 @@ export default function GraphAnalyticsShell() {
         'VxRail', 'Yokogawa'
     ];
 
+    // --- Query Highlight Nodes (Buscador Relacional) ---
+    const highlightNodes = useMemo(() => {
+        if (mode !== 'queries' || queryFilters.vendor === 'ALL') return undefined;
+        const nodes = new Set<string>();
+        nodes.add(`Vendor:${queryFilters.vendor}`);
+        queryResults.forEach(p => nodes.add(`Partner:${p.id}`));
+        return nodes;
+    }, [mode, queryFilters.vendor, queryResults]);
+
     // 2. Pre-Calculate Graph Mathematics on Mount (Memoized)
     const { graph, centrality, communities, bridges } = useMemo(() => {
         const g = buildGraph(ECOSYSTEM_RELATIONSHIPS);
@@ -105,6 +114,7 @@ export default function GraphAnalyticsShell() {
                         communities={communities}
                         bridges={bridges}
                         shortestPath={activePath}
+                        highlightNodes={highlightNodes}
                         onNodeClick={handleNodeClick}
                         language={language}
                     />
