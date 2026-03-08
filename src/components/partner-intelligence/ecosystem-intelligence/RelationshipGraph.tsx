@@ -13,6 +13,9 @@ const LOCAL_VENDOR_COLORS: Record<string, string> = {
     'HPE': '#01A982',
     'Dell': '#007db8',
     'Cisco': '#0096d6',
+    'Microsoft': '#00a4ef',
+    'AWS': '#ff9900',
+    'Google Cloud': '#4285F4',
     'default': '#6366f1',
 };
 
@@ -42,10 +45,10 @@ export default function RelationshipGraph() {
             const tgtId = `${rel.target_type}:${rel.target_id}`;
 
             if (!nodesMap.has(srcId)) {
-                nodesMap.set(srcId, { id: srcId, name: rel.source_id, group: rel.source_type, val: rel.source_type === 'Vendor' ? 15 : rel.source_type === 'Industry' ? 12 : 5 });
+                nodesMap.set(srcId, { id: srcId, name: rel.source_id, group: rel.source_type, val: rel.source_type === 'Vendor' ? 20 : rel.source_type === 'Industry' ? 12 : 5 });
             }
             if (!nodesMap.has(tgtId)) {
-                nodesMap.set(tgtId, { id: tgtId, name: rel.target_id, group: rel.target_type, val: rel.target_type === 'Vendor' ? 15 : rel.target_type === 'Industry' ? 12 : 5 });
+                nodesMap.set(tgtId, { id: tgtId, name: rel.target_id, group: rel.target_type, val: rel.target_type === 'Vendor' ? 20 : rel.target_type === 'Industry' ? 12 : 5 });
             }
 
             links.push({
@@ -73,6 +76,15 @@ export default function RelationshipGraph() {
             if (containerRef.current) setGraphWidth(containerRef.current.offsetWidth);
         };
         window.addEventListener('resize', handleResize);
+
+        // Increase repulsion for better layout spacing at mount
+        setTimeout(() => {
+            if (fgRef.current) {
+                fgRef.current.d3Force('charge')?.strength(-120);
+                fgRef.current.d3Force('link')?.distance(60);
+            }
+        }, 100);
+
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
@@ -126,9 +138,40 @@ export default function RelationshipGraph() {
                     }}
                     nodeRelSize={4}
                     linkColor={() => '#cbd5e1'}
-                    linkDirectionalArrowLength={3.5}
+                    linkDirectionalArrowLength={2}
                     linkDirectionalArrowRelPos={1}
-                    linkWidth={1}
+                    linkWidth={0.5}
+                    // Implement freezing physics on drag end
+                    onNodeDragEnd={(node: any) => {
+                        node.fx = node.x;
+                        node.fy = node.y;
+                    }}
+                    // Custom Canvas Drawing for persistent text labels
+                    nodeCanvasObject={(node: any, ctx, globalScale) => {
+                        const label = node.name;
+                        const fontSize = node.group === 'Vendor' ? 14 / globalScale : 10 / globalScale;
+                        const radius = Math.sqrt(node.val) * 4; // matches nodeRelSize internally
+
+                        // Draw circle
+                        ctx.beginPath();
+                        ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
+                        ctx.fillStyle = node.group === 'Vendor' ? (LOCAL_VENDOR_COLORS[node.name] || LOCAL_VENDOR_COLORS['default']) : (TYPE_COLORS[node.group] || '#999');
+                        ctx.fill();
+
+                        // Draw text
+                        ctx.font = `${node.group === 'Vendor' ? 'bold ' : ''}${fontSize}px Inter, Sans-Serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+
+                        // Outline for readability
+                        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+                        ctx.lineWidth = fontSize / 4;
+                        ctx.strokeText(label, node.x, node.y + radius + (4 / globalScale));
+
+                        ctx.fillStyle = '#334155'; // Dark text
+                        ctx.fillText(label, node.x, node.y + radius + (4 / globalScale));
+                    }}
+                    nodeCanvasObjectMode={() => 'replace'}
                 />
             </div>
 
