@@ -9,6 +9,9 @@ import { NextResponse } from 'next/server';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export interface ScrapedPartner {
     company_name: string;
     country: string;
