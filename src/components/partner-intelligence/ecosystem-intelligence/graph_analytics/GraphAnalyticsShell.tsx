@@ -40,12 +40,34 @@ export default function GraphAnalyticsShell() {
 
     // --- Query Highlight Nodes (Buscador Relacional) ---
     const highlightNodes = useMemo(() => {
-        if (mode !== 'queries' || queryFilters.vendor === 'ALL') return undefined;
+        if (mode !== 'queries') return undefined;
+        if (queryFilters.vendor === 'ALL' && queryFilters.industry === 'ALL' && queryFilters.technology === 'ALL') return undefined;
+
         const nodes = new Set<string>();
-        nodes.add(`Vendor:${queryFilters.vendor}`);
+
+        if (queryFilters.vendor !== 'ALL') {
+            nodes.add(`Vendor:${queryFilters.vendor}`);
+        }
+
+        if (queryFilters.technology !== 'ALL') {
+            nodes.add(`Technology:${queryFilters.technology}`);
+        }
+
+        if (queryFilters.industry !== 'ALL') {
+            const indMap: Record<string, string> = {
+                manufacturing: 'Manufacturing', energy: 'Energy', oil_and_gas: 'Oil & Gas', mining: 'Mining',
+                telecommunications: 'Telecom', finance: 'Finance', healthcare: 'Healthcare', retail: 'Retail',
+                public_sector: 'Public Sector', utilities: 'Utilities', food_and_beverage: 'Food & Beverage',
+                pharmaceutical: 'Pharmaceutical', water_and_wastewater: 'Water & Waste', transportation: 'Transportation',
+                smart_cities: 'Smart Cities'
+            };
+            const label = indMap[queryFilters.industry] || queryFilters.industry;
+            nodes.add(`Industry:${label}`);
+        }
+
         queryResults.forEach(p => nodes.add(`Partner:${p.company_name}`));
         return nodes;
-    }, [mode, queryFilters.vendor, queryResults]);
+    }, [mode, queryFilters, queryResults]);
 
     // 2. Pre-Calculate Graph Mathematics on Mount (Memoized)
     const { graph, centrality, communities, bridges } = useMemo(() => {
@@ -383,21 +405,21 @@ export default function GraphAnalyticsShell() {
                         )}
                     </div>
                 </div>
+            </div> {/* END OF ROW WRAPPER */}
 
-                {/* BOTTOM: Dynamic Table for Ecosystem Queries */}
-                {mode === 'queries' && queryResults.length > 0 && (
-                    <div className="w-full animate-fade-in">
-                        <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <Table className="w-4 h-4 text-[#01A982]" />
-                            {language === 'es' ? 'Directorio de Partners Compatibles' : 'Compatible Partners Directory'}
-                            <span className="bg-[#01A982] text-white text-[10px] px-2 py-0.5 rounded-full">{queryResults.length}</span>
-                        </h3>
-                        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                            <PartnerDatabase preFilteredData={queryResults} hideFilters={true} />
-                        </div>
+            {/* BOTTOM: Dynamic Table for Ecosystem Queries */}
+            {mode === 'queries' && queryResults.length > 0 && (
+                <div className="w-full animate-fade-in">
+                    <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <Table className="w-4 h-4 text-[#01A982]" />
+                        {language === 'es' ? 'Directorio de Partners Compatibles' : 'Compatible Partners Directory'}
+                        <span className="bg-[#01A982] text-white text-[10px] px-2 py-0.5 rounded-full">{queryResults.length}</span>
+                    </h3>
+                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                        <PartnerDatabase preFilteredData={queryResults} hideFilters={true} />
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }
