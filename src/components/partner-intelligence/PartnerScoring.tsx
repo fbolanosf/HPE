@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PARTNER_DATABASE, scorePartner, DOMAIN_LABEL, PARTNER_TYPE_LABEL } from '@/lib/partner-intelligence-data';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Info, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 
 const TIER_CONFIG = {
     High: {
@@ -60,6 +60,8 @@ export default function PartnerScoring() {
             .sort((a, b) => b.score - a.score);
     }, []);
 
+    const [showWeights, setShowWeights] = useState(false);
+
     const byTier = {
         High: ranked.filter((p) => p.tier === 'High'),
         Medium: ranked.filter((p) => p.tier === 'Medium'),
@@ -68,6 +70,79 @@ export default function PartnerScoring() {
 
     return (
         <div className="space-y-8">
+
+            {/* HPE Scoring Engine Explanation Panel */}
+            <div className="bg-white border text-gray-800 border-gray-200 rounded-xl p-6 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                    <div>
+                        <h2 className="text-lg font-bold flex items-center gap-2 mb-2 text-gray-900">
+                            <Settings className="w-5 h-5 text-[#01A982]" />
+                            Motor de Puntuación (Score HPE)
+                        </h2>
+                        <p className="text-sm text-gray-500 max-w-3xl leading-relaxed">
+                            El <strong>Score HPE</strong> es un valor dinámico calculado en tiempo real (Base Code) que determina la tracción y afinidad de un Integrador IT/OT hacia nuestro portafolio. Otorga puntos positivos por alianzas clave de nuestro ecosistema <b>(VMware, Nutanix)</b> o especializaciones tecnológicas de alto valor añadido <b>(HCI, Datacenter, etc.)</b>, y resta puntos a quienes ya sean socios fuertes de la marca para priorizar el White-Space.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setShowWeights(!showWeights)}
+                        className="flex-shrink-0 flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors text-gray-700"
+                    >
+                        {showWeights ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        {showWeights ? 'Ocultar Ponderaciones' : 'Ver Ponderaciones Actuales'}
+                    </button>
+                </div>
+
+                {showWeights && (
+                    <div className="mt-6 pt-6 border-t border-gray-100 animate-in fade-in slide-in-from-top-4 duration-300">
+                        <div className="flex items-center gap-2 mb-4 text-[#01A982]">
+                            <Info className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase tracking-wider">Tabla Analítica de Criterios (Modificable en Backend)</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                            {/* IT Weights */}
+                            <div className="space-y-3">
+                                <h4 className="text-sm font-bold text-gray-700 border-b pb-2">IT & Cloud</h4>
+                                <ul className="text-xs text-gray-600 space-y-2">
+                                    <li className="flex justify-between"><span>VMware / VxRail Partner</span> <span className="font-mono font-bold text-green-600">+5 pts</span></li>
+                                    <li className="flex justify-between"><span>Dell Infrastructure / Virt.</span> <span className="font-mono font-bold text-green-600">+3 pts</span></li>
+                                    <li className="flex justify-between"><span>HCI / Hybrid Cloud / Datacenter</span> <span className="font-mono font-bold text-green-600">+2 pts</span></li>
+                                    <li className="flex justify-between"><span>Nutanix / Veeam / PureStorage / Juniper</span> <span className="font-mono font-bold text-green-600">+2 pts</span></li>
+                                    <li className="flex justify-between"><span>Cloud Migration / Backup & DR</span> <span className="font-mono font-bold text-green-600">+1 pt</span></li>
+                                </ul>
+                            </div>
+
+                            {/* OT Weights */}
+                            <div className="space-y-3">
+                                <h4 className="text-sm font-bold text-gray-700 border-b pb-2">OT & Industrial Edge</h4>
+                                <ul className="text-xs text-gray-600 space-y-2">
+                                    <li className="flex justify-between"><span>Industrial IoT / Networking</span> <span className="font-mono font-bold text-green-600">+4 pts</span></li>
+                                    <li className="flex justify-between"><span>SCADA / MES / Edge</span> <span className="font-mono font-bold text-green-600">+3 pts</span></li>
+                                    <li className="flex justify-between"><span>Digital Manufacturing / Industrial Cyber</span> <span className="font-mono font-bold text-green-600">+2 pts</span></li>
+                                    <li className="flex justify-between"><span>Historian / PLC Programming</span> <span className="font-mono font-bold text-green-600">+1 pt</span></li>
+                                </ul>
+                            </div>
+
+                            {/* Generales */}
+                            <div className="space-y-3">
+                                <h4 className="text-sm font-bold text-gray-700 border-b pb-2">Reglas de Negocio</h4>
+                                <ul className="text-xs text-gray-600 space-y-2">
+                                    <li className="flex justify-between"><span>Vertical: Mfg, Energy, Oil/Gas, Mining</span> <span className="font-mono font-bold text-green-600">+1 pt</span></li>
+                                    <li className="flex justify-between items-center bg-red-50 p-2 rounded -mx-2 mt-2">
+                                        <span className="font-semibold text-red-700">Penalización: Partner ya es HPE</span>
+                                        <span className="font-mono font-bold text-red-600">-5 pts</span>
+                                    </li>
+                                </ul>
+                                <p className="text-[10px] text-gray-400 mt-4 leading-relaxed">
+                                    Nota Técnica: La ingeniería de estos valores actualmente yace como constantes de código (Hardcoded en `scorePartner`). En un Roadmap futuro de madurez, estas ponderaciones pueden elevarse a Variables de Entorno (Global Admin Settings) permitiendo edición de los multiplicadores sin requerir deployment, con el propósito de adecuarse a nuevas estrategias de ventas de HPE por País o Cuartil en turnos.
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {/* Summary pills */}
             <div className="grid grid-cols-3 gap-4">
                 {(['High', 'Medium', 'Low'] as const).map((tier) => {
