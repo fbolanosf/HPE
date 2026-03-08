@@ -109,7 +109,7 @@ export default function PartnerOnboarding() {
     };
 
     // Helper subsets for toggles
-    const vendorsIT = ['vmware_partner', 'vxrail_partner', 'hpe_partner', 'dell_partner', 'nutanix_partner', 'cisco_partner', 'microsoft_partner', 'aws_partner', 'google_cloud_partner'] as const;
+    const vendorsIT = ['vmware_partner', 'vxrail_partner', 'hpe_partner', 'dell_partner', 'nutanix_partner', 'cisco_partner', 'microsoft_partner', 'aws_partner', 'google_cloud_partner', 'veeam_partner', 'purestorage_partner', 'juniper_partner'] as const;
     const vendorsOT = ['siemens_partner', 'rockwell_partner', 'schneider_partner', 'abb_partner', 'honeywell_partner', 'emerson_partner', 'aveva_partner'] as const;
     const virtSolutions = ['virtualization', 'hci', 'datacenter_infrastructure', 'hybrid_cloud', 'cloud_migration', 'backup_and_disaster_recovery', 'container_platforms'] as const;
     const industries = ['telecommunications', 'finance', 'healthcare', 'retail', 'public_sector', 'manufacturing', 'energy', 'oil_and_gas', 'mining'] as const;

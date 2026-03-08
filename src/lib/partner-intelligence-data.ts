@@ -40,6 +40,9 @@ export interface Partner {
     microsoft_partner: boolean;
     aws_partner: boolean;
     google_cloud_partner: boolean;
+    veeam_partner: boolean;
+    purestorage_partner: boolean;
+    juniper_partner: boolean;
 
     // ── OT Vendors ────────────────────────────────────────────
     siemens_partner: boolean;
@@ -128,6 +131,9 @@ export function scorePartner(p: Partner): ScoreResult {
     if (p.cloud_migration) add('Cloud Migration', 1);
     if (p.backup_and_disaster_recovery) add('Backup & DR', 1);
     if (p.nutanix_partner) add('Nutanix Partner', 2);
+    if (p.veeam_partner) add('Veeam Partner', 2);
+    if (p.purestorage_partner) add('PureStorage Partner', 2);
+    if (p.juniper_partner) add('Juniper Partner', 2);
 
     // OT signals
     if (p.industrial_iot) add('Industrial IoT', 4);
@@ -216,6 +222,7 @@ export function searchPartners(
                 vmware: 'vmware_partner', vxrail: 'vxrail_partner', dell: 'dell_partner',
                 hpe: 'hpe_partner', nutanix: 'nutanix_partner', cisco: 'cisco_partner',
                 microsoft: 'microsoft_partner', aws: 'aws_partner', google: 'google_cloud_partner',
+                veeam: 'veeam_partner', purestorage: 'purestorage_partner', juniper: 'juniper_partner',
                 siemens: 'siemens_partner', rockwell: 'rockwell_partner',
                 schneider: 'schneider_partner', abb: 'abb_partner',
                 honeywell: 'honeywell_partner', emerson: 'emerson_partner',
@@ -249,6 +256,7 @@ export const BASE: Omit<Partner,
     vmware_partner: false, vxrail_partner: false, dell_partner: false,
     hpe_partner: false, nutanix_partner: false, cisco_partner: false,
     microsoft_partner: false, aws_partner: false, google_cloud_partner: false,
+    veeam_partner: false, purestorage_partner: false, juniper_partner: false,
     siemens_partner: false, rockwell_partner: false, schneider_partner: false,
     abb_partner: false, honeywell_partner: false, emerson_partner: false,
     aveva_partner: false, yokogawa_partner: false,

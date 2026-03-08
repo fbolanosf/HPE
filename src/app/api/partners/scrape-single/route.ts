@@ -53,6 +53,9 @@ export async function POST(req: Request) {
         const microsoft_partner = containsKeyword(fullText, ['microsoft', 'azure', 'hyper-v']);
         const aws_partner = containsKeyword(fullText, ['aws', 'amazon web services']);
         const google_cloud_partner = containsKeyword(fullText, ['google cloud', 'gcp']);
+        const veeam_partner = containsKeyword(fullText, ['veeam']);
+        const purestorage_partner = containsKeyword(fullText, ['pure storage', 'purestorage']);
+        const juniper_partner = containsKeyword(fullText, ['juniper', 'juniper networks']);
 
         const siemens_partner = containsKeyword(fullText, ['siemens', 'tia portal', 'simatic']);
         const rockwell_partner = containsKeyword(fullText, ['rockwell', 'allen-bradley', 'factorytalk']);
@@ -88,7 +91,7 @@ export async function POST(req: Request) {
 
         // Determine Domain (IT, OT, HYBRID)
         let domain: "IT" | "OT" | "IT_OT_HYBRID" = "IT";
-        const hasIT = vmware_partner || hpe_partner || dell_partner || nutanix_partner || cisco_partner || microsoft_partner || aws_partner || google_cloud_partner;
+        const hasIT = vmware_partner || hpe_partner || dell_partner || nutanix_partner || cisco_partner || microsoft_partner || aws_partner || google_cloud_partner || veeam_partner || purestorage_partner || juniper_partner;
         const hasOT = siemens_partner || rockwell_partner || schneider_partner || abb_partner || honeywell_partner || emerson_partner || aveva_partner;
 
         if (hasIT && hasOT) domain = "IT_OT_HYBRID";
@@ -108,6 +111,7 @@ export async function POST(req: Request) {
             // IT Vendors
             vmware_partner, vxrail_partner, hpe_partner, dell_partner,
             nutanix_partner, cisco_partner, microsoft_partner, aws_partner, google_cloud_partner,
+            veeam_partner, purestorage_partner, juniper_partner,
             // OT Vendors
             siemens_partner, rockwell_partner, schneider_partner, abb_partner,
             honeywell_partner, emerson_partner, aveva_partner, yokogawa_partner: false,
