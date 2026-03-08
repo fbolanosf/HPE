@@ -1,7 +1,19 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import ForceGraph2D, { ForceGraphMethods } from 'react-force-graph-2d';
 import { ECOSYSTEM_RELATIONSHIPS } from '@/lib/ecosystem-data';
+import { CentralityScores, CommunityMap, BridgeNode } from '@/lib/graph-analytics';
 import { Maximize2, Minimize2, ZoomIn, ZoomOut } from 'lucide-react';
+
+export type AnalyticsMode = 'default' | 'influence' | 'clusters' | 'bridges' | 'path';
+
+interface RelationshipGraphProps {
+    analyticsMode?: AnalyticsMode;
+    centralityScores?: CentralityScores;
+    communities?: CommunityMap;
+    bridges?: BridgeNode[];
+    shortestPath?: string[]; // Array of node IDs in path
+    onNodeClick?: (nodeId: string) => void;
+}
 
 const LOCAL_VENDOR_COLORS: Record<string, string> = {
     'Siemens': '#009999',
@@ -27,7 +39,14 @@ const TYPE_COLORS: Record<string, string> = {
     'Region': '#10b981',
 };
 
-export default function RelationshipGraph() {
+export default function RelationshipGraph({
+    analyticsMode = 'default',
+    centralityScores,
+    communities,
+    bridges,
+    shortestPath,
+    onNodeClick
+}: RelationshipGraphProps) {
     const fgRef = useRef<ForceGraphMethods>(null);
     const [graphWidth, setGraphWidth] = useState(800);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -42,14 +61,15 @@ export default function RelationshipGraph() {
         ECOSYSTEM_RELATIONSHIPS.forEach(rel => {
             if (!allowedTypes.includes(rel.source_type) || !allowedTypes.includes(rel.target_type)) return;
 
+            // Enforce ID standard matching graph-analytics Engine
             const srcId = `${rel.source_type}:${rel.source_id}`;
             const tgtId = `${rel.target_type}:${rel.target_id}`;
 
             if (!nodesMap.has(srcId)) {
-                nodesMap.set(srcId, { id: srcId, name: rel.source_id, group: rel.source_type, val: rel.source_type === 'Vendor' ? 20 : rel.source_type === 'Industry' ? 12 : 5 });
+                nodesMap.set(srcId, { id: srcId, name: rel.source_id, group: rel.source_type, baseVal: rel.source_type === 'Vendor' ? 20 : rel.source_type === 'Industry' ? 12 : 5 });
             }
             if (!nodesMap.has(tgtId)) {
-                nodesMap.set(tgtId, { id: tgtId, name: rel.target_id, group: rel.target_type, val: rel.target_type === 'Vendor' ? 20 : rel.target_type === 'Industry' ? 12 : 5 });
+                nodesMap.set(tgtId, { id: tgtId, name: rel.target_id, group: rel.target_type, baseVal: rel.target_type === 'Vendor' ? 20 : rel.target_type === 'Industry' ? 12 : 5 });
             }
 
             links.push({
@@ -59,10 +79,10 @@ export default function RelationshipGraph() {
             });
         });
 
-        // Compute degrees for sizing
+        // Compute base degrees for default sizing
         links.forEach(l => {
-            nodesMap.get(l.source).val += 0.2;
-            nodesMap.get(l.target).val += 0.2;
+            nodesMap.get(l.source).baseVal += 0.2;
+            nodesMap.get(l.target).baseVal += 0.2;
         });
 
         return { nodes: Array.from(nodesMap.values()), links };
@@ -132,12 +152,22 @@ export default function RelationshipGraph() {
             </div>
 
             <div className="flex gap-4">
-                {Object.entries(TYPE_COLORS).filter(([type]) => type !== 'Region').map(([type, color]) => (
-                    <div key={type} className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-                        <span className="text-xs text-gray-600 font-medium">{type} Nodos</span>
-                    </div>
-                ))}
+                {analyticsMode === 'clusters' ? (
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" /><span className="text-xs text-gray-600 font-medium">Auto-detected Community Clusters</span></div>
+                ) : analyticsMode === 'bridges' ? (
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-yellow-400 border border-yellow-600" /><span className="text-xs text-gray-600 font-medium">Bridge Nodes (Connecting 2+ Ecosystems)</span></div>
+                ) : analyticsMode === 'influence' ? (
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-slate-400" /><span className="text-xs text-gray-600 font-medium">Size = Degree Centrality</span></div>
+                ) : analyticsMode === 'path' ? (
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-[#01A982]" /><span className="text-xs text-gray-600 font-medium">Shortest Path</span></div>
+                ) : (
+                    Object.entries(TYPE_COLORS).filter(([type]) => type !== 'Region').map(([type, color]) => (
+                        <div key={type} className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
+                            <span className="text-xs text-gray-600 font-medium">{type} Nodos</span>
+                        </div>
+                    ))
+                )}
             </div>
 
             <div ref={containerRef} className={`flex-1 bg-slate-50 relative ${isFullscreen ? 'w-screen h-screen' : 'border border-slate-200 rounded-xl overflow-hidden min-h-[500px]'}`}>
@@ -159,39 +189,101 @@ export default function RelationshipGraph() {
                         return TYPE_COLORS[node.group] || '#999';
                     }}
                     nodeRelSize={4}
-                    linkColor={() => '#cbd5e1'}
-                    linkDirectionalArrowLength={2}
+                    linkColor={(link: any) => {
+                        if (analyticsMode === 'path' && shortestPath) {
+                            const isPath = shortestPath.includes(link.source.id) && shortestPath.includes(link.target.id);
+                            return isPath ? '#01A982' : 'rgba(203, 213, 225, 0.2)';
+                        }
+                        if (analyticsMode !== 'default') return 'rgba(203, 213, 225, 0.3)';
+                        return '#cbd5e1';
+                    }}
+                    linkDirectionalArrowLength={analyticsMode === 'default' ? 2 : 0}
                     linkDirectionalArrowRelPos={1}
-                    linkWidth={0.5}
+                    linkWidth={(link: any) => {
+                        if (analyticsMode === 'path' && shortestPath) {
+                            return shortestPath.includes(link.source.id) && shortestPath.includes(link.target.id) ? 3 : 0.5;
+                        }
+                        return 0.5;
+                    }}
+                    // Enable clicks
+                    onNodeClick={(node: any) => {
+                        if (onNodeClick) onNodeClick(node.id);
+                    }}
                     // Implement freezing physics on drag end
                     onNodeDragEnd={(node: any) => {
                         node.fx = node.x;
                         node.fy = node.y;
                     }}
-                    // Custom Canvas Drawing for persistent text labels
+                    // Custom Canvas Drawing for persistent text labels and Overlays
                     nodeCanvasObject={(node: any, ctx, globalScale) => {
                         const label = node.name;
+
+                        // 1. Determine Node Size dynamically based on Analytics Mode
+                        let sizeFactor = node.baseVal;
+                        if (analyticsMode === 'influence' && centralityScores) {
+                            // Expand highly central nodes exponentially
+                            const score = centralityScores[node.id] || 0.1;
+                            sizeFactor = 5 + (score * 50);
+                        }
+
+                        const radius = Math.sqrt(sizeFactor) * 4;
                         const fontSize = node.group === 'Vendor' ? 14 / globalScale : 10 / globalScale;
-                        const radius = Math.sqrt(node.val) * 4; // matches nodeRelSize internally
+
+                        // 2. Determine Node Color dynamically
+                        let fillColor = node.group === 'Vendor' ? (LOCAL_VENDOR_COLORS[node.name] || LOCAL_VENDOR_COLORS['default']) : (TYPE_COLORS[node.group] || '#999');
+                        let isFaded = false;
+                        let hasBorder = false;
+                        let borderColor = '#000';
+
+                        if (analyticsMode === 'clusters' && communities) {
+                            // Hue based on Community ID
+                            const commId = communities[node.id] || 0;
+                            fillColor = `hsl(${(commId * 137.5) % 360}, 70%, 50%)`;
+                        } else if (analyticsMode === 'bridges' && bridges) {
+                            const isBridge = bridges.some(b => b.id === node.id);
+                            if (isBridge) {
+                                fillColor = '#facc15'; // yellow-400
+                                hasBorder = true;
+                                borderColor = '#ca8a04'; // yellow-600
+                            } else {
+                                isFaded = true;
+                            }
+                        } else if (analyticsMode === 'path' && shortestPath) {
+                            if (shortestPath.includes(node.id)) {
+                                fillColor = '#01A982'; // HPE green for path nodes
+                                hasBorder = true;
+                                borderColor = '#005a46';
+                            } else {
+                                isFaded = true;
+                            }
+                        }
 
                         // Draw circle
                         ctx.beginPath();
                         ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
-                        ctx.fillStyle = node.group === 'Vendor' ? (LOCAL_VENDOR_COLORS[node.name] || LOCAL_VENDOR_COLORS['default']) : (TYPE_COLORS[node.group] || '#999');
+                        ctx.fillStyle = isFaded ? 'rgba(200, 200, 200, 0.3)' : fillColor;
                         ctx.fill();
 
+                        if (hasBorder) {
+                            ctx.lineWidth = 2 / globalScale;
+                            ctx.strokeStyle = borderColor;
+                            ctx.stroke();
+                        }
+
                         // Draw text
-                        ctx.font = `${node.group === 'Vendor' ? 'bold ' : ''}${fontSize}px Inter, Sans-Serif`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
+                        if (analyticsMode === 'default' || !isFaded || (analyticsMode === 'influence' && sizeFactor > 15)) {
+                            ctx.font = `${node.group === 'Vendor' ? 'bold ' : ''}${fontSize}px Inter, Sans-Serif`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
 
-                        // Outline for readability
-                        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-                        ctx.lineWidth = fontSize / 4;
-                        ctx.strokeText(label, node.x, node.y + radius + (4 / globalScale));
+                            // Outline for readability
+                            ctx.strokeStyle = isFaded ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.8)';
+                            ctx.lineWidth = fontSize / 4;
+                            ctx.strokeText(label, node.x, node.y + radius + (4 / globalScale));
 
-                        ctx.fillStyle = '#334155'; // Dark text
-                        ctx.fillText(label, node.x, node.y + radius + (4 / globalScale));
+                            ctx.fillStyle = isFaded ? '#94a3b8' : '#334155'; // Dark text
+                            ctx.fillText(label, node.x, node.y + radius + (4 / globalScale));
+                        }
                     }}
                     nodeCanvasObjectMode={() => 'replace'}
                 />
