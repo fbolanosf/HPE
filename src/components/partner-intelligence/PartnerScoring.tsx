@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { PARTNER_DATABASE, scorePartner, DOMAIN_LABEL, PARTNER_TYPE_LABEL } from '@/lib/partner-intelligence-data';
-import { TrendingUp, TrendingDown, Minus, Info, Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { PARTNER_DATABASE, scorePartner, DOMAIN_LABEL, PARTNER_TYPE_LABEL, getCustomWeights, saveCustomWeights, DEFAULT_SCORE_WEIGHTS, ScoreWeights } from '@/lib/partner-intelligence-data';
+import { TrendingUp, TrendingDown, Minus, Info, Settings, ChevronDown, ChevronUp, Save, RotateCcw } from 'lucide-react';
 
 const TIER_CONFIG = {
     High: {
@@ -51,16 +51,55 @@ interface ScoredPartner {
 }
 
 export default function PartnerScoring() {
+    // Global Custom Weights
+    const [weights, setWeights] = useState<ScoreWeights>(DEFAULT_SCORE_WEIGHTS);
+
+    useEffect(() => {
+        setWeights(getCustomWeights());
+    }, []);
+
     const ranked: ScoredPartner[] = useMemo(() => {
         return PARTNER_DATABASE
             .map((p) => {
-                const { score, tier, breakdown } = scorePartner(p);
+                const { score, tier, breakdown } = scorePartner(p, weights);
                 return { ...p, score, tier, breakdown } as ScoredPartner;
             })
             .sort((a, b) => b.score - a.score);
-    }, []);
+    }, [weights]); // depend on weights so the view recalculates Top10 when overriding
 
     const [showWeights, setShowWeights] = useState(false);
+
+    const handleWeightChange = (key: string, value: number) => {
+        setWeights(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleSaveWeights = () => {
+        saveCustomWeights(weights);
+        // Recalcular no es imperativo, reactivity con useMemo lo hará, 
+        // pero podemos darle un check o algo visual si se desea.
+        alert('Nuevas Ponderaciones Guardadas en Memoria.');
+    };
+
+    const handleResetWeights = () => {
+        setWeights({ ...DEFAULT_SCORE_WEIGHTS });
+        saveCustomWeights(DEFAULT_SCORE_WEIGHTS);
+    };
+
+    const renderInput = (label: string, key: string, isNegative = false) => (
+        <li className="flex justify-between items-center bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5 focus-within:ring-1 focus-within:ring-[#01A982] focus-within:border-[#01A982]">
+            <span className="truncate mr-2" title={label}>{label}</span>
+            <div className="flex items-center gap-1 w-20 flex-shrink-0 relative">
+                <span className={`absolute left-2 text-xs font-bold ${isNegative ? 'text-red-600' : 'text-green-600'}`}>{isNegative ? '' : '+'}</span>
+                <input
+                    type="number"
+                    value={weights[key] ?? 0}
+                    onChange={(e) => handleWeightChange(key, parseInt(e.target.value) || 0)}
+                    className={`w-full bg-transparent outline-none text-right font-mono font-bold text-sm ${isNegative ? 'text-red-600' : 'text-green-600'}`}
+                />
+                <span className="text-[10px] text-gray-400">pts</span>
+            </div>
+        </li>
+    );
 
     const byTier = {
         High: ranked.filter((p) => p.tier === 'High'),
@@ -98,17 +137,40 @@ export default function PartnerScoring() {
                             <Info className="w-4 h-4" />
                             <span className="text-xs font-bold uppercase tracking-wider">Tabla Analítica de Criterios (Modificable en Backend)</span>
                         </div>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2 text-[#01A982]">
+                                <Info className="w-4 h-4" />
+                                <span className="text-xs font-bold uppercase tracking-wider">Editor Analítico de Criterios (Override Override)</span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row items-center gap-2">
+                                <button onClick={handleResetWeights} className="flex flex-1 w-full justify-center items-center gap-1 px-3 py-1.5 border border-gray-200 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors">
+                                    <RotateCcw className="w-3 h-3" /> Restaurar Defaults
+                                </button>
+                                <button onClick={handleSaveWeights} className="flex flex-1 w-full justify-center items-center gap-1 px-3 py-1.5 bg-[#01A982] text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors">
+                                    <Save className="w-3 h-3" /> Guardar y Recalcular Top 10
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                             {/* IT Weights */}
                             <div className="space-y-3">
                                 <h4 className="text-sm font-bold text-gray-700 border-b pb-2">IT & Cloud</h4>
                                 <ul className="text-xs text-gray-600 space-y-2">
-                                    <li className="flex justify-between"><span>VMware / VxRail Partner</span> <span className="font-mono font-bold text-green-600">+5 pts</span></li>
-                                    <li className="flex justify-between"><span>Dell Infrastructure / Virt.</span> <span className="font-mono font-bold text-green-600">+3 pts</span></li>
-                                    <li className="flex justify-between"><span>HCI / Hybrid Cloud / Datacenter</span> <span className="font-mono font-bold text-green-600">+2 pts</span></li>
-                                    <li className="flex justify-between"><span>Nutanix / Veeam / PureStorage / Juniper</span> <span className="font-mono font-bold text-green-600">+2 pts</span></li>
-                                    <li className="flex justify-between"><span>Cloud Migration / Backup & DR</span> <span className="font-mono font-bold text-green-600">+1 pt</span></li>
+                                    {renderInput('VMware Partner', 'vmware_partner')}
+                                    {renderInput('VxRail Partner', 'vxrail_partner')}
+                                    {renderInput('Dell Infrastructure / Virt.', 'dell_partner')}
+                                    {renderInput('Nutanix Partner', 'nutanix_partner')}
+                                    {renderInput('Veeam Partner', 'veeam_partner')}
+                                    {renderInput('PureStorage Partner', 'purestorage_partner')}
+                                    {renderInput('Juniper Partner', 'juniper_partner')}
+                                    {renderInput('HCI Expertise', 'hci')}
+                                    {renderInput('Virtualization Services', 'virtualization')}
+                                    {renderInput('Datacenter Infrastructure', 'datacenter_infrastructure')}
+                                    {renderInput('Hybrid Cloud', 'hybrid_cloud')}
+                                    {renderInput('Cloud Migration', 'cloud_migration')}
+                                    {renderInput('Backup & Disaster Recovery', 'backup_and_disaster_recovery')}
                                 </ul>
                             </div>
 
@@ -116,25 +178,36 @@ export default function PartnerScoring() {
                             <div className="space-y-3">
                                 <h4 className="text-sm font-bold text-gray-700 border-b pb-2">OT & Industrial Edge</h4>
                                 <ul className="text-xs text-gray-600 space-y-2">
-                                    <li className="flex justify-between"><span>Industrial IoT / Networking</span> <span className="font-mono font-bold text-green-600">+4 pts</span></li>
-                                    <li className="flex justify-between"><span>SCADA / MES / Edge</span> <span className="font-mono font-bold text-green-600">+3 pts</span></li>
-                                    <li className="flex justify-between"><span>Digital Manufacturing / Industrial Cyber</span> <span className="font-mono font-bold text-green-600">+2 pts</span></li>
-                                    <li className="flex justify-between"><span>Historian / PLC Programming</span> <span className="font-mono font-bold text-green-600">+1 pt</span></li>
+                                    {renderInput('Industrial IoT', 'industrial_iot')}
+                                    {renderInput('Industrial Networking', 'industrial_networking')}
+                                    {renderInput('SCADA Integration', 'scada_integration')}
+                                    {renderInput('MES Integration', 'mes_integration')}
+                                    {renderInput('Edge Computing', 'edge_computing')}
+                                    {renderInput('Industrial Cybersecurity', 'industrial_cybersecurity')}
+                                    {renderInput('Digital Manufacturing', 'digital_manufacturing')}
+                                    {renderInput('Industrial Data Platforms', 'industrial_data_platforms')}
+                                    {renderInput('Historian Systems', 'historian_systems')}
+                                    {renderInput('PLC Programming', 'plc_programming')}
                                 </ul>
                             </div>
 
                             {/* Generales */}
                             <div className="space-y-3">
-                                <h4 className="text-sm font-bold text-gray-700 border-b pb-2">Reglas de Negocio</h4>
+                                <h4 className="text-sm font-bold text-gray-700 border-b pb-2">Reglas de Negocio / Verticales</h4>
                                 <ul className="text-xs text-gray-600 space-y-2">
-                                    <li className="flex justify-between"><span>Vertical: Mfg, Energy, Oil/Gas, Mining</span> <span className="font-mono font-bold text-green-600">+1 pt</span></li>
-                                    <li className="flex justify-between items-center bg-red-50 p-2 rounded -mx-2 mt-2">
-                                        <span className="font-semibold text-red-700">Penalización: Partner ya es HPE</span>
-                                        <span className="font-mono font-bold text-red-600">-5 pts</span>
-                                    </li>
+                                    {renderInput('Manufacturing Vertical', 'manufacturing')}
+                                    {renderInput('Energy Vertical', 'energy')}
+                                    {renderInput('Oil & Gas Vertical', 'oil_and_gas')}
+                                    {renderInput('Mining Vertical', 'mining')}
+
+                                    <div className="pt-2">
+                                        {renderInput('Penalización: Partner ya es HPE', 'hpe_partner', true)}
+                                    </div>
                                 </ul>
-                                <p className="text-[10px] text-gray-400 mt-4 leading-relaxed">
-                                    Nota Técnica: La ingeniería de estos valores actualmente yace como constantes de código (Hardcoded en `scorePartner`). En un Roadmap futuro de madurez, estas ponderaciones pueden elevarse a Variables de Entorno (Global Admin Settings) permitiendo edición de los multiplicadores sin requerir deployment, con el propósito de adecuarse a nuevas estrategias de ventas de HPE por País o Cuartil en turnos.
+                                <p className="text-[10px] text-gray-400 mt-4 leading-relaxed p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <strong>Modificación en Tiempo Real:</strong><br />
+                                    Cambia los multiplicadores para darle mayor peso a los canales que desplieguen soluciones como Morpheus, VM Essentials, SimpliVity o Zerto (Ej. Sube los puntos de VMware, HCI, Virt y Datacenter).<br /><br />
+                                    Al hacer clic en "Guardar", el Scoring HPE se recalculará instantáneamente reordenando la base global. Todo se autoguarda en Memoria Local.
                                 </p>
                             </div>
 

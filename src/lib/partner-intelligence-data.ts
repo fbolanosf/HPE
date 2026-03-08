@@ -100,8 +100,62 @@ export interface Partner {
 }
 
 // ============================================================
-// HPE OPPORTUNITY SCORING ENGINE
+// HPE OPPORTUNITY SCORING ENGINE & WEIGHTS
 // ============================================================
+
+export type ScoreWeights = Record<string, number>;
+
+export const DEFAULT_SCORE_WEIGHTS: ScoreWeights = {
+    // IT signals
+    vmware_partner: 5,
+    vxrail_partner: 5,
+    dell_partner: 3,
+    virtualization: 3,
+    hybrid_cloud: 2,
+    datacenter_infrastructure: 2,
+    hci: 2,
+    nutanix_partner: 2,
+    veeam_partner: 2,
+    purestorage_partner: 2,
+    juniper_partner: 2,
+    cloud_migration: 1,
+    backup_and_disaster_recovery: 1,
+
+    // OT signals
+    industrial_iot: 4,
+    industrial_networking: 4,
+    scada_integration: 3,
+    mes_integration: 3,
+    edge_computing: 3,
+    industrial_cybersecurity: 2,
+    digital_manufacturing: 2,
+    industrial_data_platforms: 2,
+    historian_systems: 1,
+    plc_programming: 1,
+
+    // Industry vertical bonus
+    manufacturing: 1,
+    oil_and_gas: 1,
+    mining: 1,
+    energy: 1,
+
+    // Penalty
+    hpe_partner: -5,
+};
+
+export function getCustomWeights(): ScoreWeights {
+    if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('hpe_score_weights');
+        if (stored) return JSON.parse(stored);
+    }
+    return { ...DEFAULT_SCORE_WEIGHTS };
+}
+
+export function saveCustomWeights(weights: ScoreWeights) {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('hpe_score_weights', JSON.stringify(weights));
+    }
+}
 
 export interface ScoreResult {
     score: number;
@@ -109,7 +163,8 @@ export interface ScoreResult {
     breakdown: { label: string; value: number }[];
 }
 
-export function scorePartner(p: Partner): ScoreResult {
+export function scorePartner(p: Partner, customWeights?: ScoreWeights): ScoreResult {
+    const weights = customWeights || getCustomWeights();
     const breakdown: { label: string; value: number }[] = [];
     let total = 0;
 
@@ -121,40 +176,40 @@ export function scorePartner(p: Partner): ScoreResult {
     };
 
     // IT signals
-    if (p.vmware_partner) add('VMware Partner', 5);
-    if (p.vxrail_partner) add('VxRail Partner', 5);
-    if (p.dell_partner) add('Dell Infrastructure', 3);
-    if (p.virtualization) add('Virtualization Services', 3);
-    if (p.hybrid_cloud) add('Hybrid Cloud', 2);
-    if (p.datacenter_infrastructure) add('Datacenter Services', 2);
-    if (p.hci) add('HCI Expertise', 2);
-    if (p.cloud_migration) add('Cloud Migration', 1);
-    if (p.backup_and_disaster_recovery) add('Backup & DR', 1);
-    if (p.nutanix_partner) add('Nutanix Partner', 2);
-    if (p.veeam_partner) add('Veeam Partner', 2);
-    if (p.purestorage_partner) add('PureStorage Partner', 2);
-    if (p.juniper_partner) add('Juniper Partner', 2);
+    if (p.vmware_partner) add('VMware Partner', weights.vmware_partner ?? 0);
+    if (p.vxrail_partner) add('VxRail Partner', weights.vxrail_partner ?? 0);
+    if (p.dell_partner) add('Dell Infrastructure', weights.dell_partner ?? 0);
+    if (p.virtualization) add('Virtualization Services', weights.virtualization ?? 0);
+    if (p.hybrid_cloud) add('Hybrid Cloud', weights.hybrid_cloud ?? 0);
+    if (p.datacenter_infrastructure) add('Datacenter Services', weights.datacenter_infrastructure ?? 0);
+    if (p.hci) add('HCI Expertise', weights.hci ?? 0);
+    if (p.nutanix_partner) add('Nutanix Partner', weights.nutanix_partner ?? 0);
+    if (p.veeam_partner) add('Veeam Partner', weights.veeam_partner ?? 0);
+    if (p.purestorage_partner) add('PureStorage Partner', weights.purestorage_partner ?? 0);
+    if (p.juniper_partner) add('Juniper Partner', weights.juniper_partner ?? 0);
+    if (p.cloud_migration) add('Cloud Migration', weights.cloud_migration ?? 0);
+    if (p.backup_and_disaster_recovery) add('Backup & DR', weights.backup_and_disaster_recovery ?? 0);
 
     // OT signals
-    if (p.industrial_iot) add('Industrial IoT', 4);
-    if (p.industrial_networking) add('Industrial Networking', 4);
-    if (p.scada_integration) add('SCADA Integration', 3);
-    if (p.mes_integration) add('MES Integration', 3);
-    if (p.industrial_cybersecurity) add('Industrial Cybersecurity', 2);
-    if (p.edge_computing) add('Edge Computing', 3);
-    if (p.digital_manufacturing) add('Digital Manufacturing', 2);
-    if (p.industrial_data_platforms) add('Industrial Data Platforms', 2);
-    if (p.historian_systems) add('Historian Systems', 1);
-    if (p.plc_programming) add('PLC Programming', 1);
+    if (p.industrial_iot) add('Industrial IoT', weights.industrial_iot ?? 0);
+    if (p.industrial_networking) add('Industrial Networking', weights.industrial_networking ?? 0);
+    if (p.scada_integration) add('SCADA Integration', weights.scada_integration ?? 0);
+    if (p.mes_integration) add('MES Integration', weights.mes_integration ?? 0);
+    if (p.edge_computing) add('Edge Computing', weights.edge_computing ?? 0);
+    if (p.industrial_cybersecurity) add('Industrial Cybersecurity', weights.industrial_cybersecurity ?? 0);
+    if (p.digital_manufacturing) add('Digital Manufacturing', weights.digital_manufacturing ?? 0);
+    if (p.industrial_data_platforms) add('Industrial Data Platforms', weights.industrial_data_platforms ?? 0);
+    if (p.historian_systems) add('Historian Systems', weights.historian_systems ?? 0);
+    if (p.plc_programming) add('PLC Programming', weights.plc_programming ?? 0);
 
     // Industry vertical bonus
-    if (p.manufacturing) add('Manufacturing Vertical', 1);
-    if (p.oil_and_gas) add('Oil & Gas Vertical', 1);
-    if (p.mining) add('Mining Vertical', 1);
-    if (p.energy) add('Energy Vertical', 1);
+    if (p.manufacturing) add('Manufacturing Vertical', weights.manufacturing ?? 0);
+    if (p.oil_and_gas) add('Oil & Gas Vertical', weights.oil_and_gas ?? 0);
+    if (p.mining) add('Mining Vertical', weights.mining ?? 0);
+    if (p.energy) add('Energy Vertical', weights.energy ?? 0);
 
     // Penalty
-    if (p.hpe_partner) add('Already HPE Partner (−)', -5);
+    if (p.hpe_partner) add('Already HPE Partner (−)', weights.hpe_partner ?? 0);
 
     const tier: OpportunityTier =
         total >= 14 ? 'High' : total >= 7 ? 'Medium' : 'Low';
