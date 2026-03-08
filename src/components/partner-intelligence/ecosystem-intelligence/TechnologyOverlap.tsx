@@ -4,6 +4,20 @@ import { getTechnologyOverlap, ECOSYSTEM_RELATIONSHIPS } from '@/lib/ecosystem-d
 export default function TechnologyOverlap() {
     const data = useMemo(() => getTechnologyOverlap(ECOSYSTEM_RELATIONSHIPS), []);
 
+    const TARGET_TECH = useMemo(() => [
+        'Virtualization',
+        'HCI',
+        'Hybrid Cloud',
+        'Cloud Migration',
+        'Container Platforms',
+        'Backup & Disaster Recovery',
+        'Datacenter Infrastructure'
+    ], []);
+
+    const filteredTechnologies = useMemo(() =>
+        data.technologies.filter(t => TARGET_TECH.includes(t)),
+        [data.technologies, TARGET_TECH]);
+
     // Color gradient for heatmap (white -> light green -> dark green)
     const getColor = (val: number, max: number) => {
         if (val === 0) return '#f8fafc';
@@ -14,13 +28,13 @@ export default function TechnologyOverlap() {
     const maxVal = useMemo(() => {
         let max = 0;
         data.matrix.forEach(row => {
-            data.technologies.forEach(tech => {
+            filteredTechnologies.forEach(tech => {
                 const count = row[tech] as number;
                 if (count > max) max = count;
             });
         });
         return max;
-    }, [data]);
+    }, [data.matrix, filteredTechnologies]);
 
     return (
         <div className="flex flex-col h-full space-y-6">
@@ -39,7 +53,7 @@ export default function TechnologyOverlap() {
                             <th className="px-4 py-3 font-semibold w-40 sticky left-0 bg-gray-50 z-20 border-r border-gray-200 align-bottom">
                                 Vendor \ Technology
                             </th>
-                            {data.technologies.map(t => (
+                            {filteredTechnologies.map(t => (
                                 <th key={t} className="px-2 font-semibold align-bottom min-w-[50px] max-w-[50px]" style={{ height: '190px' }}>
                                     <div className="relative h-full w-full">
                                         <div className="absolute bottom-3 left-1/2 origin-bottom-left -rotate-45 whitespace-nowrap text-[11px] text-gray-700 tracking-wide">
@@ -56,7 +70,7 @@ export default function TechnologyOverlap() {
                                 <td className="px-4 py-3 font-medium bg-white sticky left-0 z-10 border-r border-gray-200">
                                     {row.vendor}
                                 </td>
-                                {data.technologies.map(t => {
+                                {filteredTechnologies.map(t => {
                                     const val = row[t] as number;
                                     return (
                                         <td
