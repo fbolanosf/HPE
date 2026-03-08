@@ -14,6 +14,7 @@ import {
 
 export default function GraphAnalyticsShell() {
     // 1. Core State
+    const [language, setLanguage] = useState<'es' | 'en'>('es');
     const [mode, setMode] = useState<AnalyticsMode | 'queries' | 'insights'>('influence');
     const [pathStart, setPathStart] = useState<string>('');
     const [pathEnd, setPathEnd] = useState<string>('');
@@ -52,12 +53,36 @@ export default function GraphAnalyticsShell() {
 
     // Sub-menus
     const ANALYTICS_MENU = [
-        { id: 'influence', icon: Activity, label: 'Influence Map', desc: 'Centrality & highly-connected nodes' },
-        { id: 'clusters', icon: Layers, label: 'Cluster Analysis', desc: 'Louvain communities detection' },
-        { id: 'bridges', icon: ActivitySquare, label: 'Bridge Analysis', desc: 'Integrators crossing ecosystems' },
-        { id: 'path', icon: Route, label: 'Shortest Path', desc: 'Connect two disparate entities' },
-        { id: 'queries', icon: Search, label: 'Ecosystem Queries', desc: 'Filter nodes by capabilities' },
-        { id: 'insights', icon: Lightbulb, label: 'Graph Insights', desc: 'Strategic recommendations engine' },
+        {
+            id: 'influence', icon: Activity,
+            label: language === 'es' ? 'Mapa de Influencia' : 'Influence Map',
+            desc: language === 'es' ? 'Descubre empresas altamente conectadas' : 'Centrality & highly-connected nodes'
+        },
+        {
+            id: 'clusters', icon: Layers,
+            label: language === 'es' ? 'Análisis de Grupos' : 'Cluster Analysis',
+            desc: language === 'es' ? 'Agrupa empresas que trabajan juntas' : 'Louvain communities detection'
+        },
+        {
+            id: 'bridges', icon: ActivitySquare,
+            label: language === 'es' ? 'Nodos Puente' : 'Bridge Analysis',
+            desc: language === 'es' ? 'Integradores que conectan mundos (IT/OT)' : 'Integrators crossing ecosystems'
+        },
+        {
+            id: 'path', icon: Route,
+            label: language === 'es' ? 'Ruta Más Corta' : 'Shortest Path',
+            desc: language === 'es' ? 'Encuentra la ruta directa entre dos nodos' : 'Connect two disparate entities'
+        },
+        {
+            id: 'queries', icon: Search,
+            label: language === 'es' ? 'Buscador del Ecosistema' : 'Ecosystem Queries',
+            desc: language === 'es' ? 'Filtra y explora las conexiones' : 'Filter nodes by capabilities'
+        },
+        {
+            id: 'insights', icon: Lightbulb,
+            label: language === 'es' ? 'Recomendaciones Estratégicas' : 'Graph Insights',
+            desc: language === 'es' ? 'Oportunidades sugeridas por el sistema' : 'Strategic recommendations engine'
+        },
     ] as const;
 
     return (
@@ -73,6 +98,7 @@ export default function GraphAnalyticsShell() {
                         bridges={bridges}
                         shortestPath={activePath}
                         onNodeClick={handleNodeClick}
+                        language={language}
                     />
                 </div>
             </div>
@@ -82,10 +108,16 @@ export default function GraphAnalyticsShell() {
 
                 {/* 1. Control Panel */}
                 <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                    <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <Network className="w-4 h-4 text-[#01A982]" />
-                        Graph Operations
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                            <Network className="w-4 h-4 text-[#01A982]" />
+                            {language === 'es' ? 'Operaciones de Análisis' : 'Graph Operations'}
+                        </h3>
+                        <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+                            <button onClick={() => setLanguage('es')} className={`text-[10px] font-bold px-2 py-1 rounded ${language === 'es' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500'}`}>ES</button>
+                            <button onClick={() => setLanguage('en')} className={`text-[10px] font-bold px-2 py-1 rounded ${language === 'en' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500'}`}>EN</button>
+                        </div>
+                    </div>
                     <div className="space-y-2">
                         {ANALYTICS_MENU.map(item => {
                             const Icon = item.icon;
@@ -95,8 +127,8 @@ export default function GraphAnalyticsShell() {
                                     key={item.id}
                                     onClick={() => setMode(item.id as any)}
                                     className={`w-full flex flex-col items-start p-3 rounded-lg border transition-all text-left ${isActive
-                                            ? 'bg-[#01A982]/10 border-[#01A982] text-gray-900 shadow-sm'
-                                            : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200'
+                                        ? 'bg-[#01A982]/10 border-[#01A982] text-gray-900 shadow-sm'
+                                        : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200'
                                         }`}
                                 >
                                     <div className="flex items-center gap-2 font-semibold text-sm">
@@ -116,10 +148,10 @@ export default function GraphAnalyticsShell() {
                     {mode === 'influence' && (
                         <div className="space-y-4">
                             <h4 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-                                <Activity className="w-4 h-4" /> Degree Centrality
+                                <Activity className="w-4 h-4" /> {language === 'es' ? 'Centralidad (Nivel de Conexiones)' : 'Degree Centrality'}
                             </h4>
                             <p className="text-xs text-gray-600 mb-4">
-                                Most connected entities within the ecosystem. Size correlates directly with immediate degree centrality (number of edges).
+                                {language === 'es' ? 'Muestra cuáles son las entidades con más conexiones directas dentro del ecosistema. Entre más grande sea el círculo en la red, mayor es su influencia y poder comercial.' : 'Most connected entities within the ecosystem. Size correlates directly with immediate degree centrality (number of edges).'}
                             </p>
                             <div className="space-y-3">
                                 {Object.entries(centrality)
@@ -149,15 +181,16 @@ export default function GraphAnalyticsShell() {
                     {mode === 'clusters' && (
                         <div className="space-y-4">
                             <h4 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-                                <Layers className="w-4 h-4" /> Autodetected Communities
+                                <Layers className="w-4 h-4" /> {language === 'es' ? 'Grupos Detectados Automáticamente' : 'Autodetected Communities'}
                             </h4>
                             <p className="text-xs text-gray-600 mb-4">
-                                Using Label Propagation to identify organic "ecosystems" within the graph topology based on density.
+                                {language === 'es' ? 'Analizamos la densidad de las conexiones para descubrir de forma automática qué empresas y tecnologías suelen operar siempre juntas formando su propio \'micro ecosistema\'.' : 'Using Label Propagation to identify organic "ecosystems" within the graph topology based on density.'}
                             </p>
                             <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
                                 <p className="text-xs text-amber-800 font-medium whitespace-pre-line">
-                                    Graph mathematically fragmented into {new Set(Object.values(communities)).size} distinct communities.
-                                    Nodes sharing the same hue belong to the same dense cluster.
+                                    {language === 'es'
+                                        ? `El ecosistema ha sido dividido en ${new Set(Object.values(communities)).size} grupos distintos. Cada color en el mapa representa una comunidad de empresas y tecnologías fuertemente entrelazadas.`
+                                        : `Graph mathematically fragmented into ${new Set(Object.values(communities)).size} distinct communities. Nodes sharing the same hue belong to the same dense cluster.`}
                                 </p>
                             </div>
                         </div>
@@ -166,10 +199,10 @@ export default function GraphAnalyticsShell() {
                     {mode === 'bridges' && (
                         <div className="space-y-4">
                             <h4 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-                                <ActivitySquare className="w-4 h-4" /> Bridge Nodes
+                                <ActivitySquare className="w-4 h-4" /> {language === 'es' ? 'Integradores de Frontera (Nodos Puente)' : 'Bridge Nodes'}
                             </h4>
                             <p className="text-xs text-gray-600 mb-4">
-                                Entities that span multiple isolated communities, acting as crucial translators (typically IT/OT integrators).
+                                {language === 'es' ? 'Empresas únicas que sirven como puentes conectando dos mundos diferentes (por ejemplo, integradores que saben de centros de datos IT pero también dominan plantas OT).' : 'Entities that span multiple isolated communities, acting as crucial translators (typically IT/OT integrators).'}
                             </p>
                             <div className="space-y-3 max-h-[300px] overflow-y-auto">
                                 {bridges.slice(0, 8).map((b, idx) => {
@@ -178,7 +211,7 @@ export default function GraphAnalyticsShell() {
                                         <div key={b.id} className="flex justify-between items-center text-[11px] p-2 bg-gray-50 rounded border border-gray-100">
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-gray-700">{name} <span className="text-gray-400 font-normal">({type})</span></span>
-                                                <span className="text-gray-500 mt-1">Crosses {b.bridgeScore} Clusters</span>
+                                                <span className="text-gray-500 mt-1">{language === 'es' ? `Conecta ${b.bridgeScore} Grupos` : `Crosses ${b.bridgeScore} Clusters`}</span>
                                             </div>
                                             <div className="w-6 h-6 rounded-full bg-yellow-100 border border-yellow-300 flex items-center justify-center text-yellow-700 font-bold">
                                                 {b.bridgeScore}
@@ -193,19 +226,19 @@ export default function GraphAnalyticsShell() {
                     {mode === 'path' && (
                         <div className="space-y-4">
                             <h4 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-                                <Route className="w-4 h-4" /> Shortest Path (BFS)
+                                <Route className="w-4 h-4" /> {language === 'es' ? 'Caminos Más Cortos (Rutas Relacionales)' : 'Shortest Path (BFS)'}
                             </h4>
                             <p className="text-xs text-gray-600">
-                                Click on any two nodes in the graph to discover the shortest relationship path between them.
+                                {language === 'es' ? 'Haz clic en cualquier círculo del mapa y luego haz clic en otro diferente. Esta máquina calculará de inmediato cuál es la ruta comercial que los conecta directamente.' : 'Click on any two nodes in the graph to discover the shortest relationship path between them.'}
                             </p>
 
                             <div className="flex flex-col gap-2 mt-4">
                                 <div className={`p-2 rounded text-xs border ${pathStart ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-gray-50 border-dashed border-gray-300 text-gray-400'}`}>
-                                    <strong>A:</strong> {pathStart ? pathStart.split(':')[1] : 'Click a start node...'}
+                                    <strong>A:</strong> {pathStart ? pathStart.split(':')[1] : (language === 'es' ? 'Selecciona un origen en él gráfico...' : 'Click a start node...')}
                                 </div>
                                 <div className="flex justify-center"><Network className="w-3 h-3 text-gray-300" /></div>
                                 <div className={`p-2 rounded text-xs border ${pathEnd ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-gray-50 border-dashed border-gray-300 text-gray-400'}`}>
-                                    <strong>B:</strong> {pathEnd ? pathEnd.split(':')[1] : 'Click a destination node...'}
+                                    <strong>B:</strong> {pathEnd ? pathEnd.split(':')[1] : (language === 'es' ? 'Selecciona un destino en el gráfico...' : 'Click a destination node...')}
                                 </div>
                             </div>
 
@@ -213,7 +246,7 @@ export default function GraphAnalyticsShell() {
                                 <div className="mt-4 p-3 bg-slate-800 text-white rounded-lg text-xs">
                                     {activePath ? (
                                         <>
-                                            <span className="text-emerald-400 font-bold mb-2 block">{activePath.length - 1} degrees of separation:</span>
+                                            <span className="text-emerald-400 font-bold mb-2 block">{activePath.length - 1} {language === 'es' ? 'grados de separación (saltos):' : 'degrees of separation:'}</span>
                                             <div className="flex flex-col gap-1.5 opacity-90">
                                                 {activePath.map((id, i) => (
                                                     <div key={id} className="flex gap-2 items-center">
@@ -224,7 +257,7 @@ export default function GraphAnalyticsShell() {
                                             </div>
                                         </>
                                     ) : (
-                                        <span className="text-red-400">No reachable path exists between these entities.</span>
+                                        <span className="text-red-400">{language === 'es' ? 'No existe una ruta conocida o conexión posible entre estas dos entidades en la base de datos actual.' : 'No reachable path exists between these entities.'}</span>
                                     )}
                                 </div>
                             )}
@@ -234,7 +267,7 @@ export default function GraphAnalyticsShell() {
                                     onClick={() => { setPathStart(''); setPathEnd(''); }}
                                     className="w-full mt-2 py-1.5 text-xs text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded border border-transparent transition-colors"
                                 >
-                                    Clear Selection
+                                    {language === 'es' ? 'Limpiar Selección' : 'Clear Selection'}
                                 </button>
                             )}
                         </div>
@@ -243,21 +276,21 @@ export default function GraphAnalyticsShell() {
                     {mode === 'queries' && (
                         <div className="space-y-4">
                             <h4 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-                                <Search className="w-4 h-4" /> Relational Queries
+                                <Search className="w-4 h-4" /> {language === 'es' ? 'Buscador Relacional' : 'Relational Queries'}
                             </h4>
                             <p className="text-xs text-gray-600 mb-4">
-                                Filter the entire underlying ecosystem database based on connected edges.
+                                {language === 'es' ? 'Filtra la base de datos original usando la red topológica para encontrar socios con capacidades específicas.' : 'Filter the entire underlying ecosystem database based on connected edges.'}
                             </p>
 
                             <div className="space-y-3">
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase">Vendor Filter</label>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase">{language === 'es' ? 'Filtrar por Fabricante' : 'Vendor Filter'}</label>
                                     <select
                                         className="w-full mt-1 text-xs border-gray-200 rounded-md p-2"
                                         value={queryFilters.vendor}
                                         onChange={e => setQueryFilters({ ...queryFilters, vendor: e.target.value })}
                                     >
-                                        <option value="ALL">All Vendors</option>
+                                        <option value="ALL">{language === 'es' ? 'Todos' : 'All Vendors'}</option>
                                         <option value="VMware">VMware</option>
                                         <option value="Siemens">Siemens</option>
                                         <option value="Rockwell Automation">Rockwell Automation</option>
@@ -265,7 +298,7 @@ export default function GraphAnalyticsShell() {
                                 </div>
                                 <div className="pt-2 border-t border-gray-100">
                                     <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                        <span className="text-xs font-semibold text-gray-700">Matched Partners</span>
+                                        <span className="text-xs font-semibold text-gray-700">{language === 'es' ? 'Partners Compatibles' : 'Matched Partners'}</span>
                                         <span className="bg-[#01A982] text-white text-xs font-bold px-2 py-0.5 rounded-full">{queryResults.length}</span>
                                     </div>
                                     <div className="mt-2 max-h-[150px] overflow-y-auto space-y-1">
@@ -283,23 +316,27 @@ export default function GraphAnalyticsShell() {
                     {mode === 'insights' && (
                         <div className="space-y-4">
                             <h4 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-                                <Lightbulb className="w-4 h-4 text-amber-500" /> Strategic Insights
+                                <Lightbulb className="w-4 h-4 text-amber-500" /> {language === 'es' ? 'Recomendaciones Estratégicas' : 'Strategic Insights'}
                             </h4>
                             <p className="text-xs text-gray-600 mb-4">
-                                Mathematical recommendations derived from graph topology analysis.
+                                {language === 'es' ? 'Oportunidades de negocio y tácticas matemáticas calculadas desde el flujo topológico de conexiones.' : 'Mathematical recommendations derived from graph topology analysis.'}
                             </p>
 
                             <div className="space-y-3">
                                 <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                                    <h5 className="text-xs font-bold text-blue-900 mb-1">High-Value OT Targets</h5>
+                                    <h5 className="text-xs font-bold text-blue-900 mb-1">{language === 'es' ? 'Oportunidades Híbridas (Edge / OT)' : 'High-Value OT Targets'}</h5>
                                     <p className="text-[11px] text-blue-800">
-                                        {identifyHybridIntegrators(PARTNER_DATABASE).length} Integrators identified acting as hybrid bridges between IT data centers and OT floors. Prioritize them for Edge Computing pitches.
+                                        {language === 'es'
+                                            ? `Hemos detectado matemáticamente ${identifyHybridIntegrators(PARTNER_DATABASE).length} integradores que operan orgánicamente saltando entre el piso de planta industrial y los centros de datos corporativos. Son prospectos estelares de HPE para infraestructura Edge y WiFi.`
+                                            : `${identifyHybridIntegrators(PARTNER_DATABASE).length} Integrators identified acting as hybrid bridges between IT data centers and OT floors. Prioritize them for Edge Computing pitches.`}
                                     </p>
                                 </div>
                                 <div className="p-3 bg-purple-50 border border-purple-100 rounded-lg">
-                                    <h5 className="text-xs font-bold text-purple-900 mb-1">Virtualization Opportunity</h5>
+                                    <h5 className="text-xs font-bold text-purple-900 mb-1">{language === 'es' ? 'Oportunidad de Virtualización y Nube' : 'Virtualization Opportunity'}</h5>
                                     <p className="text-[11px] text-purple-800">
-                                        {PARTNER_DATABASE.filter(p => !p.virtualization && p.technology_domain.includes('IT')).length} IT Partners are heavily connected but lack Virtualization capabilities. Prime targets for VMware/HCI expansion.
+                                        {language === 'es'
+                                            ? `Encontramos ${PARTNER_DATABASE.filter(p => !p.virtualization && p.technology_domain.includes('IT')).length} partners de tecnología clásica que poseen altas conexiones pero no tienen registros modernos de Virtualización. Este es terreno virgen excelente para empujar soluciones de VMware o entornos híbridos.`
+                                            : `${PARTNER_DATABASE.filter(p => !p.virtualization && p.technology_domain.includes('IT')).length} IT Partners are heavily connected but lack Virtualization capabilities. Prime targets for VMware/HCI expansion.`}
                                     </p>
                                 </div>
                             </div>

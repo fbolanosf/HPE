@@ -13,6 +13,7 @@ interface RelationshipGraphProps {
     bridges?: BridgeNode[];
     shortestPath?: string[]; // Array of node IDs in path
     onNodeClick?: (nodeId: string) => void;
+    language?: 'es' | 'en';
 }
 
 const LOCAL_VENDOR_COLORS: Record<string, string> = {
@@ -45,7 +46,8 @@ export default function RelationshipGraph({
     communities,
     bridges,
     shortestPath,
-    onNodeClick
+    onNodeClick,
+    language = 'es'
 }: RelationshipGraphProps) {
     const fgRef = useRef<ForceGraphMethods>(null);
     const [graphWidth, setGraphWidth] = useState(800);
@@ -97,7 +99,12 @@ export default function RelationshipGraph({
             if (containerRef.current) setGraphWidth(containerRef.current.offsetWidth);
         };
         const handleFullscreenChange = () => {
-            setIsFullscreen(!!document.fullscreenElement);
+            const isFull = !!document.fullscreenElement;
+            setIsFullscreen(isFull);
+            // Delay measurement to allow CSS classes (w-screen) to apply
+            setTimeout(() => {
+                if (containerRef.current) setGraphWidth(containerRef.current.offsetWidth);
+            }, 50);
         };
 
         window.addEventListener('resize', handleResize);
@@ -139,8 +146,12 @@ export default function RelationshipGraph({
         <div className="flex flex-col h-full space-y-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-sm font-bold text-gray-800">Global Ecosystem Network</h3>
-                    <p className="text-xs text-gray-500">Visualización Topológica de Relaciones Comerciales (Integrador ↔ Tecnología ↔ Vertical)</p>
+                    <h3 className="text-sm font-bold text-gray-800">
+                        {language === 'es' ? 'Topología Global del Ecosistema' : 'Global Ecosystem Network'}
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                        {language === 'es' ? 'Visualización de Relaciones Comerciales (Integrador ↔ Tecnología ↔ Vertical)' : 'Visualización Topológica de Relaciones Comerciales (Integrador ↔ Tecnología ↔ Vertical)'}
+                    </p>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={zoomIn} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"><ZoomIn className="w-4 h-4" /></button>
@@ -153,13 +164,13 @@ export default function RelationshipGraph({
 
             <div className="flex gap-4">
                 {analyticsMode === 'clusters' ? (
-                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" /><span className="text-xs text-gray-600 font-medium">Auto-detected Community Clusters</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" /><span className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Grupos / Comunidades' : 'Auto-detected Community Clusters'}</span></div>
                 ) : analyticsMode === 'bridges' ? (
-                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-yellow-400 border border-yellow-600" /><span className="text-xs text-gray-600 font-medium">Bridge Nodes (Connecting 2+ Ecosystems)</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-yellow-400 border border-yellow-600" /><span className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Integradores Puente (Múltiples Tecnologías)' : 'Bridge Nodes (Connecting 2+ Ecosystems)'}</span></div>
                 ) : analyticsMode === 'influence' ? (
-                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-slate-400" /><span className="text-xs text-gray-600 font-medium">Size = Degree Centrality</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-slate-400" /><span className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Tamaño = Nivel de Influencia' : 'Size = Degree Centrality'}</span></div>
                 ) : analyticsMode === 'path' ? (
-                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-[#01A982]" /><span className="text-xs text-gray-600 font-medium">Shortest Path</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-[#01A982]" /><span className="text-xs text-gray-600 font-medium">{language === 'es' ? 'La Ruta Más Corta' : 'Shortest Path'}</span></div>
                 ) : (
                     Object.entries(TYPE_COLORS).filter(([type]) => type !== 'Region').map(([type, color]) => (
                         <div key={type} className="flex items-center gap-1.5">
@@ -290,7 +301,9 @@ export default function RelationshipGraph({
             </div>
 
             <p className="text-[10px] text-gray-400">
-                Interacción: Arrastra los nodos para reacomodar el layout físico. Scroll para zoom. Da doble clic en un nodo para centrar.
+                {language === 'es'
+                    ? 'Interacción: Arrastra los nodos para explorar la red. Usa el scroll para acercar/alejar. Da doble clic en un nodo para centrar.'
+                    : 'Interaction: Drag nodes to explore the network layout. Scroll to zoom. Double click a node to center.'}
             </p>
         </div>
     );
