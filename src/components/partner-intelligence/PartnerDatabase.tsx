@@ -61,7 +61,12 @@ const VIRT_MAP: Partial<Record<keyof Partner, string>> = {
     container_platforms: 'Contenedores',
 };
 
-export default function PartnerDatabase() {
+interface PartnerDatabaseProps {
+    preFilteredData?: Partner[];
+    hideFilters?: boolean;
+}
+
+export default function PartnerDatabase({ preFilteredData, hideFilters }: PartnerDatabaseProps = {}) {
     const [filters, setFilters] = useState<PartnerFilters>({});
     const [showFilters, setShowFilters] = useState(false);
 
@@ -72,7 +77,10 @@ export default function PartnerDatabase() {
     // Force re-render trick on save
     const [tick, setTick] = useState(0);
 
-    const results = useMemo(() => searchPartners(PARTNER_DATABASE, filters), [filters, tick]);
+    const results = useMemo(() => {
+        if (preFilteredData) return preFilteredData;
+        return searchPartners(PARTNER_DATABASE, filters);
+    }, [filters, tick, preFilteredData]);
 
     const handleEditClick = (p: Partner) => {
         setEditingPartner(p);
@@ -127,33 +135,35 @@ export default function PartnerDatabase() {
     return (
         <div className="space-y-4">
             {/* Search bar + actions */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Buscar empresa, país, descripción…"
-                        className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#01A982]"
-                        value={filters.query ?? ''}
-                        onChange={(e) => update({ query: e.target.value })}
-                    />
+            {!hideFilters && (
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar empresa, país, descripción…"
+                            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#01A982]"
+                            value={filters.query ?? ''}
+                            onChange={(e) => update({ query: e.target.value })}
+                        />
+                    </div>
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                    >
+                        <Filter className="h-4 w-4" /> Filtros
+                    </button>
+                    <button
+                        onClick={handleExportXLS}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#01A982] text-white rounded-lg text-sm hover:bg-emerald-700 transition-colors"
+                    >
+                        <Download className="h-4 w-4" /> Exportar XLS
+                    </button>
                 </div>
-                <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
-                >
-                    <Filter className="h-4 w-4" /> Filtros
-                </button>
-                <button
-                    onClick={handleExportXLS}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#01A982] text-white rounded-lg text-sm hover:bg-emerald-700 transition-colors"
-                >
-                    <Download className="h-4 w-4" /> Exportar XLS
-                </button>
-            </div>
+            )}
 
             {/* Advanced filters */}
-            {showFilters && (
+            {showFilters && !hideFilters && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
                     <div>
                         <label className="text-xs font-semibold text-gray-600 block mb-1">País</label>

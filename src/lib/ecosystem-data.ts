@@ -75,11 +75,28 @@ export function generateEcosystemRelationships(partners: Partner[]): EcosystemRe
         // Partner -> OPERATES_IN -> Region
         addRel('Partner', pName, 'Region', p.region, 'OPERATES_IN', 1.0);
 
-        // Partner -> SERVES -> Industry (Generics based on OT focus if true)
-        if (p.manufacturing) addRel('Partner', pName, 'Industry', 'Manufacturing', 'SERVES', 1.0);
-        if (p.energy) addRel('Partner', pName, 'Industry', 'Energy', 'SERVES', 1.0);
-        if (p.oil_and_gas) addRel('Partner', pName, 'Industry', 'Oil & Gas', 'SERVES', 1.0);
-        if (p.mining) addRel('Partner', pName, 'Industry', 'Mining', 'SERVES', 1.0);
+        // Partner -> SERVES -> Industry 
+        const indMap: Record<string, string> = {
+            manufacturing: 'Manufacturing',
+            energy: 'Energy',
+            oil_and_gas: 'Oil & Gas',
+            mining: 'Mining',
+            telecommunications: 'Telecom',
+            finance: 'Finance',
+            healthcare: 'Healthcare',
+            retail: 'Retail',
+            public_sector: 'Public Sector',
+            utilities: 'Utilities',
+            food_and_beverage: 'Food & Beverage',
+            pharmaceutical: 'Pharmaceutical',
+            water_and_wastewater: 'Water & Waste',
+            transportation: 'Transportation',
+            smart_cities: 'Smart Cities'
+        };
+
+        Object.entries(indMap).forEach(([key, label]) => {
+            if (p[key as keyof Partner]) addRel('Partner', pName, 'Industry', label, 'SERVES', 1.0);
+        });
 
         // Partner -> USES -> Vendor
         const vendorsMapping: Record<keyof Partner, string> = {
