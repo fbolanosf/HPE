@@ -599,6 +599,30 @@ export const PARTNER_DATABASE: Partner[] = [
 export const UNIQUE_COUNTRIES = [...new Set(PARTNER_DATABASE.map(p => p.country))].sort();
 export const UNIQUE_REGIONS = [...new Set(PARTNER_DATABASE.map(p => p.region))].sort();
 
+// Hydrate from LocalStorage so manual partners persist across reloads
+if (typeof window !== 'undefined') {
+    try {
+        const stored = localStorage.getItem('hpe_custom_partners');
+        if (stored) {
+            const customPartners: Partner[] = JSON.parse(stored);
+            customPartners.reverse().forEach(p => {
+                if (!PARTNER_DATABASE.some(existing => existing.id === p.id)) {
+                    PARTNER_DATABASE.unshift(p);
+                }
+            });
+            // Re-calc unique countries just in case
+            customPartners.forEach(p => {
+                if (!UNIQUE_COUNTRIES.includes(p.country)) UNIQUE_COUNTRIES.push(p.country);
+                if (!UNIQUE_REGIONS.includes(p.region)) UNIQUE_REGIONS.push(p.region);
+            });
+            UNIQUE_COUNTRIES.sort();
+            UNIQUE_REGIONS.sort();
+        }
+    } catch (e) {
+        console.error('Error hydrating partners from LocalStorage', e);
+    }
+}
+
 export const DOMAIN_LABEL: Record<TechnologyDomain, string> = {
     IT: 'IT', OT: 'OT', IT_OT_HYBRID: 'IT/OT Hybrid',
 };
@@ -614,5 +638,20 @@ export const PARTNER_TYPE_LABEL: Record<PartnerType, string> = {
 };
 
 export const addPartnerToDatabase = (partner: Partner) => {
-    PARTNER_DATABASE.unshift(partner); // Add to top of list
+    PARTNER_DATABASE.unshift(partner); // Add to top of memory list
+
+    // Persist to LocalStorage
+    if (typeof window !== 'undefined') {
+        try {
+            const stored = localStorage.getItem('hpe_custom_partners');
+            let custom: Partner[] = [];
+            if (stored) {
+                custom = JSON.parse(stored);
+            }
+            custom.unshift(partner);
+            localStorage.setItem('hpe_custom_partners', JSON.stringify(custom));
+        } catch (e) {
+            console.error('Error saving to LocalStorage', e);
+        }
+    }
 };

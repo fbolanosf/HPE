@@ -14,6 +14,16 @@ export default function PartnerOnboarding() {
     const [companyName, setCompanyName] = useState('');
     const [country, setCountry] = useState('Mexico');
 
+    const getExtractedCount = () => {
+        if (!scrapedData) return 0;
+        return Object.keys(scrapedData).filter(k =>
+            typeof scrapedData[k as keyof Partner] === 'boolean' &&
+            scrapedData[k as keyof Partner] === true &&
+            k !== 'linkedin'
+        ).length;
+    };
+
+
     // Partner profile state (start with BASE)
     const [profile, setProfile] = useState<Partial<Partner>>({
         ...BASE,
@@ -155,13 +165,43 @@ export default function PartnerOnboarding() {
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                         {loading ? 'Analizando Website...' : 'Auto-Descubrimiento (Scraping)'}
                     </button>
-                    {!loading && scrapedData && (
-                        <span className="text-xs font-semibold text-green-600 flex items-center gap-1 bg-green-50 px-3 py-1.5 rounded-full">
-                            <CheckCircle2 className="w-4 h-4" />
-                            {scrapedData.technology_domain} Data Extracted
-                        </span>
+
+                    {/* Botón Guardar Superior (Aparece cuando ya se tiene url para agilizar workflow) */}
+                    {url && (
+                        <button
+                            onClick={handleSave}
+                            disabled={!companyName || !url}
+                            className="bg-[#01A982] hover:bg-[#008f6b] disabled:opacity-50 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition ml-auto"
+                        >
+                            <Save className="w-4 h-4" /> Guardar en Base de Datos
+                        </button>
                     )}
                 </div>
+
+                {!loading && scrapedData && (
+                    <div className={`mt-5 p-4 rounded-lg border ${getExtractedCount() > 0 ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'}`}>
+                        <h4 className={`font-bold flex items-center gap-2 ${getExtractedCount() > 0 ? 'text-blue-800' : 'text-amber-800'}`}>
+                            {getExtractedCount() > 0 ? <CheckCircle2 className="w-5 h-5" /> : <Loader2 className="w-5 h-5" />}
+                            Resultados del Análisis Web
+                        </h4>
+                        {getExtractedCount() > 0 ? (
+                            <p className="text-sm text-blue-700 mt-2">
+                                Se detectaron <strong>{getExtractedCount()} atributos técnicos clave</strong> en la página principal
+                                (Dominio inferido: <b>{scrapedData.technology_domain}</b>).
+                                Hemos activado las casillas correspondientes de forma automática en la matriz inferior.
+                                <br /><br />
+                                <b>Importante:</b> Revisa las casillas, haz ajustes manuales si lo necesitas, y luego <b>haz clic en "Guardar en Base de Datos"</b> para persistir la información.
+                            </p>
+                        ) : (
+                            <p className="text-sm text-amber-700 mt-2">
+                                El escaneo estructural finalizó, pero <strong>no se identificaron palabras clave técnicas explícitas</strong> en la portada del sitio.
+                                Esto es muy común si el website bloquea robots o no menciona sus marcas/industrias en texto plano.
+                                <br /><br />
+                                <b>Siguiente Paso:</b> Por favor, <b>selecciona las casillas manualmente</b> en la matriz inferior y haz clic en <b>"Guardar en Base de Datos"</b>.
+                            </p>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Matrix Form */}
