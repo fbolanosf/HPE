@@ -23,6 +23,14 @@ export default function GraphAnalyticsShell() {
     const [queryFilters, setQueryFilters] = useState({ vendor: 'ALL', technology: 'ALL', industry: 'ALL', isHybrid: undefined as boolean | undefined });
     const queryResults = useMemo(() => queryEcosystem(PARTNER_DATABASE, queryFilters), [queryFilters]);
 
+    // Complete vendor list derived from Partner interface structure
+    const allVendors = [
+        'ABB', 'AVEVA', 'AWS', 'Cisco', 'Dell', 'Emerson', 'Google Cloud',
+        'Honeywell', 'HPE', 'Juniper', 'Microsoft', 'Nutanix', 'PureStorage',
+        'Rockwell Automation', 'Schneider', 'Siemens', 'Veeam', 'VMware',
+        'VxRail', 'Yokogawa'
+    ];
+
     // 2. Pre-Calculate Graph Mathematics on Mount (Memoized)
     const { graph, centrality, communities, bridges } = useMemo(() => {
         const g = buildGraph(ECOSYSTEM_RELATIONSHIPS);
@@ -291,9 +299,9 @@ export default function GraphAnalyticsShell() {
                                         onChange={e => setQueryFilters({ ...queryFilters, vendor: e.target.value })}
                                     >
                                         <option value="ALL">{language === 'es' ? 'Todos' : 'All Vendors'}</option>
-                                        <option value="VMware">VMware</option>
-                                        <option value="Siemens">Siemens</option>
-                                        <option value="Rockwell Automation">Rockwell Automation</option>
+                                        {allVendors.map(vendor => (
+                                            <option key={vendor} value={vendor}>{vendor}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="pt-2 border-t border-gray-100">
