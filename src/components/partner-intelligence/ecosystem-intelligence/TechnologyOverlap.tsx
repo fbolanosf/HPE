@@ -32,16 +32,20 @@ export default function TechnologyOverlap() {
                 </p>
             </div>
 
-            <div className="overflow-x-auto border border-gray-200 rounded-xl">
+            <div className="overflow-x-auto border border-gray-200 rounded-xl relative">
                 <table className="w-full text-left text-xs text-gray-700">
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                            <th className="px-4 py-3 font-semibold w-40 sticky left-0 bg-gray-50 z-10 border-r border-gray-200">
+                            <th className="px-4 py-3 font-semibold w-40 sticky left-0 bg-gray-50 z-20 border-r border-gray-200 align-bottom">
                                 Vendor \ Technology
                             </th>
                             {data.technologies.map(t => (
-                                <th key={t} className="px-2 py-3 font-semibold transform -rotate-45 whitespace-nowrap min-w-[80px]">
-                                    <div className="w-4 h-4 translate-x-4 -translate-y-2">{t}</div>
+                                <th key={t} className="px-2 font-semibold align-bottom min-w-[60px]" style={{ height: '120px' }}>
+                                    <div className="relative h-full w-full">
+                                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 origin-left -rotate-45 whitespace-nowrap pl-4">
+                                            {t}
+                                        </div>
+                                    </div>
                                 </th>
                             ))}
                         </tr>
