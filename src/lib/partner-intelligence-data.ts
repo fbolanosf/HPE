@@ -241,7 +241,7 @@ export function searchPartners(
 // SAMPLE PARTNER DATASET (~30 partners — IT, OT, Hybrid)
 // ============================================================
 
-const BASE: Omit<Partner,
+export const BASE: Omit<Partner,
     'id' | 'company_name' | 'country' | 'city' | 'region' | 'website' |
     'partner_type' | 'technology_domain' | 'company_size' | 'estimated_employees'
 > = {
@@ -611,4 +611,8 @@ export const PARTNER_TYPE_LABEL: Record<PartnerType, string> = {
     industrial_integrator: 'Industrial Integrator',
     engineering_company: 'Engineering Company',
     automation_integrator: 'Automation Integrator',
+};
+
+export const addPartnerToDatabase = (partner: Partner) => {
+    PARTNER_DATABASE.unshift(partner); // Add to top of list
 };

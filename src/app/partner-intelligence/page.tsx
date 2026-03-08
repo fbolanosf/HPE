@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Database, Star, Map, BarChart2, Network } from 'lucide-react';
+import { ArrowLeft, Database, Star, Map, BarChart2, Network, UserPlus } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 // Dynamic imports to avoid SSR chart issues
@@ -10,8 +10,9 @@ const PartnerDatabase = dynamic(() => import('@/components/partner-intelligence/
 const PartnerScoring = dynamic(() => import('@/components/partner-intelligence/PartnerScoring'), { ssr: false });
 const EcosystemMap = dynamic(() => import('@/components/partner-intelligence/EcosystemMap'), { ssr: false });
 const EcosystemDashboard = dynamic(() => import('@/components/partner-intelligence/EcosystemDashboard'), { ssr: false });
+const PartnerOnboarding = dynamic(() => import('@/components/partner-intelligence/PartnerOnboarding'), { ssr: false });
 
-type Tab = 'database' | 'scoring' | 'ecosystem' | 'dashboard';
+type Tab = 'dashboard' | 'database' | 'scoring' | 'ecosystem' | 'onboarding';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType; description: string }[] = [
     {
@@ -37,6 +38,12 @@ const TABS: { id: Tab; label: string; icon: React.ElementType; description: stri
         label: 'Ecosystem Map',
         icon: Map,
         description: 'Mapa visual del ecosistema IT / OT / Híbrido',
+    },
+    {
+        id: 'onboarding',
+        label: 'Añadir Partner',
+        icon: UserPlus,
+        description: 'Alta manual o por IA de nuevos integradores al sistema',
     },
 ];
 
@@ -130,6 +137,7 @@ export default function PartnerIntelligencePage() {
                         {activeTab === 'database' && <PartnerDatabase />}
                         {activeTab === 'scoring' && <PartnerScoring />}
                         {activeTab === 'ecosystem' && <EcosystemMap />}
+                        {activeTab === 'onboarding' && <PartnerOnboarding />}
                     </div>
                 </div>
             </main>
