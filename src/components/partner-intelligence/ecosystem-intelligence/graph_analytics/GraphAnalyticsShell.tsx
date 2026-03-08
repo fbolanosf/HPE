@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Network, Activity, Layers, ActivitySquare, Route, Lightbulb, Search } from 'lucide-react';
+import { Network, Activity, Layers, ActivitySquare, Route, Lightbulb, Search, Table, X } from 'lucide-react';
 
 import RelationshipGraph, { AnalyticsMode } from '../RelationshipGraph';
 import { ECOSYSTEM_RELATIONSHIPS, queryEcosystem, identifyHybridIntegrators } from '@/lib/ecosystem-data';
-import { PARTNER_DATABASE, Partner } from '@/lib/partner-intelligence-data';
+import { PARTNER_DATABASE } from '@/lib/partner-intelligence-data';
+import PartnerDatabase from '../../PartnerDatabase';
 import {
     buildGraph,
     calculateDegreeCentrality,
@@ -18,6 +19,7 @@ export default function GraphAnalyticsShell() {
     const [mode, setMode] = useState<AnalyticsMode | 'queries' | 'insights'>('influence');
     const [pathStart, setPathStart] = useState<string>('');
     const [pathEnd, setPathEnd] = useState<string>('');
+    const [showQueryTable, setShowQueryTable] = useState(false);
 
     // --- Query State ---
     const [queryFilters, setQueryFilters] = useState({ vendor: 'ALL', technology: 'ALL', industry: 'ALL', isHybrid: undefined as boolean | undefined });
@@ -29,6 +31,12 @@ export default function GraphAnalyticsShell() {
         'Honeywell', 'HPE', 'Juniper', 'Microsoft', 'Nutanix', 'PureStorage',
         'Rockwell Automation', 'Schneider', 'Siemens', 'Veeam', 'VMware',
         'VxRail', 'Yokogawa'
+    ];
+    const allIndustries = [
+        'manufacturing', 'mining', 'oil_and_gas', 'energy', 'utilities',
+        'food_and_beverage', 'pharmaceutical', 'water_and_wastewater',
+        'transportation', 'smart_cities', 'retail', 'healthcare', 'finance',
+        'telecommunications', 'public_sector'
     ];
 
     // --- Query Highlight Nodes (Buscador Relacional) ---
@@ -314,12 +322,32 @@ export default function GraphAnalyticsShell() {
                                         ))}
                                     </select>
                                 </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase">{language === 'es' ? 'Filtrar por Segmento Vertical' : 'Industry Filter'}</label>
+                                    <select
+                                        className="w-full mt-1 text-xs border-gray-200 rounded-md p-2"
+                                        value={queryFilters.industry}
+                                        onChange={e => setQueryFilters({ ...queryFilters, industry: e.target.value })}
+                                    >
+                                        <option value="ALL">{language === 'es' ? 'Todas' : 'All Industries'}</option>
+                                        {allIndustries.map(ind => (
+                                            <option key={ind} value={ind}>{ind.replace(/_/g, ' ').toUpperCase()}</option>
+                                        ))}
+                                    </select>
+                                </div>
                                 <div className="pt-2 border-t border-gray-100">
                                     <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
                                         <span className="text-xs font-semibold text-gray-700">{language === 'es' ? 'Partners Compatibles' : 'Matched Partners'}</span>
                                         <span className="bg-[#01A982] text-white text-xs font-bold px-2 py-0.5 rounded-full">{queryResults.length}</span>
                                     </div>
-                                    <div className="mt-2 max-h-[150px] overflow-y-auto space-y-1">
+                                    <button
+                                        onClick={() => setShowQueryTable(true)}
+                                        className="w-full mt-2 flex items-center justify-center gap-2 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                                    >
+                                        <Table className="w-4 h-4" />
+                                        {language === 'es' ? 'Expandir Tabla Detallada' : 'View Full Database table'}
+                                    </button>
+                                    <div className="mt-3 max-h-[150px] overflow-y-auto space-y-1">
                                         {queryResults.slice(0, 50).map(p => (
                                             <div key={p.id} className="text-[11px] text-gray-600 truncate p-1.5 bg-gray-50 rounded">
                                                 {p.company_name} <span className="text-gray-400 capitalize">({p.region})</span>
@@ -362,6 +390,31 @@ export default function GraphAnalyticsShell() {
                     )}
                 </div>
             </div>
+
+            {/* Modal de Tabla Detallada */}
+            {showQueryTable && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-slate-50">
+                            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <Table className="w-5 h-5 text-[#01A982]" />
+                                {language === 'es' ? 'Explorador de Base de Datos Extendida' : 'Expanded Database Explorer'}
+                            </h2>
+                            <button onClick={() => setShowQueryTable(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {/* Al montar el componente PartnerDatabase forzamos inyectar visualmente los resultados ignorando su state interno */}
+                            {/* Para simplificar y no romper su arquitectura nativa, simplemente indicamos al usuario que filtre allí si necesita más granularidad */}
+                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                                {language === 'es' ? '💡 Tip: Utiliza los controles superiores de esta tabla para exportar a Excel el cruce topológico que acabas de realizar.' : '💡 Tip: Use the top controls of this table to export to Excel the topological query you just performed.'}
+                            </div>
+                            <PartnerDatabase />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
