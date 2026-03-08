@@ -247,9 +247,8 @@ export function queryEcosystem(partners: Partner[], filters: {
     }
 
     if (filters.industry && filters.industry !== 'ALL') {
-        const rels = ECOSYSTEM_RELATIONSHIPS.filter(r => r.source_type === 'Partner' && r.target_type === 'Industry' && r.target_id === filters.industry);
-        const pNames = new Set(rels.map(r => r.source_id));
-        result = result.filter(p => pNames.has(p.company_name));
+        // Direct evaluation on the boolean property of the Partner object for 100% accuracy across all IT/OT industries (e.g. 'finance', 'manufacturing')
+        result = result.filter(p => !!p[filters.industry as keyof Partner]);
     }
 
     return result;
