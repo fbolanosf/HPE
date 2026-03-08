@@ -11,8 +11,9 @@ const PartnerScoring = dynamic(() => import('@/components/partner-intelligence/P
 const EcosystemMap = dynamic(() => import('@/components/partner-intelligence/EcosystemMap'), { ssr: false });
 const EcosystemDashboard = dynamic(() => import('@/components/partner-intelligence/EcosystemDashboard'), { ssr: false });
 const PartnerOnboarding = dynamic(() => import('@/components/partner-intelligence/PartnerOnboarding'), { ssr: false });
+const EcosystemIntelligenceShell = dynamic(() => import('@/components/partner-intelligence/ecosystem-intelligence/EcosystemIntelligenceShell'), { ssr: false });
 
-type Tab = 'dashboard' | 'database' | 'scoring' | 'ecosystem' | 'onboarding';
+type Tab = 'dashboard' | 'database' | 'scoring' | 'ecosystem' | 'intelligence' | 'onboarding';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType; description: string }[] = [
     {
@@ -20,6 +21,12 @@ const TABS: { id: Tab; label: string; icon: React.ElementType; description: stri
         label: 'Analytics Dashboard',
         icon: BarChart2,
         description: 'KPIs y métricas del ecosistema global de partners',
+    },
+    {
+        id: 'intelligence',
+        label: 'Ecosystem Intelligence',
+        icon: Network,
+        description: 'Análisis Relacional y Grafos del Ecosistema',
     },
     {
         id: 'database',
@@ -134,6 +141,7 @@ export default function PartnerIntelligencePage() {
                     {/* Tab content */}
                     <div className="p-6">
                         {activeTab === 'dashboard' && <EcosystemDashboard />}
+                        {activeTab === 'intelligence' && <EcosystemIntelligenceShell />}
                         {activeTab === 'database' && <PartnerDatabase />}
                         {activeTab === 'scoring' && <PartnerScoring />}
                         {activeTab === 'ecosystem' && <EcosystemMap />}
