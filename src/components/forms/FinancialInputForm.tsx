@@ -105,21 +105,7 @@ export default function FinancialInputForm({ onCalculate }: FinancialInputFormPr
                     </div>
                 </div>
 
-                {/* Sección HPE GreenLake */}
-                <div className="group bg-white rounded-xl border-2 border-[#01A982]/20 hover:border-[#01A982]/40 hover:shadow-xl hover:shadow-[#01A982]/10 transition-all duration-300 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-[#01A982]/5 rounded-bl-full -mr-2 -mt-2"></div>
-                    <div className="p-3 border-b border-[#01A982]/10 bg-[#01A982]/5 rounded-t-xl flex items-center">
-                        <div className="w-1 h-4 bg-[#01A982] rounded-full mr-2 shadow-sm"></div>
-                        <h3 className="font-bold text-sm text-gray-900">Propuesta HPE GreenLake</h3>
-                    </div>
-                    <div className="p-4 space-y-4">
-                        <div className="bg-[#01A982]/5 p-2 rounded-lg border border-[#01A982]/10">
-                            <InputGroup label="Compromiso Mensual" name="greenlakeMonthlyCommit" value={formData.greenlakeMonthlyCommit} onChange={handleChange} prefix="$" highlight />
-                        </div>
-                        <InputGroup label="Buffer (Estimado)" name="greenlakeBufferUsage" value={formData.greenlakeBufferUsage} onChange={handleChange} prefix="$" />
-                        <InputGroup label="Servicios Gestionados" name="greenlakeServicesCost" value={formData.greenlakeServicesCost} onChange={handleChange} prefix="$" />
-                    </div>
-                </div>
+
 
                 {/* Sección Soluciones HPE (Premium Selection) */}
                 <div className="group bg-white rounded-xl border border-purple-200 hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300">
