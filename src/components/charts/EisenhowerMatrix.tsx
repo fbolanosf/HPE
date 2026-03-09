@@ -115,13 +115,13 @@ const EisenhowerMatrix = forwardRef<EisenhowerMatrixRef, EisenhowerMatrixProps>(
         };
 
         const xAxisLabels: Record<XAxisMode, string> = {
-            complexity: 'Facilidad de Implementación →',
+            complexity: 'Dificultad de Implementación →',
             roi: 'Retorno de Inversión (ROI) →',
             maturity: 'Madurez Tecnológica →',
         };
 
         const xAxisButtonLabels: Record<XAxisMode, string> = {
-            complexity: 'Facilidad',
+            complexity: 'Dificultad',
             roi: 'ROI',
             maturity: 'Madurez',
         };
