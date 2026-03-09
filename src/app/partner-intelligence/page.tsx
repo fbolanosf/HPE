@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 
 // Dynamic imports to avoid SSR chart issues
 const PartnerDatabase = dynamic(() => import('@/components/partner-intelligence/PartnerDatabase'), { ssr: false });
-const PartnerScoring = dynamic(() => import('@/components/partner-intelligence/PartnerScoring'), { ssr: false });
+const BusinessAndProductAffinityShell = dynamic(() => import('@/components/partner-intelligence/BusinessAndProductAffinityShell'), { ssr: false });
 const EcosystemMap = dynamic(() => import('@/components/partner-intelligence/EcosystemMap'), { ssr: false });
 const EcosystemDashboard = dynamic(() => import('@/components/partner-intelligence/EcosystemDashboard'), { ssr: false });
 const PartnerOnboarding = dynamic(() => import('@/components/partner-intelligence/PartnerOnboarding'), { ssr: false });
@@ -36,9 +36,9 @@ const TABS: { id: Tab; label: string; icon: React.ElementType; description: stri
     },
     {
         id: 'scoring',
-        label: 'Opportunity Scoring',
+        label: 'Business & Product Affinity',
         icon: Star,
-        description: 'Ranking de partners con mayor potencial para HPE',
+        description: 'Ranking de partners con mayor potencial para HPE y afinidad de portafolio',
     },
     {
         id: 'ecosystem',
@@ -143,7 +143,7 @@ export default function PartnerIntelligencePage() {
                         {activeTab === 'dashboard' && <EcosystemDashboard />}
                         {activeTab === 'intelligence' && <EcosystemIntelligenceShell />}
                         {activeTab === 'database' && <PartnerDatabase />}
-                        {activeTab === 'scoring' && <PartnerScoring />}
+                        {activeTab === 'scoring' && <BusinessAndProductAffinityShell />}
                         {activeTab === 'ecosystem' && <EcosystemMap />}
                         {activeTab === 'onboarding' && <PartnerOnboarding />}
                     </div>
