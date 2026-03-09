@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Partner } from '@/lib/partner-intelligence-data';
 import {
     ComposableMap,
     Geographies,
@@ -60,7 +61,59 @@ type ColorMode = 'vendor' | 'domain';
 
 interface GeoMapProps {
     colorMode?: ColorMode;
+    dbPartners?: Partner[];
 }
+
+// Country → lat/lng centroids for LATAM countries
+const COUNTRY_COORDS: Record<string, { lat: number; lng: number }> = {
+    'Mexico': { lat: 23.6, lng: -102.5 },
+    'Colombia': { lat: 4.6, lng: -74.1 },
+    'Brazil': { lat: -14.2, lng: -51.9 },
+    'Argentina': { lat: -38.4, lng: -63.6 },
+    'Chile': { lat: -35.7, lng: -71.5 },
+    'Peru': { lat: -9.2, lng: -75.0 },
+    'Ecuador': { lat: -1.8, lng: -78.2 },
+    'Bolivia': { lat: -16.3, lng: -63.6 },
+    'Venezuela': { lat: 6.4, lng: -66.6 },
+    'Paraguay': { lat: -23.4, lng: -58.4 },
+    'Uruguay': { lat: -32.5, lng: -55.8 },
+    'Panama': { lat: 8.9, lng: -79.5 },
+    'Costa Rica': { lat: 9.7, lng: -83.8 },
+    'Guatemala': { lat: 15.8, lng: -90.2 },
+    'Honduras': { lat: 15.2, lng: -86.2 },
+    'El Salvador': { lat: 13.8, lng: -88.9 },
+};
+
+// City → specific lat/lng true coordinates
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+    'Mexico City': { lat: 19.4326, lng: -99.1332 },
+    'Monterrey': { lat: 25.6866, lng: -100.3161 },
+    'Guadalajara': { lat: 20.6597, lng: -103.3500 },
+    'Querétaro': { lat: 20.5888, lng: -100.3899 },
+    'Bogotá': { lat: 4.7110, lng: -74.0721 },
+    'Medellín': { lat: 6.2442, lng: -75.5812 },
+    'São Paulo': { lat: -23.5505, lng: -46.6333 },
+    'Rio de Janeiro': { lat: -22.9068, lng: -43.1729 },
+    'Curitiba': { lat: -25.4290, lng: -49.2671 },
+    'Santiago': { lat: -33.4489, lng: -70.6693 },
+    'Antofagasta': { lat: -23.6500, lng: -70.4000 },
+    'Buenos Aires': { lat: -34.6037, lng: -58.3816 },
+    'Córdoba': { lat: -31.4201, lng: -64.1888 },
+    'Lima': { lat: -12.0464, lng: -77.0282 },
+    'Quito': { lat: -0.1807, lng: -78.4678 },
+    'Santa Cruz': { lat: -17.7833, lng: -63.1821 },
+    'Caracas': { lat: 10.4806, lng: -66.9036 },
+};
+
+function getCoords(country: string, city: string) {
+    if (CITY_COORDS[city]) return CITY_COORDS[city];
+    const base = COUNTRY_COORDS[country] || COUNTRY_COORDS['Mexico'];
+    return {
+        lat: base.lat + (Math.random() * 2 - 1),
+        lng: base.lng + (Math.random() * 2 - 1),
+    };
+}
+
 
 const MOCK_CONTACTS = [
     "Director Comercial IT",
@@ -78,8 +131,8 @@ function getMockContactInfo(name: string) {
     return { phone, role };
 }
 
-export default function GeoMap({ colorMode = 'vendor' }: GeoMapProps) {
-    const [partners, setPartners] = useState<ScrapedPartner[]>([]);
+export default function GeoMap({ colorMode = 'vendor', dbPartners = [] }: GeoMapProps) {
+    const [scrapedPartners, setScrapedPartners] = useState<ScrapedPartner[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [tooltip, setTooltip] = useState<TooltipState | null>(null);
@@ -105,7 +158,7 @@ export default function GeoMap({ colorMode = 'vendor' }: GeoMapProps) {
             const withCoords = (data.partners as ScrapedPartner[]).filter(
                 (p) => p.lat && p.lng
             );
-            setPartners(withCoords);
+            setScrapedPartners(withCoords);
             setScrapedCount(data.scraped_live ?? 0);
         } catch (e) {
             setError(e instanceof Error ? e.message : 'Error desconocido');
@@ -115,6 +168,36 @@ export default function GeoMap({ colorMode = 'vendor' }: GeoMapProps) {
     }, []);
 
     useEffect(() => { fetchPartners(); }, [fetchPartners]);
+
+    const partners = useMemo(() => {
+        const dbMapped: ScrapedPartner[] = dbPartners.map(p => {
+            const possibleVendors = ['vmware', 'vxrail', 'dell', 'cisco', 'microsoft', 'aws', 'google_cloud', 'nutanix', 'siemens', 'rockwell', 'schneider', 'abb', 'honeywell', 'aveva', 'emerson', 'yokogawa', 'hpe'];
+            let vendor = 'HPE';
+            for (const v of possibleVendors) {
+                if (p[`${v}_partner` as keyof Partner]) {
+                    vendor = v === 'rockwell' ? 'Rockwell Automation'
+                        : v === 'schneider' ? 'Schneider Electric'
+                            : v === 'google_cloud' ? 'Google Cloud'
+                                : v.charAt(0).toUpperCase() + v.slice(1);
+                    break;
+                }
+            }
+            return {
+                company_name: p.company_name,
+                country: p.country,
+                city: p.city,
+                website: p.website || '',
+                vendor: vendor,
+                source_url: 'HPE Partner Database',
+                domain: p.technology_domain,
+                ...getCoords(p.country, p.city)
+            };
+        });
+
+        const scrapeNames = new Set(scrapedPartners.map(p => p.company_name.toLowerCase()));
+        const uniqueDb = dbMapped.filter(p => !scrapeNames.has(p.company_name.toLowerCase()));
+        return [...scrapedPartners, ...uniqueDb];
+    }, [scrapedPartners, dbPartners]);
 
     const getColor = (p: ScrapedPartner) => {
         if (activeColorMode === 'domain') return DOMAIN_COLORS[p.domain] ?? '#6366f1';

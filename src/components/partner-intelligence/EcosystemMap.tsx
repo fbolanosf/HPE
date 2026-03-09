@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
 import {
     PARTNER_DATABASE, scorePartner, DOMAIN_LABEL, PARTNER_TYPE_LABEL,
     TechnologyDomain, Partner
@@ -10,6 +9,7 @@ import {
     Tooltip, Legend, ResponsiveContainer, Cell,
 } from 'recharts';
 import { MapPin, Map, BarChart2 } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
 const GeoMap = dynamic(() => import('./GeoMap'), {
@@ -114,9 +114,21 @@ export default function EcosystemMap() {
     const [selectedDomain, setSelectedDomain] = useState<TechnologyDomain | 'ALL'>('ALL');
     const [selectedCountry, setSelectedCountry] = useState<string | 'ALL'>('ALL');
     const [viewMode, setViewMode] = useState<ViewMode>('geo');
+    const [dbPartners, setDbPartners] = useState<Partner[]>([]);
+
+    useEffect(() => {
+        setDbPartners([...PARTNER_DATABASE]);
+        const interval = setInterval(() => {
+            setDbPartners(current => {
+                if (current.length !== PARTNER_DATABASE.length) return [...PARTNER_DATABASE];
+                return current;
+            });
+        }, 1500);
+        return () => clearInterval(interval);
+    }, []);
 
     const chartData = useMemo(() => {
-        return PARTNER_DATABASE
+        return dbPartners
             .filter((p) => {
                 if (selectedRegion !== 'ALL' && p.region !== selectedRegion) return false;
                 if (selectedDomain !== 'ALL' && p.technology_domain !== selectedDomain) return false;
@@ -140,7 +152,7 @@ export default function EcosystemMap() {
     }, [selectedRegion, selectedDomain]);
 
     const countryDataPool = useMemo(() => {
-        return PARTNER_DATABASE.filter(p => {
+        return dbPartners.filter(p => {
             if (selectedRegion !== 'ALL' && p.region !== selectedRegion) return false;
             if (selectedDomain !== 'ALL' && p.technology_domain !== selectedDomain) return false;
             return true;
@@ -161,9 +173,9 @@ export default function EcosystemMap() {
     };
 
     const stats = {
-        IT: PARTNER_DATABASE.filter((p) => p.technology_domain === 'IT').length,
-        OT: PARTNER_DATABASE.filter((p) => p.technology_domain === 'OT').length,
-        IT_OT_HYBRID: PARTNER_DATABASE.filter((p) => p.technology_domain === 'IT_OT_HYBRID').length,
+        IT: dbPartners.filter((p) => p.technology_domain === 'IT').length,
+        OT: dbPartners.filter((p) => p.technology_domain === 'OT').length,
+        IT_OT_HYBRID: dbPartners.filter((p) => p.technology_domain === 'IT_OT_HYBRID').length,
     };
 
     return (
@@ -235,7 +247,7 @@ export default function EcosystemMap() {
             </div>
 
             {/* ── Geo Map View ─────────────────────────────────────── */}
-            {viewMode === 'geo' && <GeoMap />}
+            {viewMode === 'geo' && <GeoMap dbPartners={dbPartners} />}
 
             {/* ── Scatter Chart View ───────────────────────────────── */}
             {viewMode === 'scatter' && (
