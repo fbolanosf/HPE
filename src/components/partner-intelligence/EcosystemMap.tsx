@@ -241,7 +241,7 @@ export default function EcosystemMap() {
             {viewMode === 'scatter' && (
                 <>
                     <div className="bg-white border border-gray-200 rounded-xl p-4">
-                        <p className="text-xs text-gray-400 mb-3">Eje X: Score de Oportunidad HPE &nbsp;|&nbsp; Eje Y: Tamaño de empresa (Small → Enterprise)</p>
+                        <p className="text-xs text-gray-400 mb-3">Eje X: Score de Oportunidad HPE &nbsp;|&nbsp; Eje Y: Tamaño de empresa (Small → Very Large Enterprise)</p>
                         <ResponsiveContainer width="100%" height={400}>
                             <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -253,7 +253,7 @@ export default function EcosystemMap() {
                                 />
                                 <YAxis
                                     dataKey="y" type="number" domain={[0, 100]}
-                                    tickFormatter={(v) => v < 30 ? 'Small' : v < 50 ? 'Medium' : v < 75 ? 'Large' : 'Enterprise'}
+                                    tickFormatter={(v) => v < 30 ? 'Small' : v < 50 ? 'Mid Size' : v < 75 ? 'Large Enterprise' : 'Very Large Enterprise'}
                                     tick={{ fontSize: 10 }}
                                     width={68}
                                 />
