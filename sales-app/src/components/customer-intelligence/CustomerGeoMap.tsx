@@ -161,10 +161,11 @@ export default function CustomerGeoMap({ filterRegion }: Props) {
                 zoomControl: true,
             });
 
-            // OpenStreetMap Humanitarian style — blue ocean, clear land colors, no API key needed
-            L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://hot.openstreetmap.org">HOT</a>',
-                maxZoom: 18,
+            // CartoDB Positron — clear white land, natural blue ocean, no API key needed
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19,
             }).addTo(map);
 
             customers.forEach(c => {
