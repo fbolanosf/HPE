@@ -8,7 +8,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
     PieChart, Pie, Cell, ResponsiveContainer,
 } from 'recharts';
-import { Building2, Flame, TrendingUp, Minus, AlertTriangle, Download, DollarSign } from 'lucide-react';
+import { Building2, Activity, TrendingUp, Minus, AlertTriangle, Download, Server, Star, Zap } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 function KPICard({ label, value, sub, icon: Icon, color }: {
@@ -30,9 +30,9 @@ function KPICard({ label, value, sub, icon: Icon, color }: {
 }
 
 const TIER_COLORS: Record<string, string> = {
-    Hot: 'bg-red-100 text-red-700',
+    Hot: 'bg-green-100 text-green-700',
     Warm: 'bg-yellow-100 text-yellow-700',
-    Cold: 'bg-blue-100 text-blue-700',
+    Cold: 'bg-red-100 text-red-700',
 };
 
 function Badge({ className, children }: { className: string; children: React.ReactNode }) {
@@ -44,7 +44,7 @@ function Badge({ className, children }: { className: string; children: React.Rea
 }
 
 const HYPERVISOR_COLORS = ['#01A982', '#2563eb', '#7c3aed', '#ea580c', '#f59e0b', '#6b7280'];
-const PIE_COLORS = ['#ef4444', '#f59e0b', '#3b82f6'];
+const PIE_COLORS = ['#16a34a', '#f59e0b', '#dc2626'];
 
 export default function CustomerDashboard() {
     const [filters, setFilters] = useState<CustomerFilters>({});
@@ -68,9 +68,9 @@ export default function CustomerDashboard() {
 
     // Tier pie
     const tierData = [
-        { name: 'Hot 🔥', value: totals.hot },
-        { name: 'Warm ⚡', value: totals.warm },
-        { name: 'Cold ❄️', value: totals.cold },
+        { name: 'Alta Prioridad', value: totals.hot },
+        { name: 'Media Prioridad', value: totals.warm },
+        { name: 'Baja Prioridad', value: totals.cold },
     ].filter(d => d.value > 0);
 
     // Industry bar
@@ -117,9 +117,9 @@ export default function CustomerDashboard() {
             {/* KPI Row */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 <KPICard label="Total Prospects" value={totals.all} icon={Building2} color="bg-gray-700" sub="Base de clientes" />
-                <KPICard label="🔴 Hot" value={totals.hot} icon={Flame} color="bg-red-500" sub="Score ≥ 18 pts" />
-                <KPICard label="🟡 Warm" value={totals.warm} icon={TrendingUp} color="bg-amber-500" sub="Score 9-17 pts" />
-                <KPICard label="🔵 Cold" value={totals.cold} icon={Minus} color="bg-blue-500" sub="Score < 9 pts" />
+                <KPICard label="Alta Prioridad" value={totals.hot} icon={Activity} color="bg-green-600" sub="Score ≥ 18 pts" />
+                <KPICard label="Media Prioridad" value={totals.warm} icon={TrendingUp} color="bg-amber-500" sub="Score 9-17 pts" />
+                <KPICard label="Baja Prioridad" value={totals.cold} icon={Minus} color="bg-red-500" sub="Score < 9 pts" />
                 <KPICard label="Impacto Broadcom" value={totals.broadcom} icon={AlertTriangle} color="bg-orange-600" sub="Candidatos urgentes" />
             </div>
 
@@ -128,7 +128,7 @@ export default function CustomerDashboard() {
                 {/* Tier Pie */}
                 <div className="bg-white border border-gray-200 rounded-xl p-5">
                     <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <Flame className="h-4 w-4 text-red-500" /> Distribución por Prioridad de Venta
+                        <Activity className="h-4 w-4 text-green-600" /> Distribución por Prioridad de Venta
                     </h4>
                     <ResponsiveContainer width="100%" height={280}>
                         <PieChart>
@@ -148,7 +148,7 @@ export default function CustomerDashboard() {
                 {/* Hypervisor bar */}
                 <div className="bg-white border border-gray-200 rounded-xl p-5">
                     <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-[#01A982]" /> Hypervisor Actual de los Prospects
+                        <Server className="h-4 w-4 text-[#01A982]" /> Hypervisor Actual de los Prospects
                     </h4>
                     <ResponsiveContainer width="100%" height={280}>
                         <BarChart data={hypervisorData} layout="vertical" margin={{ left: 10, right: 20 }}>
@@ -185,7 +185,7 @@ export default function CustomerDashboard() {
             {/* Top prospects */}
             <div className="bg-white border border-gray-200 rounded-xl p-5">
                 <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <Flame className="h-4 w-4 text-red-500" /> Top 5 Prospects — Mayor Potencial HPE
+                    <Star className="h-4 w-4 text-amber-500" /> Top 5 Prospects — Mayor Potencial HPE
                 </h4>
                 <div className="space-y-3">
                     {topCustomers.map((c, i) => (
@@ -198,7 +198,7 @@ export default function CustomerDashboard() {
                                     <Badge className={TIER_COLORS[c.tier]}>{c.tier}</Badge>
                                     <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{c.current_hypervisor}</span>
                                     {c.broadcom_pricing_impact && (
-                                        <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium">⚡ Broadcom</span>
+                                        <span className="inline-flex items-center gap-0.5 text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium"><Zap className="h-2.5 w-2.5" /> Broadcom</span>
                                     )}
                                 </div>
                                 <div className="mt-1 h-2 bg-gray-100 rounded-full overflow-hidden">

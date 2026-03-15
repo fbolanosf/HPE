@@ -2,21 +2,23 @@
 
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
-import { Map, LayoutDashboard, Database, UserPlus, Globe, Filter, X } from 'lucide-react';
+import { Map, LayoutDashboard, Database, UserPlus, Globe, Filter, X, BarChart2, Zap } from 'lucide-react';
 import CustomerDashboard from '@/components/customer-intelligence/CustomerDashboard';
 import CustomerDatabase from '@/components/customer-intelligence/CustomerDatabase';
 import CustomerOnboarding from '@/components/customer-intelligence/CustomerOnboarding';
+import CustomerAffinityAnalysis from '@/components/customer-intelligence/CustomerAffinityAnalysis';
 
 const CustomerGeoMap = dynamic(
     () => import('@/components/customer-intelligence/CustomerGeoMap'),
     { ssr: false, loading: () => <div className="w-full h-96 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm">Cargando mapa...</div> }
 );
 
-type TabKey = 'dashboard' | 'map' | 'database' | 'add';
+type TabKey = 'dashboard' | 'map' | 'affinity' | 'database' | 'add';
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { key: 'map', label: 'Mapa Global', icon: Map },
+    { key: 'affinity', label: 'Afinidad HPE', icon: BarChart2 },
     { key: 'database', label: 'Base de Datos', icon: Database },
     { key: 'add', label: 'Agregar Cliente', icon: UserPlus },
 ];
@@ -84,9 +86,10 @@ export default function CustomerIntelligencePage() {
 
             {/* Broadcom Alert Banner */}
             <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white">
-                <div className="max-w-7xl mx-auto px-4 py-2 sm:px-6 lg:px-8">
-                    <p className="text-xs text-center font-medium">
-                        ⚡ <strong>Oportunidad Broadcom:</strong> El cambio de modelo de precios de VMware by Broadcom generó incrementos de hasta <strong>400%</strong> — Los clientes afectados son tus mejores prospectos para HPE VM Essentials.
+                <div className="max-w-7xl mx-auto px-4 py-2 sm:px-6 lg:px-8 flex items-center justify-center gap-2">
+                    <Zap className="h-3.5 w-3.5 flex-shrink-0" />
+                    <p className="text-xs font-medium text-center">
+                        <strong>Oportunidad Broadcom:</strong> El cambio de modelo de precios de VMware by Broadcom generó incrementos de hasta <strong>400%</strong> — Los clientes afectados son tus mejores prospectos para HPE VM Essentials.
                     </p>
                 </div>
             </div>
@@ -101,11 +104,12 @@ export default function CustomerIntelligencePage() {
                                 <Map className="h-4 w-4 text-cyan-600" />
                                 Mapa Global de Clientes Potenciales
                             </h3>
-                            <p className="text-xs text-gray-500">Haz clic en cada punto para ver el perfil completo del prospect y sus señales de compra</p>
+                            <p className="text-xs text-gray-500">Selecciona un punto del mapa para ver el perfil completo del prospect y sus señales de compra en el panel lateral</p>
                         </div>
                         <CustomerGeoMap filterRegion={region !== 'ALL' ? region : undefined} />
                     </div>
                 )}
+                {activeTab === 'affinity' && <CustomerAffinityAnalysis />}
                 {activeTab === 'database' && <CustomerDatabase filterRegion={region !== 'ALL' ? region : undefined} />}
                 {activeTab === 'add' && <CustomerOnboarding />}
             </main>

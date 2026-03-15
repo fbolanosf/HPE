@@ -5,13 +5,13 @@ import {
     CUSTOMER_DATABASE, scoreCustomer, searchCustomers,
     CustomerFilters, HypervisorInUse, CustomerSize, CloudAdoption
 } from '@/lib/customer-intelligence-data';
-import { Search, X, AlertTriangle, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, X, AlertTriangle, Download, ChevronDown, ChevronUp, Zap, Monitor, RefreshCcw, CloudOff, Check, Database as DatabaseIcon, Activity, Minus } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const TIER_COLORS: Record<string, string> = {
-    Hot: 'bg-red-100 text-red-700 border border-red-200',
+    Hot: 'bg-green-100 text-green-700 border border-green-200',
     Warm: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
-    Cold: 'bg-blue-100 text-blue-700 border border-blue-200',
+    Cold: 'bg-red-100 text-red-700 border border-red-200',
 };
 
 function Badge({ className, children }: { className: string; children: React.ReactNode }) {
@@ -90,9 +90,9 @@ export default function CustomerDatabase({ filterRegion }: Props) {
                     <select value={filters.tier ?? 'ALL'} onChange={e => setFilters(f => ({ ...f, tier: e.target.value === 'ALL' ? undefined : e.target.value as never }))}
                         className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
                         <option value="ALL">Prioridad: Todas</option>
-                        <option value="Hot">🔴 Hot</option>
-                        <option value="Warm">🟡 Warm</option>
-                        <option value="Cold">🔵 Cold</option>
+                        <option value="Hot">Alta Prioridad</option>
+                        <option value="Warm">Media Prioridad</option>
+                        <option value="Cold">Baja Prioridad</option>
                     </select>
 
                     {/* Hypervisor */}
@@ -196,11 +196,11 @@ export default function CustomerDatabase({ filterRegion }: Props) {
                                         </td>
                                         <td className="px-4 py-2.5 text-center"><Badge className={TIER_COLORS[c.tier]}>{c.tier}</Badge></td>
                                         <td className="px-4 py-2.5 text-center">
-                                            <div className="flex gap-1 justify-center">
-                                                {c.broadcom_pricing_impact && <span title="Impacto Broadcom" className="text-orange-500">⚡</span>}
-                                                {c.existing_hpe_hardware && <span title="HPE Hardware" className="text-[#01A982]">🖥️</span>}
-                                                {c.vmware_license_renewal_due && <span title="Renovación VMware" className="text-blue-500">🔄</span>}
-                                                {c.cloud_repatriation_interest && <span title="Repatriación Cloud" className="text-purple-500">☁️</span>}
+                                            <div className="flex gap-1 justify-center flex-wrap">
+                                                {c.broadcom_pricing_impact && <span title="Impacto Broadcom" className="inline-flex items-center gap-0.5 text-[9px] bg-orange-100 text-orange-700 border border-orange-200 px-1 py-0.5 rounded font-medium"><Zap className="h-2.5 w-2.5" />BC</span>}
+                                                {c.existing_hpe_hardware && <span title="HPE Hardware existente" className="inline-flex items-center gap-0.5 text-[9px] bg-teal-100 text-teal-700 border border-teal-200 px-1 py-0.5 rounded font-medium"><Monitor className="h-2.5 w-2.5" />HPE</span>}
+                                                {c.vmware_license_renewal_due && <span title="Renovación VMware pendiente" className="inline-flex items-center gap-0.5 text-[9px] bg-blue-100 text-blue-700 border border-blue-200 px-1 py-0.5 rounded font-medium"><RefreshCcw className="h-2.5 w-2.5" />VM</span>}
+                                                {c.cloud_repatriation_interest && <span title="Interés en repatriar cloud" className="inline-flex items-center gap-0.5 text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1 py-0.5 rounded font-medium"><CloudOff className="h-2.5 w-2.5" />Rpt</span>}
                                             </div>
                                         </td>
                                     </tr>
@@ -222,13 +222,13 @@ export default function CustomerDatabase({ filterRegion }: Props) {
                                                     <div>
                                                         <div className="font-bold text-gray-700 mb-1">Señales de Oportunidad</div>
                                                         <div className="flex flex-wrap gap-1">
-                                                            {c.broadcom_pricing_impact && <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px]">⚡ Broadcom Impact</span>}
-                                                            {c.vmware_license_renewal_due && <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]">🔄 Renovación VMware</span>}
-                                                            {c.vmware_version_eol && <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px]">⛔ VMware EOL</span>}
-                                                            {c.datacenter_refresh_cycle && <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px]">🔧 Refresh Pendiente</span>}
-                                                            {c.existing_hpe_hardware && <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px]">✅ HPE Hardware</span>}
-                                                            {c.cloud_repatriation_interest && <span className="bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded text-[10px]">☁️ Cloud Repatriation</span>}
-                                                            {c.hpe_greenlake_interest && <span className="bg-[#e6f7f2] text-[#01A982] px-1.5 py-0.5 rounded text-[10px]">🌱 GreenLake Interest</span>}
+                                                            {c.broadcom_pricing_impact && <span className="inline-flex items-center gap-0.5 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px]"><Zap className="h-2.5 w-2.5" /> Broadcom Impact</span>}
+                                                            {c.vmware_license_renewal_due && <span className="inline-flex items-center gap-0.5 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]"><RefreshCcw className="h-2.5 w-2.5" /> Renovación VMware</span>}
+                                                            {c.vmware_version_eol && <span className="inline-flex items-center gap-0.5 bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px]"><AlertTriangle className="h-2.5 w-2.5" /> VMware EOL</span>}
+                                                            {c.datacenter_refresh_cycle && <span className="inline-flex items-center gap-0.5 bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px]"><RefreshCcw className="h-2.5 w-2.5" /> Refresh Pendiente</span>}
+                                                            {c.existing_hpe_hardware && <span className="inline-flex items-center gap-0.5 bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px]"><Check className="h-2.5 w-2.5" /> HPE Hardware</span>}
+                                                            {c.cloud_repatriation_interest && <span className="inline-flex items-center gap-0.5 bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded text-[10px]"><CloudOff className="h-2.5 w-2.5" /> Cloud Repatriation</span>}
+                                                            {c.hpe_greenlake_interest && <span className="inline-flex items-center gap-0.5 bg-[#e6f7f2] text-[#01A982] px-1.5 py-0.5 rounded text-[10px]"><Activity className="h-2.5 w-2.5" /> GreenLake Interest</span>}
                                                         </div>
                                                     </div>
                                                     <div>
