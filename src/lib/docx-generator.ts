@@ -346,10 +346,13 @@ export async function generateProposalDocument(options: ProposalOptions) {
                 );
 
                 const solLabels: Record<string, string> = {
-                    'morpheus': 'HPE Morpheus',
+                    'morpheus': 'HPE Morpheus VME',
                     'vmEssentials': 'HPE VM Essentials',
                     'zerto': 'HPE Zerto',
                     'opsRamp': 'HPE OpsRamp',
+                    'pcbeBusiness': 'PCBE Business Edition',
+                    'pcbeEnterprise': 'PCBE Enterprise Edition',
+                    'storeOnce': 'HPE StoreOnce',
                 };
 
                 const solValues: Record<string, number> = {
@@ -357,6 +360,9 @@ export async function generateProposalDocument(options: ProposalOptions) {
                     'vmEssentials': lastYear.vmEssentialsCumulative,
                     'zerto': lastYear.zertoCumulative,
                     'opsRamp': lastYear.opsRampCumulative,
+                    'pcbeBusiness': lastYear.pcbeBusinessCumulative,
+                    'pcbeEnterprise': lastYear.pcbeEnterpriseCumulative,
+                    'storeOnce': lastYear.storeOnceCumulative,
                 };
 
                 selectedSols.forEach((sol: string) => {

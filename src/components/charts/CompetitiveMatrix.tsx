@@ -7,10 +7,15 @@ import { Check, X, Trophy, ArrowRight, Zap, Shield, Server, Box, Activity, Cloud
 const SOLUTION_ICONS: Record<string, any> = {
     'morpheus': Box,
     'vm-essentials': Server,
+    'vm_essentials_infra': Server,
+    'vm_essentials_license': Server,
     'simplivity': Zap,
     'zerto': Shield,
     'opsramp': Activity,
-    'greenlake': Cloud
+    'greenlake': Cloud,
+    'pcbe_business': Cloud,
+    'pcbe_enterprise': Cloud,
+    'storeonce': Shield
 };
 
 interface CompetitiveMatrixProps {

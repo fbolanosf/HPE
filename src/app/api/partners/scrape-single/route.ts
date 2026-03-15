@@ -25,11 +25,16 @@ export async function POST(req: Request) {
         }
 
         const res = await axios.get(fetchUrl, {
-            timeout: 10000,
+            timeout: 15000,
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'Referer': 'https://www.google.com/',
+                'Upgrade-Insecure-Requests': '1'
             }
         });
 
@@ -91,7 +96,7 @@ export async function POST(req: Request) {
 
         // Determine Domain (IT, OT, HYBRID)
         let domain: "IT" | "OT" | "IT_OT_HYBRID" = "IT";
-        const hasIT = vmware_partner || hpe_partner || dell_partner || nutanix_partner || cisco_partner || microsoft_partner || aws_partner || google_cloud_partner || veeam_partner || purestorage_partner || juniper_partner;
+        const hasIT = vmware_partner || vxrail_partner || hpe_partner || dell_partner || nutanix_partner || cisco_partner || microsoft_partner || aws_partner || google_cloud_partner || veeam_partner || purestorage_partner || juniper_partner;
         const hasOT = siemens_partner || rockwell_partner || schneider_partner || abb_partner || honeywell_partner || emerson_partner || aveva_partner;
 
         if (hasIT && hasOT) domain = "IT_OT_HYBRID";
@@ -127,6 +132,17 @@ export async function POST(req: Request) {
         return NextResponse.json(inferredProfile);
     } catch (error: any) {
         console.error('Scraping error:', error.message);
-        return NextResponse.json({ error: 'Failed to access the provided website. They might be blocking automated requests or the URL is invalid.' }, { status: 500 });
+        
+        // Granular error handling for UX
+        let message = 'No se pudo acceder al sitio web.';
+        if (error.code === 'ENOTFOUND') message = 'El dominio no existe o la URL es inválida.';
+        if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) message = 'El sitio tardó demasiado en responder (Timeout).';
+        if (error.response?.status === 403 || error.response?.status === 401) message = 'El sitio web bloqueó el acceso automático (CORS/WAF).';
+        if (error.response?.status === 404) message = 'La página especificada no existe (Error 404).';
+        
+        return NextResponse.json({ 
+            error: message,
+            detail: error.message 
+        }, { status: 500 });
     }
 }

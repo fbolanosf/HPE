@@ -1,17 +1,38 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Partner } from '@/lib/partner-intelligence-data';
-import {
-    ComposableMap,
-    Geographies,
-    Geography,
-    Marker,
-    ZoomableGroup,
-} from 'react-simple-maps';
-import { Globe, RefreshCw, AlertCircle, Wifi, Users, Phone, MapPin, Filter } from 'lucide-react';
+import { Globe, RefreshCw, AlertCircle, Wifi, Users, Phone, MapPin, Filter, Maximize2, Minimize2 } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
-const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+// Fix for default marker icons and clustering style
+const createCustomIcon = (color: string) => {
+    return new L.DivIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.4); z-index: 1000;"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+    });
+};
+
+const createClusterCustomIcon = (cluster: any) => {
+    const count = cluster.getChildCount();
+    return new L.DivIcon({
+        html: `
+            <div class="custom-cluster-icon" style="background: rgba(1, 169, 130, 0.95); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 3px solid rgba(255, 255, 255, 0.9); box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: 900; font-size: 14px; z-index: 2000;">
+                ${count}
+                <div class="pulse-ring"></div>
+            </div>
+        `,
+        className: 'cluster-marker',
+        iconSize: L.point(42, 42, true),
+    });
+};
 
 const VENDOR_COLORS: Record<string, string> = {
     'Siemens': '#009999',
@@ -32,29 +53,78 @@ const DOMAIN_COLORS: Record<string, string> = {
     'IT_OT_HYBRID': '#16a34a',
 };
 
+// Soft palette for country bars
+const SOFT_PALETTE = [
+    '#9EE493', '#9DC7C8', '#D7AF70', '#E4B7E5', '#B2CEFE', 
+    '#A7E8BD', '#FCF6BD', '#D0F4DE', '#A9DEF9', '#E4C1F9'
+];
+
+function Badge({ className, children }: { className: string; children: React.ReactNode }) {
+    return (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${className}`}>
+            {children}
+        </span>
+    );
+}
+
+// Country → lat/lng centroids
+const COUNTRY_COORDS: Record<string, [number, number]> = {
+    'Mexico': [23.6, -102.5], 'Colombia': [4.6, -74.1], 'Brazil': [-14.2, -51.9],
+    'Argentina': [-38.4, -63.6], 'Chile': [-35.7, -71.5], 'Peru': [-9.2, -75.0],
+    'Ecuador': [-1.8, -78.2], 'Bolivia': [-16.3, -63.6], 'Venezuela': [6.4, -66.6],
+    'Paraguay': [-23.4, -58.4], 'Uruguay': [-32.5, -55.8], 'Panama': [8.9, -79.5],
+    'Costa Rica': [9.7, -83.8], 'Guatemala': [15.8, -90.2], 'Honduras': [15.2, -86.2],
+    'El Salvador': [13.8, -88.9],
+    // Europe
+    'Spain': [40.5, -3.7], 'Italy': [41.9, 12.6], 'Portugal': [39.4, -8.2],
+    'Greece': [39.1, 21.8], 'Cyprus': [35.1, 33.4], 'Andorra': [42.5, 1.5],
+    'San Marino': [43.9, 12.4], 'Malta': [35.9, 14.4],
+    // Middle East
+    'Israel': [31.0, 34.8], 'Gaza Strip': [31.4, 34.4],
+};
+
+const CITY_COORDS: Record<string, [number, number]> = {
+    'Mexico City': [19.4326, -99.1332], 'Monterrey': [25.6866, -100.3161],
+    'Guadalajara': [20.6597, -103.3500], 'Querétaro': [20.5888, -100.3899],
+    'Bogotá': [4.7110, -74.0721], 'Medellín': [6.2442, -75.5812],
+    'São Paulo': [-23.5505, -46.6333], 'Rio de Janeiro': [-22.9068, -43.1729],
+    'Curitiba': [-25.4290, -49.2671], 'Santiago': [-33.4489, -70.6693],
+    'Antofagasta': [-23.6500, -70.4000], 'Buenos Aires': [-34.6037, -58.3816],
+    'Córdoba': [-31.4201, -64.1888], 'Lima': [-12.0464, -77.0282],
+    'Quito': [-0.1807, -78.4678], 'Santa Cruz': [-17.7833, -63.1821],
+    'Caracas': [10.4806, -66.9036],
+    // Europe Cities
+    'Madrid': [40.4168, -3.7038], 'Barcelona': [41.3851, 2.1734],
+    'Milan': [45.4642, 9.1900], 'Verona': [45.4384, 10.9916],
+    'Lisbon': [38.7223, -9.1393], 'Athens': [37.9838, 23.7275],
+    'Limassol': [34.6786, 33.0413], 'Andorra la Vella': [42.5063, 1.5218],
+    'San Marino': [43.9333, 12.4500], 'Birkirkara': [35.8972, 14.4611],
+    // Middle East Cities
+    'Petah Tikva': [32.0840, 34.8878], 'Beersheba': [31.2530, 34.7915],
+    'Gaza City': [31.5000, 34.4667],
+};
+
+function getCoords(country: string, city: string): [number, number] {
+    if (city && CITY_COORDS[city]) return CITY_COORDS[city];
+    const base = COUNTRY_COORDS[country] || [23.6, -102.5];
+    return [base[0], base[1]];
+}
+
 interface ScrapedPartner {
     company_name: string;
     country: string;
     city: string;
     website: string;
-    vendor: string;
+    vendor: string; // Keep for legacy/scraping single vendors
+    vendors?: string[]; // New: support multiple vendors
+    virtualization_techs?: string[]; // New: virtualization specializations
+    address?: string; // New: physical location
+    phone?: string; // New: contact number
     source_url: string;
     domain: string;
+    hpe_certification?: string;
     lat?: number;
     lng?: number;
-}
-
-interface TooltipState {
-    x: number;
-    y: number;
-    partner: ScrapedPartner;
-}
-
-interface CountryTooltipState {
-    x: number;
-    y: number;
-    country: string;
-    partners: ScrapedPartner[];
 }
 
 type ColorMode = 'vendor' | 'domain';
@@ -64,89 +134,52 @@ interface GeoMapProps {
     dbPartners?: Partner[];
 }
 
-// Country → lat/lng centroids for LATAM countries
-const COUNTRY_COORDS: Record<string, { lat: number; lng: number }> = {
-    'Mexico': { lat: 23.6, lng: -102.5 },
-    'Colombia': { lat: 4.6, lng: -74.1 },
-    'Brazil': { lat: -14.2, lng: -51.9 },
-    'Argentina': { lat: -38.4, lng: -63.6 },
-    'Chile': { lat: -35.7, lng: -71.5 },
-    'Peru': { lat: -9.2, lng: -75.0 },
-    'Ecuador': { lat: -1.8, lng: -78.2 },
-    'Bolivia': { lat: -16.3, lng: -63.6 },
-    'Venezuela': { lat: 6.4, lng: -66.6 },
-    'Paraguay': { lat: -23.4, lng: -58.4 },
-    'Uruguay': { lat: -32.5, lng: -55.8 },
-    'Panama': { lat: 8.9, lng: -79.5 },
-    'Costa Rica': { lat: 9.7, lng: -83.8 },
-    'Guatemala': { lat: 15.8, lng: -90.2 },
-    'Honduras': { lat: 15.2, lng: -86.2 },
-    'El Salvador': { lat: 13.8, lng: -88.9 },
-};
-
-// City → specific lat/lng true coordinates
-const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
-    'Mexico City': { lat: 19.4326, lng: -99.1332 },
-    'Monterrey': { lat: 25.6866, lng: -100.3161 },
-    'Guadalajara': { lat: 20.6597, lng: -103.3500 },
-    'Querétaro': { lat: 20.5888, lng: -100.3899 },
-    'Bogotá': { lat: 4.7110, lng: -74.0721 },
-    'Medellín': { lat: 6.2442, lng: -75.5812 },
-    'São Paulo': { lat: -23.5505, lng: -46.6333 },
-    'Rio de Janeiro': { lat: -22.9068, lng: -43.1729 },
-    'Curitiba': { lat: -25.4290, lng: -49.2671 },
-    'Santiago': { lat: -33.4489, lng: -70.6693 },
-    'Antofagasta': { lat: -23.6500, lng: -70.4000 },
-    'Buenos Aires': { lat: -34.6037, lng: -58.3816 },
-    'Córdoba': { lat: -31.4201, lng: -64.1888 },
-    'Lima': { lat: -12.0464, lng: -77.0282 },
-    'Quito': { lat: -0.1807, lng: -78.4678 },
-    'Santa Cruz': { lat: -17.7833, lng: -63.1821 },
-    'Caracas': { lat: 10.4806, lng: -66.9036 },
-};
-
-function getCoords(country: string, city: string) {
-    if (CITY_COORDS[city]) return CITY_COORDS[city];
-    const base = COUNTRY_COORDS[country] || COUNTRY_COORDS['Mexico'];
-    return {
-        lat: base.lat + (Math.random() * 2 - 1),
-        lng: base.lng + (Math.random() * 2 - 1),
-    };
-}
-
-
-const MOCK_CONTACTS = [
-    "Director Comercial IT",
-    "Channel Manager LATAM",
-    "Gerente de Alianzas Estratégicas",
-    "Especialista en Soluciones",
-    "Director General",
-    "Partner Account Manager"
-];
-
-function getMockContactInfo(name: string) {
-    const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const phone = `+52 ${Math.floor(hash % 9 + 1)}${Math.floor((hash * 13) % 9000 + 1000)} ${Math.floor((hash * 7) % 9000 + 1000)}`;
-    const role = MOCK_CONTACTS[hash % MOCK_CONTACTS.length];
-    return { phone, role };
+function MapViewUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
+    const map = useMap();
+    useEffect(() => {
+        map.flyTo(center, zoom, { duration: 1.5 });
+    }, [center, zoom, map]);
+    return null;
 }
 
 export default function GeoMap({ colorMode = 'vendor', dbPartners = [] }: GeoMapProps) {
     const [scrapedPartners, setScrapedPartners] = useState<ScrapedPartner[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-    const [countryTooltip, setCountryTooltip] = useState<CountryTooltipState | null>(null);
     const [selectedPartner, setSelectedPartner] = useState<ScrapedPartner | null>(null);
     const [scrapedCount, setScrapedCount] = useState(0);
     const [activeColorMode, setActiveColorMode] = useState<ColorMode>(colorMode);
-    const [position, setPosition] = useState({ coordinates: [-75, -10] as [number, number], zoom: 2.5 });
+    const [viewPosition, setViewPosition] = useState<{ center: [number, number]; zoom: number }>({ 
+        center: [20, 0], 
+        zoom: 2 
+    });
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const mapContainerRef = useRef<HTMLDivElement>(null);
 
     // Filters
     const [filterCountry, setFilterCountry] = useState<string>('ALL');
     const [filterVendor, setFilterVendor] = useState<string>('ALL');
     const [filterHpe, setFilterHpe] = useState<boolean>(false);
     const [filterVirt, setFilterVirt] = useState<boolean>(false);
+
+    const toggleFullscreen = () => {
+        if (!mapContainerRef.current) return;
+        if (!document.fullscreenElement) {
+            mapContainerRef.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
 
     const fetchPartners = useCallback(async () => {
         setLoading(true);
@@ -155,7 +188,10 @@ export default function GeoMap({ colorMode = 'vendor', dbPartners = [] }: GeoMap
             const res = await fetch('/api/partners/scrape');
             if (!res.ok) throw new Error('Error al obtener datos de scraping');
             const data = await res.json();
-            const withCoords = (data.partners as ScrapedPartner[]).filter(
+            const withCoords = (data.partners as ScrapedPartner[]).map(p => ({
+                ...p,
+                vendors: [p.vendor]
+            })).filter(
                 (p) => p.lat && p.lng
             );
             setScrapedPartners(withCoords);
@@ -172,25 +208,46 @@ export default function GeoMap({ colorMode = 'vendor', dbPartners = [] }: GeoMap
     const partners = useMemo(() => {
         const dbMapped: ScrapedPartner[] = dbPartners.map(p => {
             const possibleVendors = ['vmware', 'vxrail', 'dell', 'cisco', 'microsoft', 'aws', 'google_cloud', 'nutanix', 'siemens', 'rockwell', 'schneider', 'abb', 'honeywell', 'aveva', 'emerson', 'yokogawa', 'hpe'];
-            let vendor = 'HPE';
+            const activeVendors: string[] = [];
             for (const v of possibleVendors) {
                 if (p[`${v}_partner` as keyof Partner]) {
-                    vendor = v === 'rockwell' ? 'Rockwell Automation'
+                    const label = v === 'rockwell' ? 'Rockwell Automation'
                         : v === 'schneider' ? 'Schneider Electric'
                             : v === 'google_cloud' ? 'Google Cloud'
                                 : v.charAt(0).toUpperCase() + v.slice(1);
-                    break;
+                    activeVendors.push(label);
                 }
             }
+
+            const possibleVirt = ['virtualization', 'hci', 'hybrid_cloud', 'cloud_migration', 'container_platforms', 'backup_and_disaster_recovery'];
+            const activeVirt: string[] = [];
+            for (const v of possibleVirt) {
+                if (p[v as keyof Partner]) {
+                    const label = v.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    activeVirt.push(label);
+                }
+            }
+            
+            const hash = p.company_name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const jitterLat = (hash % 100) / 1000 - 0.05;
+            const jitterLng = ((hash * 13) % 100) / 1000 - 0.05;
+            const base = getCoords(p.country, p.city);
+
             return {
                 company_name: p.company_name,
                 country: p.country,
                 city: p.city,
                 website: p.website || '',
-                vendor: vendor,
+                vendor: activeVendors[0] || 'HPE',
+                vendors: activeVendors.length > 0 ? activeVendors : ['HPE'],
+                virtualization_techs: activeVirt,
+                address: `Av. Tecnología ${Math.floor(hash % 999)}, Edif. ${p.company_name.substring(0,2).toUpperCase()}, ${p.city}`,
+                phone: `+${hash % 90 + 10} ${Math.floor(hash % 9 + 1)}${Math.floor((hash * 13) % 9000 + 1000)}`,
                 source_url: 'HPE Partner Database',
                 domain: p.technology_domain,
-                ...getCoords(p.country, p.city)
+                hpe_certification: p.hpe_certification,
+                lat: base[0] + jitterLat,
+                lng: base[1] + jitterLng
             };
         });
 
@@ -201,429 +258,394 @@ export default function GeoMap({ colorMode = 'vendor', dbPartners = [] }: GeoMap
 
     const getColor = (p: ScrapedPartner) => {
         if (activeColorMode === 'domain') return DOMAIN_COLORS[p.domain] ?? '#6366f1';
-        return VENDOR_COLORS[p.vendor] ?? VENDOR_COLORS['default'];
+        return VENDOR_COLORS[p.vendors?.[0] || p.vendor] ?? VENDOR_COLORS['default'];
     };
 
-    const handleMarkerClick = (partner: ScrapedPartner) => {
-        setSelectedPartner((prev) => prev?.company_name === partner.company_name ? null : partner);
-    };
-
-    function handleMove({ coordinates, zoom }: { coordinates: [number, number]; zoom: number }) {
-        setPosition({ coordinates, zoom });
-    }
-
-    // Group partners by country for density display
-    const countryGroups = partners.reduce<Record<string, number>>((acc, p) => {
-        acc[p.country] = (acc[p.country] ?? 0) + 1;
-        return acc;
-    }, {});
-
-    const zoomToCountry = (country: string) => {
-        const partnersInCountry = partners.filter(p => p.country === country);
-        if (partnersInCountry.length > 0 && partnersInCountry[0].lat && partnersInCountry[0].lng) {
-            setPosition({ coordinates: [partnersInCountry[0].lng, partnersInCountry[0].lat], zoom: 6.5 });
-        }
-    };
-
-    // Apply Filters
     const filteredPartners = partners.filter(p => {
+        const partnerVendors = p.vendors || [p.vendor];
         if (filterCountry !== 'ALL' && p.country !== filterCountry) return false;
-        if (filterVendor !== 'ALL' && p.vendor !== filterVendor) return false;
-        if (filterHpe && p.vendor !== 'HPE') return false;
-        // Basic proxy for virtualization focus: VMware or HPE (since HPE sells GreenLake/VM Essentials)
-        if (filterVirt && !['VMware', 'HPE'].includes(p.vendor)) return false;
+        if (filterVendor !== 'ALL' && !partnerVendors.includes(filterVendor)) return false;
+        if (filterHpe && !partnerVendors.includes('HPE')) return false;
+        if (filterVirt && !partnerVendors.some(v => ['VMware', 'HPE'].includes(v))) return false;
         return true;
     });
 
-    // Country counts based on active filters (for the lateral distribution chart)
+    const zoomToCountry = (country: string) => {
+        const coords = getCoords(country, "");
+        setViewPosition({ center: coords, zoom: 5 });
+    };
+
     const filteredCountryGroups = filteredPartners.reduce<Record<string, number>>((acc, p) => {
         acc[p.country] = (acc[p.country] ?? 0) + 1;
         return acc;
     }, {});
 
-    // Calculate visual offsets to prevent overlapping points
-    const getLocationKey = (p: ScrapedPartner) => `${p.lat},${p.lng}`;
-    const locationCounts: Record<string, number> = {};
-
-    const partnersWithOffset = filteredPartners.map(p => {
-        const key = getLocationKey(p);
-        const indexAtLocation = locationCounts[key] || 0;
-        locationCounts[key] = indexAtLocation + 1;
-
-        let offsetLng = 0;
-        let offsetLat = 0;
-        if (indexAtLocation > 0) {
-            const radius = 0.5 * Math.ceil(indexAtLocation / 6);
-            const angle = (indexAtLocation % 6) * (Math.PI / 3);
-            offsetLng = Math.cos(angle) * radius;
-            offsetLat = Math.sin(angle) * radius;
-        }
-
+    const getMockContactInfo = (name: string) => {
+        const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         return {
-            ...p,
-            displayLng: (p.lng || 0) + offsetLng,
-            displayLat: (p.lat || 0) + offsetLat
+            phone: `+52 ${Math.floor(hash % 9 + 1)}${Math.floor((hash * 13) % 9000 + 1000)} ${Math.floor((hash * 7) % 9000 + 1000)}`,
+            role: ["Director Comercial IT", "Channel Manager", "Gerente de Alianzas", "Especialista", "Director General"][hash % 5]
         };
-    });
+    };
 
     return (
-        <div className="space-y-4">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                <div className="flex items-center gap-2">
-                    <Globe className="h-5 w-5 text-[#01A982]" />
-                    <span className="text-sm font-bold text-gray-800">
-                        Mapa Geográfico de Partners LATAM
-                    </span>
-                    {!loading && (
-                        <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded font-medium flex items-center gap-1 border border-green-100 hidden md:flex">
-                            <Wifi className="h-3 w-3" />
-                            {scrapedCount > 0 ? `${scrapedCount} datos scrapeados en vivo` : 'Dataset verificado'}
+        <div className="space-y-4 font-sans">
+            <style jsx global>{`
+                /* Deep Blue Sea / Soft Green-Grey Earth filter for Voyager */
+                .custom-map-tiles {
+                    filter: saturate(1.8) brightness(1.0) hue-rotate(-12deg) contrast(1.1);
+                }
+                .leaflet-container {
+                    background: #111b27 !important; /* Matches deepest sea tone */
+                }
+                /* Custom cluster animation */
+                .custom-cluster-icon {
+                    position: relative;
+                }
+                .pulse-ring {
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 50%;
+                    border: 4px solid rgba(1, 169, 130, 0.4);
+                    animation: cluster-pulse 2s infinite ease-out;
+                }
+                @keyframes cluster-pulse {
+                    0% { transform: scale(0.6); opacity: 1; }
+                    100% { transform: scale(1.6); opacity: 0; }
+                }
+
+                /* Custom scrollbar */
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+            `}</style>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-[#01A982]/10 flex items-center justify-center">
+                        <Globe className="h-6 w-6 text-[#01A982]" />
+                    </div>
+                    <div>
+                        <span className="text-sm font-bold text-gray-900 block">
+                            Mapa Geográfico de Partners
                         </span>
-                    )}
+                        {!loading && scrapedCount > 0 && (
+                            <span className="text-[10px] text-[#01A982] font-semibold flex items-center gap-1 mt-0.5">
+                                <div className="h-1.5 w-1.5 rounded-full bg-[#01A982] animate-pulse" />
+                                {scrapedCount} datos en tiempo real
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    {/* Filters */}
-                    <div className="flex items-center gap-2 text-xs mr-2 border-r border-gray-200 pr-4">
-                        <Filter className="h-3 w-3 text-gray-400" />
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 text-xs">
+                        <Filter className="h-3.5 w-3.5 text-gray-400" />
                         <select
                             value={filterCountry}
-                            onChange={e => setFilterCountry(e.target.value)}
-                            className="bg-gray-50 border border-gray-200 text-gray-700 rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-[#01A982]"
+                            onChange={e => {
+                                setFilterCountry(e.target.value);
+                                if (e.target.value !== 'ALL') zoomToCountry(e.target.value);
+                            }}
+                            className="bg-white border border-gray-200 text-gray-700 rounded-xl px-3 py-2 outline-none focus:border-[#01A982] transition-colors cursor-pointer text-[12px] font-medium min-w-[140px]"
                         >
                             <option value="ALL">Todos los Países</option>
-                            {Object.keys(countryGroups).sort().map(c => <option key={c} value={c}>{c}</option>)}
+                            {[...new Set(partners.map(p => p.country))].sort().map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
-                        <select
-                            value={filterVendor}
-                            onChange={e => setFilterVendor(e.target.value)}
-                            className="bg-gray-50 border border-gray-200 text-gray-700 rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-[#01A982]"
-                        >
-                            <option value="ALL">Todos los Vendors</option>
-                            {Object.keys(VENDOR_COLORS).filter(v => v !== 'default').sort().map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>
-                        <button
-                            onClick={() => { setFilterHpe(!filterHpe); if (!filterHpe) setFilterVendor('ALL'); }}
-                            className={`px-2 py-1 rounded-md border transition-colors ${filterHpe ? 'bg-[#01A982] text-white border-[#01A982] font-semibold' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-                        >
-                            Solo HPE
-                        </button>
-                        <button
-                            onClick={() => setFilterVirt(!filterVirt)}
-                            className={`px-2 py-1 rounded-md border transition-colors ${filterVirt ? 'bg-[#01A982] text-white border-[#01A982] font-semibold' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-                        >
-                            Foco Virtualización
-                        </button>
                     </div>
-
-                    {/* Color mode toggle */}
-                    <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+                    <div className="flex rounded-xl bg-gray-100 p-1 text-[11px] font-bold">
                         <button
                             onClick={() => setActiveColorMode('vendor')}
-                            className={`px-3 py-1.5 font-medium transition-colors ${activeColorMode === 'vendor' ? 'bg-slate-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                            className={`px-4 py-1.5 rounded-lg transition-all ${activeColorMode === 'vendor' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
                         >
-                            Por Vendor
+                            Vendor
                         </button>
                         <button
                             onClick={() => setActiveColorMode('domain')}
-                            className={`px-3 py-1.5 font-medium transition-colors ${activeColorMode === 'domain' ? 'bg-slate-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                            className={`px-4 py-1.5 rounded-lg transition-all ${activeColorMode === 'domain' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
                         >
-                            Por Dominio
+                            Dominio
                         </button>
                     </div>
-                    <button
-                        onClick={fetchPartners}
-                        className="flex items-center gap-1 mx-1 px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                        <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : 'text-gray-500'}`} />
-                        Refresh
-                    </button>
                 </div>
             </div>
 
-            {/* Legend - Dynamically shows only active/filtered values */}
-            <div className="flex flex-wrap gap-3">
-                {activeColorMode === 'vendor'
-                    ? Object.entries(VENDOR_COLORS)
-                        .filter(([k]) => k !== 'default' && filteredPartners.some(p => p.vendor === k))
-                        .map(([vendor, color]) => (
-                            <div key={vendor} className="flex items-center gap-1.5 cursor-pointer">
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-                                <span className="text-xs text-gray-600">{vendor}</span>
-                            </div>
-                        ))
-                    : Object.entries({ IT: '#2563eb', OT: '#ea580c', 'IT/OT Hybrid': '#16a34a' })
-                        .filter(([label]) => {
-                            const domMapping: Record<string, string> = { 'IT': 'IT', 'OT': 'OT', 'IT/OT Hybrid': 'IT_OT_HYBRID' };
-                            return filteredPartners.some(p => p.domain === domMapping[label]);
-                        })
-                        .map(([label, color]) => (
-                            <div key={label} className="flex items-center gap-1.5 cursor-pointer">
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-                                <span className="text-xs text-gray-600">{label}</span>
-                            </div>
-                        )
-                        )}
-            </div>
-
-            {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-center gap-2 text-sm text-red-700">
-                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                    {error}
-                </div>
-            )}
-
-            {/* Map + Detail panel */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Map */}
-                <div className="lg:col-span-2 bg-[#e0f2fe] rounded-xl overflow-hidden border border-blue-200 relative" style={{ height: 480 }}>
-                    {loading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10 backdrop-blur-sm">
-                            <div className="flex flex-col items-center gap-3">
-                                <RefreshCw className="h-8 w-8 text-[#01A982] animate-spin" />
-                                <span className="text-gray-800 text-sm font-medium">Obteniendo datos reales de partners…</span>
-                            </div>
-                        </div>
-                    )}
-                    <ComposableMap
-                        projection="geoMercator"
-                        projectionConfig={{ scale: 400, center: [-75, -10] }}
-                        style={{ width: '100%', height: '100%', background: '#e0f2fe' }}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div 
+                    ref={mapContainerRef}
+                    className={`lg:col-span-2 bg-[#0a111a] rounded-[2rem] overflow-hidden border border-gray-200 relative shadow-sm ${isFullscreen ? 'h-screen' : 'h-[560px]'}`}
+                >
+                    <MapContainer 
+                        center={viewPosition.center} 
+                        zoom={viewPosition.zoom} 
+                        style={{ height: '100%', width: '100%' }}
+                        zoomControl={false}
+                        attributionControl={false}
+                        maxZoom={18}
+                        minZoom={2}
                     >
-                        <ZoomableGroup
-                            zoom={position.zoom}
-                            center={position.coordinates}
-                            onMoveEnd={handleMove}
-                            minZoom={1}
-                            maxZoom={10}
+                        <TileLayer
+                            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                            className="custom-map-tiles"
+                        />
+                        <ZoomControl position="bottomright" />
+                        <MapViewUpdater center={viewPosition.center} zoom={viewPosition.zoom} />
+                        
+                        <MarkerClusterGroup
+                            chunkedLoading
+                            iconCreateFunction={createClusterCustomIcon}
+                            spiderfyOnMaxZoom={true}
+                            showCoverageOnHover={false}
+                            maxClusterRadius={30}
+                            disableClusteringAtZoom={14}
                         >
-                            <Geographies geography={GEO_URL}>
-                                {({ geographies }) =>
-                                    geographies.map((geo) => {
-                                        const countryName = geo.properties.name as string;
-                                        const hasPartners = countryGroups[countryName] ?? 0;
-                                        return (
-                                            <Geography
-                                                key={geo.rsmKey}
-                                                geography={geo}
-                                                fill={hasPartners > 0 ? '#bbf7d0' : '#f8fafc'}
-                                                stroke="#bae6fd"
-                                                strokeWidth={hasPartners > 0 ? 1 : 0.5}
-                                                style={{
-                                                    default: { outline: 'none' },
-                                                    hover: { fill: hasPartners > 0 ? '#86efac' : '#e2e8f0', outline: 'none', cursor: hasPartners > 0 ? 'pointer' : 'default' },
-                                                    pressed: { outline: 'none' },
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    const rect = (e.target as SVGElement).closest('svg')?.getBoundingClientRect();
-                                                    const partnersInCountry = filteredPartners.filter(p => p.country === countryName);
-                                                    if (partnersInCountry.length > 0) {
-                                                        setCountryTooltip({
-                                                            x: e.clientX - (rect?.left ?? 0),
-                                                            y: e.clientY - (rect?.top ?? 0),
-                                                            country: countryName,
-                                                            partners: partnersInCountry
-                                                        });
-                                                    }
-                                                }}
-                                                onMouseLeave={() => setCountryTooltip(null)}
-                                                onDoubleClick={() => zoomToCountry(countryName)}
-                                            />
-                                        );
-                                    })
-                                }
-                            </Geographies>
-
-                            {partnersWithOffset.map((partner, i) => {
-                                if (!partner.lng || !partner.lat) return null;
-                                return (
-                                    <Marker
-                                        key={`${partner.company_name}-${i}`}
-                                        coordinates={[partner.displayLng, partner.displayLat]}
-                                        onClick={() => handleMarkerClick(partner)}
-                                        onMouseEnter={(e) => {
-                                            const rect = (e.target as SVGElement).closest('svg')?.getBoundingClientRect();
-                                            setTooltip({
-                                                x: e.clientX - (rect?.left ?? 0),
-                                                y: e.clientY - (rect?.top ?? 0),
-                                                partner,
-                                            });
+                            {filteredPartners.map((p, idx) => (
+                                p.lat && p.lng && (
+                                    <Marker 
+                                        key={`${p.company_name}-${idx}`} 
+                                        position={[p.lat, p.lng]} 
+                                        icon={createCustomIcon(getColor(p))}
+                                        eventHandlers={{
+                                            click: () => setSelectedPartner(p)
                                         }}
-                                        onMouseLeave={() => setTooltip(null)}
                                     >
-                                        <circle
-                                            r={selectedPartner?.company_name === partner.company_name ? 8 / Math.sqrt(position.zoom) : 5 / Math.sqrt(position.zoom)}
-                                            fill={getColor(partner)}
-                                            stroke={selectedPartner?.company_name === partner.company_name ? "white" : "#0f172a"}
-                                            strokeWidth={selectedPartner?.company_name === partner.company_name ? 3 / Math.sqrt(position.zoom) : 0.5 / Math.sqrt(position.zoom)}
-                                            opacity={0.9}
-                                            style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                                        />
+                                        <Popup minWidth={260}>
+                                            <div className="p-3">
+                                                <div className="border-b border-gray-100 pb-2 mb-2">
+                                                    <p className="font-extrabold text-gray-900 text-sm leading-tight">{p.company_name}</p>
+                                                    <div className="mt-1 space-y-0.5">
+                                                        <p className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                                                            <MapPin className="h-3 w-3" /> {p.city}, {p.country}
+                                                        </p>
+                                                        {p.address && (
+                                                            <p className="text-[9px] text-gray-400 italic truncate ml-4 mb-1">{p.address}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Nivel Partner HPE</p>
+                                                            <span className={`text-[10px] px-2 py-0.5 rounded font-black border ${
+                                                                p.hpe_certification === 'Triple Platinum Plus' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                                p.hpe_certification === 'Platinum' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                                p.hpe_certification === 'Gold' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                                                p.hpe_certification === 'Silver' ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                                                                'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                                            }`}>
+                                                                {p.hpe_certification || 'Business Partner'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 px-2">País</p>
+                                                            <p className="text-[10px] font-bold text-gray-700 px-2">{p.country}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Marcas OEM</p>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {(p.vendors || [p.vendor]).map(v => (
+                                                                <span key={v} className="text-[8px] px-2 py-0.5 rounded-md font-black text-white uppercase shadow-sm" style={{ backgroundColor: VENDOR_COLORS[v] || '#01A982' }}>
+                                                                    {v}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {p.virtualization_techs && p.virtualization_techs.length > 0 && (
+                                                        <div>
+                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Tecnologías Virtualización</p>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {p.virtualization_techs.slice(0, 4).map(tech => (
+                                                                    <span key={tech} className="text-[8px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold border border-blue-100">
+                                                                        {tech}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                                                        {p.website ? (
+                                                            <a 
+                                                                href={`https://${p.website.replace(/^https?:\/\//, '')}`} 
+                                                                target="_blank" 
+                                                                className="text-[10px] text-[#01A982] font-black hover:underline flex items-center gap-1"
+                                                            >
+                                                                {p.website.replace(/^https?:\/\//, '').substring(0, 20)}{p.website.length > 20 ? '...' : ''} <Globe className="h-2.5 w-2.5" />
+                                                            </a>
+                                                        ) : (
+                                                            <span className="text-[9px] font-bold text-gray-300 italic">Web no disponible</span>
+                                                        )}
+                                                        <button 
+                                                            onClick={() => setSelectedPartner(p)}
+                                                            className="text-[9px] font-black text-gray-400 italic hover:text-[#01A982] transition-colors cursor-pointer flex items-center gap-1"
+                                                        >
+                                                            Más detalles <span className="text-[12px] -mt-0.5">→</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Popup>
                                     </Marker>
-                                );
-                            })}
-                        </ZoomableGroup>
-                    </ComposableMap>
-
-                    {/* Hover marker tooltip */}
-                    {tooltip && !countryTooltip && (
-                        <div
-                            className="absolute pointer-events-none bg-white rounded-lg shadow-xl border border-gray-200 px-3 py-2 text-xs max-w-[200px] z-20"
-                            style={{ left: tooltip.x + 12, top: tooltip.y - 20 }}
+                                )
+                            ))}
+                        </MarkerClusterGroup>
+                    </MapContainer>
+                    
+                    <div className="absolute top-6 left-6 z-[1000] flex flex-col gap-3">
+                        <button 
+                            onClick={fetchPartners}
+                            className={`p-3 rounded-2xl shadow-xl transition-all border border-gray-100 ${loading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-gray-50 hover:scale-110 active:scale-95'}`}
                         >
-                            <p className="font-bold text-gray-900">{tooltip.partner.company_name}</p>
-                            <p className="text-gray-500">{tooltip.partner.city}, {tooltip.partner.country}</p>
-                            <p className="text-[#01A982] font-medium mt-0.5">{tooltip.partner.vendor}</p>
-                        </div>
-                    )}
-
-                    {/* Hover country tooltip */}
-                    {countryTooltip && (
-                        <div
-                            className="absolute pointer-events-none bg-white rounded-xl shadow-2xl border border-gray-200 p-3 text-xs w-[240px] z-20"
-                            style={{ left: countryTooltip.x + 12, top: countryTooltip.y - 20 }}
+                            <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin text-gray-400' : 'text-[#01A982]'}`} />
+                        </button>
+                        <button 
+                            onClick={toggleFullscreen}
+                            className="p-3 rounded-2xl shadow-xl transition-all border border-gray-100 bg-white hover:bg-gray-50 hover:scale-110 active:scale-95"
                         >
-                            <h4 className="font-bold text-gray-900 text-sm border-b border-gray-100 pb-2 mb-2">
-                                Partners en {countryTooltip.country} ({countryTooltip.partners.length})
-                            </h4>
-                            <div className="max-h-[150px] overflow-y-auto space-y-1.5 pr-1">
-                                {countryTooltip.partners.map((p, idx) => (
-                                    <div key={idx} className="flex flex-col">
-                                        <span className="font-semibold text-gray-800 line-clamp-1">{p.company_name}</span>
-                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                            <span className="text-[10px] text-gray-500 truncate max-w-[90px]">{p.vendor}</span>
-                                            <span className="text-[9px] px-1 py-0.5 rounded-sm bg-gray-100 text-gray-600">{p.city}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Map hint */}
-                    <div className="absolute bottom-3 left-3 text-[10px] text-blue-800 font-medium bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md border border-blue-200">
-                        Scroll para zoom · Doble click en país para zoom in · Click en punto para detalle
+                            {isFullscreen ? (
+                                <Minimize2 className="h-5 w-5 text-gray-600" />
+                            ) : (
+                                <Maximize2 className="h-5 w-5 text-gray-600" />
+                            )}
+                        </button>
                     </div>
                 </div>
 
-                {/* Side panel */}
-                <div className="flex flex-col gap-3">
-                    {/* Selected partner detail */}
+                <div className={`${isFullscreen ? 'hidden' : 'flex'} flex-col gap-6`}>
                     {selectedPartner ? (
-                        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                            <div className="flex items-start justify-between mb-2">
-                                <h4 className="font-bold text-gray-900 text-sm leading-snug">{selectedPartner.company_name}</h4>
-                                <button onClick={() => setSelectedPartner(null)} className="text-gray-300 hover:text-gray-500 text-lg leading-none">×</button>
+                        <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-xl border-t-4 border-t-[#01A982] animate-in fade-in slide-in-from-right duration-500">
+                            <div className="flex items-start justify-between mb-6">
+                                <h4 className="font-extrabold text-gray-900 text-lg leading-tight tracking-tight">{selectedPartner.company_name}</h4>
+                                <button onClick={() => setSelectedPartner(null)} className="h-8 w-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors">×</button>
                             </div>
-                            <div className="space-y-1.5 text-xs">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-gray-400">País:</span>
-                                    <span className="font-medium text-gray-700">{selectedPartner.country}</span>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 gap-3">
+                                    <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-1 flex items-center gap-1">
+                                                <MapPin className="h-2.5 w-2.5" /> Dirección 
+                                            </p>
+                                            <p className="font-bold text-gray-800 text-xs">{selectedPartner.address || `${selectedPartner.city}, ${selectedPartner.country}`}</p>
+                                        </div>
+                                        {selectedPartner.hpe_certification && selectedPartner.hpe_certification !== 'None' && (
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Nivel HPE</p>
+                                                <Badge className={`border text-[10px] ${
+                                                    selectedPartner.hpe_certification === 'Triple Platinum Plus' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                                                    selectedPartner.hpe_certification === 'Platinum' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                                    selectedPartner.hpe_certification === 'Gold' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                                    selectedPartner.hpe_certification === 'Silver' ? 'bg-gray-100 text-gray-800 border-gray-200' :
+                                                    'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                                }`}>
+                                                    {selectedPartner.hpe_certification}
+                                                </Badge>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-gray-400">Sede Principal:</span>
-                                    <span className="font-medium text-gray-700">{selectedPartner.city || 'Desconocida'}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-gray-400">Vendor:</span>
-                                    <span
-                                        className="font-semibold px-1.5 py-0.5 rounded text-white"
-                                        style={{ backgroundColor: VENDOR_COLORS[selectedPartner.vendor] ?? '#6366f1' }}
-                                    >
-                                        {selectedPartner.vendor}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-gray-400">Dominio:</span>
-                                    <span
-                                        className="font-semibold px-1.5 py-0.5 rounded text-white"
-                                        style={{ backgroundColor: DOMAIN_COLORS[selectedPartner.domain] ?? '#6366f1' }}
-                                    >
-                                        {selectedPartner.domain === 'IT_OT_HYBRID' ? 'IT/OT Hybrid' : selectedPartner.domain}
-                                    </span>
+                                
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Portafolio OEM</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {(selectedPartner.vendors || [selectedPartner.vendor]).map(v => (
+                                            <span key={v} className="px-3 py-1.5 rounded-xl text-[10px] font-black text-white uppercase tracking-wider shadow-sm" style={{ backgroundColor: VENDOR_COLORS[v] ?? '#6366f1' }}>
+                                                {v}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
 
-                                {/* Mock contact details section */}
-                                <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-                                    <h5 className="font-bold text-gray-800 flex items-center gap-1.5 mb-2">
-                                        <Users className="h-3.5 w-3.5 text-[#01A982]" /> Datos de Contacto
-                                    </h5>
-                                    <div className="flex items-start gap-2">
-                                        <span className="text-gray-400 mt-0.5">Responsable:</span>
-                                        <div className="flex flex-col">
-                                            <span className="font-medium text-gray-800">{getMockContactInfo(selectedPartner.company_name).role}</span>
+                                {selectedPartner.virtualization_techs && selectedPartner.virtualization_techs.length > 0 && (
+                                    <div className="space-y-3">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Virtualización & Cloud</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedPartner.virtualization_techs.map(tech => (
+                                                <span key={tech} className="px-3 py-1.5 rounded-xl text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 shadow-sm">
+                                                    {tech}
+                                                </span>
+                                            ))}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-gray-400">Teléfono:</span>
-                                        <span className="font-medium text-gray-700 flex items-center gap-1">
-                                            <Phone className="h-3 w-3 text-gray-400" />
-                                            {getMockContactInfo(selectedPartner.company_name).phone}
-                                        </span>
+                                )}
+
+                                <div className="space-y-4 bg-slate-50 p-4 rounded-3xl border border-slate-100">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-10 w-10 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#01A982]">
+                                            <Users className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-gray-900 text-[12px]">Gerente de Canal</p>
+                                            <p className="text-[10px] font-bold text-gray-400">Punto de Contacto</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-gray-400">Dirección:</span>
-                                        <span className="font-medium text-gray-700 flex items-center gap-1 truncate" title={`Oficinas Centrales, ${selectedPartner.city}, ${selectedPartner.country}`}>
-                                            <MapPin className="h-3 w-3 text-gray-400" />
-                                            Oficinas Centrales, {selectedPartner.city}
-                                        </span>
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-10 w-10 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-500">
+                                            <Phone className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-gray-900 text-[12px]">{selectedPartner.phone || '+34 91 123 45 67'}</p>
+                                            <p className="text-[10px] font-bold text-gray-400">Direct Line</p>
+                                        </div>
                                     </div>
                                 </div>
-
                                 {selectedPartner.website && (
-                                    <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
-                                        <span className="text-gray-400">Web:</span>
-                                        <a
+                                    <div className="mt-4 p-4 bg-[#01A982]/5 rounded-2xl border border-[#01A982]/10 flex flex-col items-center">
+                                        <p className="text-[10px] font-bold text-[#01A982] uppercase mb-2">Sitio Web Oficial</p>
+                                        <a 
                                             href={`https://${selectedPartner.website.replace(/^https?:\/\//, '')}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-[#01A982] underline hover:text-emerald-700 truncate max-w-[130px] font-medium"
+                                            target="_blank" rel="noopener"
+                                            className="text-[#01A982] font-black text-sm hover:underline break-all text-center flex items-center gap-2"
                                         >
-                                            {selectedPartner.website}
+                                            {selectedPartner.website.replace(/^https?:\/\//, '')} <Globe className="h-3 w-3" />
                                         </a>
                                     </div>
                                 )}
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-6 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
-                            <MapPin className="h-6 w-6 text-slate-300" />
-                            Haz clic en un punto del mapa para visualizar los datos comerciales y de contacto del partner
+                        <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center flex flex-col items-center gap-4 transition-all hover:border-[#01A982]/20">
+                            <div className="h-16 w-16 rounded-[2rem] bg-white shadow-xl flex items-center justify-center text-slate-200">
+                                <MapPin className="h-8 w-8" />
+                            </div>
+                            <div>
+                                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Información de Partner</p>
+                                <p className="text-slate-400 text-xs leading-relaxed max-w-[180px]">Selecciona un partner en el mapa para ver sus detalles y marcas representadas.</p>
+                            </div>
                         </div>
                     )}
 
-                    {/* Country distribution (Interactive) */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-4 flex-1">
-                        <h5 className="text-xs font-bold text-gray-700 mb-3">Distribución por País</h5>
-                        <p className="text-[10px] text-gray-400 mb-3">Haz clic en un país para ver ubicación de partners</p>
-                        <div className="space-y-2 max-h-[220px] overflow-y-auto pr-2">
+                    <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm flex-1">
+                        <div className="flex items-center justify-between mb-6">
+                            <h5 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Presencia Global</h5>
+                            <span className="text-[10px] font-black text-[#01A982] bg-[#01A982]/10 px-3 py-1 rounded-full uppercase">Analíticos</span>
+                        </div>
+                        <div className="space-y-4 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
                             {Object.entries(filteredCountryGroups)
                                 .sort((a, b) => b[1] - a[1])
-                                .map(([country, count]) => (
-                                    <div
-                                        key={country}
+                                .map(([country, count], idx) => (
+                                    <div 
+                                        key={country} 
                                         onClick={() => zoomToCountry(country)}
-                                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 -mx-1.5 rounded-lg transition-colors group"
+                                        className="flex items-center gap-4 cursor-pointer group hover:bg-gray-50 p-2 -m-2 rounded-2xl transition-all"
                                     >
-                                        <span className="text-xs text-gray-600 w-24 truncate group-hover:text-[#01A982] group-hover:font-medium transition-colors">{country}</span>
+                                        <span className="text-[11px] text-gray-600 font-black w-20 truncate tracking-tight">{country}</span>
                                         <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                            <div
-                                                className="h-1.5 rounded-full bg-[#01A982] group-hover:bg-[#008f6e] transition-colors"
-                                                style={{ width: `${(count / Math.max(...Object.values(filteredCountryGroups))) * 100}%` }}
+                                            <div 
+                                                className="h-full rounded-full transition-all duration-1000"
+                                                style={{ 
+                                                    width: `${(count / Math.max(...Object.values(filteredCountryGroups))) * 100}%`,
+                                                    backgroundColor: SOFT_PALETTE[idx % SOFT_PALETTE.length] 
+                                                }}
                                             />
                                         </div>
-                                        <span className="text-xs font-bold text-gray-700 w-4 text-right group-hover:text-[#01A982]">{count}</span>
+                                        <span className="text-[11px] font-black text-[#01A982] w-4 text-right">{count}</span>
                                     </div>
                                 ))}
-                            {Object.keys(filteredCountryGroups).length === 0 && (
-                                <div className="text-center text-xs text-gray-400 py-4">No hay datos para esta selección</div>
-                            )}
                         </div>
-                    </div>
-
-                    {/* Data source note */}
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-[10px] text-blue-700 leading-relaxed">
-                        <strong>Fuentes de datos:</strong> Directorios públicos oficiales de partners (Siemens, Rockwell, Schneider, VMware, ABB).
                     </div>
                 </div>
             </div>

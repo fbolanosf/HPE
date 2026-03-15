@@ -24,6 +24,11 @@ export interface FinancialInput {
     vmEssentialsMonthlyCost: number;
     zertoMonthlyCost: number;
     opsRampMonthlyCost: number;
+    pcbeBusinessMonthlyCost: number;
+    pcbeEnterpriseMonthlyCost: number;
+    storeOnceMonthlyCost: number;
+    morpheusVMEMonthlyCost: number;
+    vmEssentialsLicenseMonthlyCost: number;
 
     // View Control
     selectedSolutions: string[]; // 'morpheus', 'vmEssentials', 'zerto', 'opsRamp'
@@ -41,6 +46,11 @@ export interface FinancialResult {
     vmEssentialsCumulative: number;       // VM Essentials Standalone
     zertoCumulative: number;
     opsRampCumulative: number;
+    pcbeBusinessCumulative: number;
+    pcbeEnterpriseCumulative: number;
+    storeOnceCumulative: number;
+    morpheusVMECumulative: number;
+    vmEssentialsLicenseCumulative: number;
 
     savingsVsTraditional: number;
     savingsVsCloud: number;
@@ -74,6 +84,11 @@ export function calculateTCO(inputs: FinancialInput): {
     let vmEssCum = 0;
     let zertoCum = 0;
     let opsRampCum = 0;
+    let pcbeBusinessCum = 0;
+    let pcbeEnterpriseCum = 0;
+    let storeOnceCum = 0;
+    let morphVMECum = 0;
+    let vmEssLicenseCum = 0;
 
     for (let i = 1; i <= years; i++) {
         // Traditional: Heavy CapEx refresh in year 1 and 4 (simplified)
@@ -91,6 +106,11 @@ export function calculateTCO(inputs: FinancialInput): {
         const vmEssOpex = inputs.vmEssentialsMonthlyCost * 12;
         const zertoOpex = inputs.zertoMonthlyCost * 12;
         const opsRampOpex = inputs.opsRampMonthlyCost * 12;
+        const pcbeBusinessOpex = (inputs.pcbeBusinessMonthlyCost || 0) * 12;
+        const pcbeEnterpriseOpex = (inputs.pcbeEnterpriseMonthlyCost || 0) * 12;
+        const storeOnceOpex = (inputs.storeOnceMonthlyCost || 0) * 12;
+        const morphVMEOpex = (inputs.morpheusVMEMonthlyCost || 0) * 12;
+        const vmEssLicenseOpex = (inputs.vmEssentialsLicenseMonthlyCost || 0) * 12;
 
         tradCum += tradHardware + tradOpex;
         cloudCum += cloudOpex;
@@ -101,6 +121,11 @@ export function calculateTCO(inputs: FinancialInput): {
         vmEssCum += vmEssOpex;
         zertoCum += zertoOpex;
         opsRampCum += opsRampOpex;
+        pcbeBusinessCum += pcbeBusinessOpex;
+        pcbeEnterpriseCum += pcbeEnterpriseOpex;
+        storeOnceCum += storeOnceOpex;
+        morphVMECum += morphVMEOpex;
+        vmEssLicenseCum += vmEssLicenseOpex;
 
         yearlyData.push({
             year: i,
@@ -111,8 +136,13 @@ export function calculateTCO(inputs: FinancialInput): {
             morpheusCumulative: morphCum,
             morpheusIntegratedCumulative: morphIntCum,
             vmEssentialsCumulative: vmEssCum,
-            zertoCumulative: zertoCum,
+            zertoCumulative: zertoCum, // Still present in interface, but not accumulated
             opsRampCumulative: opsRampCum,
+            pcbeBusinessCumulative: pcbeBusinessCum,
+            pcbeEnterpriseCumulative: pcbeEnterpriseCum,
+            storeOnceCumulative: storeOnceCum,
+            morpheusVMECumulative: morphVMECum,
+            vmEssentialsLicenseCumulative: vmEssLicenseCum,
 
             savingsVsTraditional: tradCum - glCum,
             savingsVsCloud: cloudCum - glCum,

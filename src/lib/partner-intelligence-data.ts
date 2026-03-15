@@ -14,6 +14,14 @@ export type PartnerType =
     | 'engineering_company'
     | 'automation_integrator';
 
+export type HPECertification = 
+    | 'Triple Platinum Plus'
+    | 'Platinum'
+    | 'Gold'
+    | 'Silver'
+    | 'Business Partner'
+    | 'None';
+
 export type OpportunityTier = 'High' | 'Medium' | 'Low';
 
 export interface Partner {
@@ -93,8 +101,12 @@ export interface Partner {
     finance: boolean;
     telecommunications: boolean;
     public_sector: boolean;
+    defense: boolean;
+    tourism: boolean;
+    shipping: boolean;
 
     // ── Optional enrichment ───────────────────────────────────
+    hpe_certification: HPECertification;
     description?: string;
     key_projects?: string[];
 }
@@ -305,7 +317,7 @@ export function searchPartners(
 
 export const BASE: Omit<Partner,
     'id' | 'company_name' | 'country' | 'city' | 'region' | 'website' |
-    'partner_type' | 'technology_domain' | 'company_size' | 'estimated_employees'
+    'partner_type' | 'technology_domain' | 'company_size' | 'estimated_employees' | 'hpe_certification'
 > = {
     linkedin: undefined,
     vmware_partner: false, vxrail_partner: false, dell_partner: false,
@@ -327,12 +339,13 @@ export const BASE: Omit<Partner,
     water_and_wastewater: false, transportation: false, smart_cities: false,
     retail: false, healthcare: false, finance: false,
     telecommunications: false, public_sector: false,
+    defense: false, tourism: false, shipping: false,
 };
 
 export const PARTNER_DATABASE: Partner[] = [
     // ── IT Integrators ─────────────────────────────────────────
     {
-        ...BASE, id: 'p001', company_name: 'Axtel Enterprises', country: 'Mexico',
+        hpe_certification: "Gold", ...BASE, id: 'p001', company_name: 'Axtel Enterprises', country: 'Mexico',
         city: 'Monterrey', region: 'LATAM', website: 'axtel.com.mx',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Large', estimated_employees: 3200,
@@ -344,7 +357,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador IT líder en México con fuertes competencias VMware y VxRail.',
     },
     {
-        ...BASE, id: 'p002', company_name: 'Telmex Soluciones', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p002', company_name: 'Telmex Soluciones', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: 'telmex.com',
         partner_type: 'managed_service_provider', technology_domain: 'IT',
         company_size: 'Enterprise', estimated_employees: 12000,
@@ -356,7 +369,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'MSP de gran escala con portafolio cloud híbrido.',
     },
     {
-        ...BASE, id: 'p003', company_name: 'Ingram Micro Colombia', country: 'Colombia',
+        hpe_certification: "Platinum", ...BASE, id: 'p003', company_name: 'Ingram Micro Colombia', country: 'Colombia',
         city: 'Bogotá', region: 'LATAM', website: 'ingrammicro.com',
         partner_type: 'reseller', technology_domain: 'IT',
         company_size: 'Enterprise', estimated_employees: 2500,
@@ -366,7 +379,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Distribuidor mayorista con amplio portafolio IT incluyendo HPE.',
     },
     {
-        ...BASE, id: 'p004', company_name: 'Sievert TI', country: 'Brazil',
+        hpe_certification: "Silver", ...BASE, id: 'p004', company_name: 'Sievert TI', country: 'Brazil',
         city: 'São Paulo', region: 'LATAM', website: 'sievert.com.br',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 450,
@@ -377,7 +390,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Especialista VMware y VxRail en Brasil con foco en manufactura.',
     },
     {
-        ...BASE, id: 'p005', company_name: 'Globant Infrastructure', country: 'Argentina',
+        hpe_certification: "None", ...BASE, id: 'p005', company_name: 'Globant Infrastructure', country: 'Argentina',
         city: 'Buenos Aires', region: 'LATAM', website: 'globant.com',
         partner_type: 'consulting_firm', technology_domain: 'IT',
         company_size: 'Enterprise', estimated_employees: 25000,
@@ -387,7 +400,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Firma de consultoría cloud-native con capacidades multi-cloud.',
     },
     {
-        ...BASE, id: 'p006', company_name: 'Nexxt Solutions', country: 'Chile',
+        hpe_certification: "None", ...BASE, id: 'p006', company_name: 'Nexxt Solutions', country: 'Chile',
         city: 'Santiago', region: 'LATAM', website: 'nexxt.com.co',
         partner_type: 'reseller', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 120,
@@ -396,7 +409,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Reseller Cisco y VMware en mercado SMB de Chile.',
     },
     {
-        ...BASE, id: 'p007', company_name: 'Logicalis LATAM', country: 'Mexico',
+        hpe_certification: "Platinum", ...BASE, id: 'p007', company_name: 'Logicalis LATAM', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: 'la.logicalis.com',
         partner_type: 'managed_service_provider', technology_domain: 'IT',
         company_size: 'Large', estimated_employees: 4000,
@@ -410,7 +423,7 @@ export const PARTNER_DATABASE: Partner[] = [
 
     // ── OT Integrators ─────────────────────────────────────────
     {
-        ...BASE, id: 'p008', company_name: 'Automatización Industrial Monterrey', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p008', company_name: 'Automatización Industrial Monterrey', country: 'Mexico',
         city: 'Monterrey', region: 'LATAM', website: 'aimty.com.mx',
         partner_type: 'automation_integrator', technology_domain: 'OT',
         company_size: 'Small', estimated_employees: 85,
@@ -420,7 +433,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador industrial especializado en PLC Siemens y Rockwell en manufactura.',
     },
     {
-        ...BASE, id: 'p009', company_name: 'ControlSys de México', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p009', company_name: 'ControlSys de México', country: 'Mexico',
         city: 'Querétaro', region: 'LATAM', website: 'controlsys.com.mx',
         partner_type: 'automation_integrator', technology_domain: 'OT',
         company_size: 'Medium', estimated_employees: 210,
@@ -431,7 +444,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'System integrator MES/SCADA con proyectos en manufactura farmacéutica.',
     },
     {
-        ...BASE, id: 'p010', company_name: 'IDS Ingeniería', country: 'Colombia',
+        hpe_certification: "None", ...BASE, id: 'p010', company_name: 'IDS Ingeniería', country: 'Colombia',
         city: 'Medellín', region: 'LATAM', website: 'ids.com.co',
         partner_type: 'industrial_integrator', technology_domain: 'OT',
         company_size: 'Medium', estimated_employees: 320,
@@ -441,7 +454,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador SCADA líder en sector energía y utilities en Colombia.',
     },
     {
-        ...BASE, id: 'p011', company_name: 'Process Solutions Brazil', country: 'Brazil',
+        hpe_certification: "None", ...BASE, id: 'p011', company_name: 'Process Solutions Brazil', country: 'Brazil',
         city: 'Rio de Janeiro', region: 'LATAM', website: 'processsolutions.com.br',
         partner_type: 'industrial_integrator', technology_domain: 'OT',
         company_size: 'Large', estimated_employees: 780,
@@ -453,7 +466,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador de proceso para oil & gas con DCS Honeywell y AVEVA.',
     },
     {
-        ...BASE, id: 'p012', company_name: 'Intelcon Industrial', country: 'Chile',
+        hpe_certification: "None", ...BASE, id: 'p012', company_name: 'Intelcon Industrial', country: 'Chile',
         city: 'Santiago', region: 'LATAM', website: 'intelcon.cl',
         partner_type: 'industrial_integrator', technology_domain: 'OT',
         company_size: 'Medium', estimated_employees: 260,
@@ -463,7 +476,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Especialista en SCADA minero y utilities en Chile.',
     },
     {
-        ...BASE, id: 'p013', company_name: 'Tecnomatic Argentina', country: 'Argentina',
+        hpe_certification: "None", ...BASE, id: 'p013', company_name: 'Tecnomatic Argentina', country: 'Argentina',
         city: 'Buenos Aires', region: 'LATAM', website: 'tecnomatic.com.ar',
         partner_type: 'automation_integrator', technology_domain: 'OT',
         company_size: 'Small', estimated_employees: 75,
@@ -475,7 +488,7 @@ export const PARTNER_DATABASE: Partner[] = [
 
     // ── IT/OT Hybrid Integrators ───────────────────────────────
     {
-        ...BASE, id: 'p014', company_name: 'ProA Technology', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p014', company_name: 'ProA Technology', country: 'Mexico',
         city: 'Guadalajara', region: 'LATAM', website: 'proatechnology.com.mx',
         partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Medium', estimated_employees: 380,
@@ -486,7 +499,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador híbrido IT/OT con fuerte componente edge computing industrial.',
     },
     {
-        ...BASE, id: 'p015', company_name: 'Wara Technologies', country: 'Peru',
+        hpe_certification: "None", ...BASE, id: 'p015', company_name: 'Wara Technologies', country: 'Peru',
         city: 'Lima', region: 'LATAM', website: 'waratec.pe',
         partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Medium', estimated_employees: 185,
@@ -498,7 +511,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador híbrido IT/OT con proyectos mineros y energía en Perú y Bolivia.',
     },
     {
-        ...BASE, id: 'p016', company_name: 'Grupo Assa Latam', country: 'Colombia',
+        hpe_certification: "None", ...BASE, id: 'p016', company_name: 'Grupo Assa Latam', country: 'Colombia',
         city: 'Bogotá', region: 'LATAM', website: 'grupoassa.com',
         partner_type: 'consulting_firm', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Large', estimated_employees: 1800,
@@ -510,7 +523,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Consultora digital con práctica Industry 4.0 y cloud híbrido.',
     },
     {
-        ...BASE, id: 'p017', company_name: 'Soluciones i4.0 México', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p017', company_name: 'Soluciones i4.0 México', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: 'soluciones-i40.mx',
         partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Small', estimated_employees: 95,
@@ -521,7 +534,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: '¡Start-up de industria 4.0 con foco en edge analytics y MES.',
     },
     {
-        ...BASE, id: 'p018', company_name: 'Ingetech Ecuador', country: 'Ecuador',
+        hpe_certification: "None", ...BASE, id: 'p018', company_name: 'Ingetech Ecuador', country: 'Ecuador',
         city: 'Quito', region: 'LATAM', website: 'ingetech.ec',
         partner_type: 'industrial_integrator', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Small', estimated_employees: 65,
@@ -531,7 +544,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador OT con capacidades de redes industriales y datacenter básico.',
     },
     {
-        ...BASE, id: 'p019', company_name: 'IIoT Solutions México', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p019', company_name: 'IIoT Solutions México', country: 'Mexico',
         city: 'Monterrey', region: 'LATAM', website: 'iiotsolutions.com.mx',
         partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Small', estimated_employees: 130,
@@ -542,7 +555,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Especialista IIoT con capacidades de conectividad edge-to-cloud.',
     },
     {
-        ...BASE, id: 'p020', company_name: 'CyberOT Chile', country: 'Chile',
+        hpe_certification: "None", ...BASE, id: 'p020', company_name: 'CyberOT Chile', country: 'Chile',
         city: 'Santiago', region: 'LATAM', website: 'cyberot.cl',
         partner_type: 'consulting_firm', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Small', estimated_employees: 55,
@@ -552,7 +565,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Boutique de ciberseguridad IT/OT convergida para industrias críticas.',
     },
     {
-        ...BASE, id: 'p021', company_name: 'TechPetro Services', country: 'Colombia',
+        hpe_certification: "None", ...BASE, id: 'p021', company_name: 'TechPetro Services', country: 'Colombia',
         city: 'Bogotá', region: 'LATAM', website: 'techpetro.co',
         partner_type: 'engineering_company', technology_domain: 'OT',
         company_size: 'Medium', estimated_employees: 420,
@@ -563,7 +576,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Firma de ingeniería especializada en DCS y control de proceso para oil & gas.',
     },
     {
-        ...BASE, id: 'p022', company_name: 'Xytech industrial', country: 'Brazil',
+        hpe_certification: "None", ...BASE, id: 'p022', company_name: 'Xytech industrial', country: 'Brazil',
         city: 'Curitiba', region: 'LATAM', website: 'xytech.ind.br',
         partner_type: 'automation_integrator', technology_domain: 'OT',
         company_size: 'Medium', estimated_employees: 195,
@@ -573,7 +586,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador industrial con cobertura nacional en Brasil.',
     },
     {
-        ...BASE, id: 'p023', company_name: 'Infracloud Perú', country: 'Peru',
+        hpe_certification: "None", ...BASE, id: 'p023', company_name: 'Infracloud Perú', country: 'Peru',
         city: 'Lima', region: 'LATAM', website: 'infracloud.pe',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 110,
@@ -583,7 +596,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador IT enfocado en sectores extractivos en Perú.',
     },
     {
-        ...BASE, id: 'p024', company_name: 'BML Networking', country: 'Mexico',
+        hpe_certification: "Silver", ...BASE, id: 'p024', company_name: 'BML Networking', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: 'bml.com.mx',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 280,
@@ -593,7 +606,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Partner HPE activo en México. Fuerte en networking y datacenter.',
     },
     {
-        ...BASE, id: 'p025', company_name: 'DigitalPlant Argentina', country: 'Argentina',
+        hpe_certification: "None", ...BASE, id: 'p025', company_name: 'DigitalPlant Argentina', country: 'Argentina',
         city: 'Córdoba', region: 'LATAM', website: 'digitalplant.com.ar',
         partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Small', estimated_employees: 88,
@@ -604,7 +617,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador de planta digital con AVEVA y Schneider.',
     },
     {
-        ...BASE, id: 'p026', company_name: 'DataCenter DPR Monterrey', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p026', company_name: 'DataCenter DPR Monterrey', country: 'Mexico',
         city: 'Monterrey', region: 'LATAM', website: 'dpr.com.mx',
         partner_type: 'managed_service_provider', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 340,
@@ -615,7 +628,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'MSP con datacenter propio en Monterrey. Fuerte en VxRail y HCI.',
     },
     {
-        ...BASE, id: 'p027', company_name: 'Systemia Venezuela', country: 'Venezuela',
+        hpe_certification: "None", ...BASE, id: 'p027', company_name: 'Systemia Venezuela', country: 'Venezuela',
         city: 'Caracas', region: 'LATAM', website: 'systemia.com.ve',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 70,
@@ -625,7 +638,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador IT local con enfoque en sector energético venezolano.',
     },
     {
-        ...BASE, id: 'p028', company_name: 'Pacific Edge Solutions', country: 'Chile',
+        hpe_certification: "None", ...BASE, id: 'p028', company_name: 'Pacific Edge Solutions', country: 'Chile',
         city: 'Antofagasta', region: 'LATAM', website: 'pacificedge.cl',
         partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Small', estimated_employees: 60,
@@ -636,7 +649,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador de edge computing y redes industriales para minería en el norte de Chile.',
     },
     {
-        ...BASE, id: 'p029', company_name: 'Enersis Soluciones Digitales', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p029', company_name: 'Enersis Soluciones Digitales', country: 'Mexico',
         city: 'Mérida', region: 'LATAM', website: 'enersis.mx',
         partner_type: 'engineering_company', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Small', estimated_employees: 115,
@@ -647,7 +660,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Firma de ingeniería en transición digital para utilities en el sureste de México.',
     },
     {
-        ...BASE, id: 'p030', company_name: 'Datalink Bolivia', country: 'Bolivia',
+        hpe_certification: "None", ...BASE, id: 'p030', company_name: 'Datalink Bolivia', country: 'Bolivia',
         city: 'Santa Cruz de la Sierra', region: 'LATAM', website: 'datalink.bo',
         partner_type: 'reseller', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 45,
@@ -657,7 +670,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Reseller IT en Bolivia con fuerte presencia en sector hidrocarburos.',
     },
     {
-        ...BASE, id: 'p031', company_name: 'Integratto Tecnologia', country: 'Brazil',
+        hpe_certification: "None", ...BASE, id: 'p031', company_name: 'Integratto Tecnologia', country: 'Brazil',
         city: 'Goiânia', region: 'LATAM', website: 'integratto.com.br',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 150,
@@ -666,7 +679,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Especialistas en infraestructura IT, cloud y protección de datos en Brasil.',
     },
     {
-        ...BASE, id: 'p032', company_name: 'Green', country: 'Brazil',
+        hpe_certification: "None", ...BASE, id: 'p032', company_name: 'Green', country: 'Brazil',
         city: 'São Paulo', region: 'LATAM', website: 'green.com.br',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 200,
@@ -675,7 +688,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Green IT Solutions - enfocado en infraestructura y servicios cloud sustentables.',
     },
     {
-        ...BASE, id: 'p033', company_name: 'eSoft', country: 'Peru',
+        hpe_certification: "None", ...BASE, id: 'p033', company_name: 'eSoft', country: 'Peru',
         city: 'Lima', region: 'LATAM', website: 'esoftglobaltech.com',
         partner_type: 'consulting_firm', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 50,
@@ -684,7 +697,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Consultora de modernización y soluciones cloud.',
     },
     {
-        ...BASE, id: 'p034', company_name: 'Andes Digital', country: 'Chile',
+        hpe_certification: "None", ...BASE, id: 'p034', company_name: 'Andes Digital', country: 'Chile',
         city: 'Santiago', region: 'LATAM', website: 'andesdigital.com',
         partner_type: 'consulting_firm', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 80,
@@ -693,7 +706,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Especialistas en migración cloud (AWS) y modernización de infraestructuras (VMware/RedHat).',
     },
     {
-        ...BASE, id: 'p035', company_name: 'Green ITS', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p035', company_name: 'Green ITS', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: 'greenits.com',
         partner_type: 'consulting_firm', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 30,
@@ -702,7 +715,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Consultoría en TI sustentable e infraestructura verde.',
     },
     {
-        ...BASE, id: 'p036', company_name: 'Scanda', country: 'Mexico',
+        hpe_certification: "Triple Platinum Plus", ...BASE, id: 'p036', company_name: 'Scanda', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: 'gruposcanda.com',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Large', estimated_employees: 1200,
@@ -712,7 +725,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Grupo Scanda es un referente mexicano en integración empresarial TI.',
     },
     {
-        ...BASE, id: 'p037', company_name: 'INACOM de México', country: 'Mexico',
+        hpe_certification: "Gold", ...BASE, id: 'p037', company_name: 'INACOM de México', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: 'inacom.com.mx',
         partner_type: 'reseller', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 250,
@@ -722,7 +735,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Mayorista e integrador histórico en México, provisión de hardware y licenciamiento IT.',
     },
     {
-        ...BASE, id: 'p038', company_name: 'GBM', country: 'Costa Rica',
+        hpe_certification: "None", ...BASE, id: 'p038', company_name: 'GBM', country: 'Costa Rica',
         city: 'San José', region: 'LATAM', website: 'gbm.net',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Enterprise', estimated_employees: 2500,
@@ -732,7 +745,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Gigante integrador IT centroamericano con fuerte alianza regional (IBM, Cisco, VMware).',
     },
     {
-        ...BASE, id: 'p039', company_name: 'NGeek', country: 'Colombia',
+        hpe_certification: "None", ...BASE, id: 'p039', company_name: 'NGeek', country: 'Colombia',
         city: 'Bogotá', region: 'LATAM', website: 'ngeek.net',
         partner_type: 'managed_service_provider', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 60,
@@ -741,7 +754,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'MSP con capacidades en optimización y aseguraración de nubes híbridas en Colombia y Perú.',
     },
     {
-        ...BASE, id: 'p040', company_name: 'RYC', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p040', company_name: 'RYC', country: 'Mexico',
         city: 'Ciudad Nezahualcóyotl', region: 'LATAM', website: 'rycmx.com',
         partner_type: 'managed_service_provider', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 45,
@@ -750,7 +763,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'RYC Redes y Comunicaciones provee soporte IT y soluciones robustas de networking.',
     },
     {
-        ...BASE, id: 'p041', company_name: 'iCorp', country: 'Mexico',
+        hpe_certification: "Gold", ...BASE, id: 'p041', company_name: 'iCorp', country: 'Mexico',
         city: 'Querétaro', region: 'LATAM', website: 'icorp.com.mx',
         partner_type: 'managed_service_provider', technology_domain: 'IT',
         company_size: 'Large', estimated_employees: 600,
@@ -760,7 +773,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Gran proveedor MSP mexicano con foco global en administración delegada de IT y help desk.',
     },
     {
-        ...BASE, id: 'p042', company_name: 'INT / Intelligence & Technology', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p042', company_name: 'INT / Intelligence & Technology', country: 'Mexico',
         city: 'Monterrey', region: 'LATAM', website: 'int.com.mx',
         partner_type: 'consulting_firm', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 120,
@@ -769,7 +782,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Consultoría en transformación digital, IA y modernización de infraestructura TI.',
     },
     {
-        ...BASE, id: 'p043', company_name: 'Iterati', country: 'Mexico',
+        hpe_certification: "Silver", ...BASE, id: 'p043', company_name: 'Iterati', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: 'iterati.com.mx',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 75,
@@ -778,7 +791,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integrador IT y Cloud focalizado en seguridad, respaldo e infraestructuras heterogéneas.',
     },
     {
-        ...BASE, id: 'p044', company_name: 'MES Automation', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p044', company_name: 'MES Automation', country: 'Mexico',
         city: 'Querétaro', region: 'LATAM', website: 'mesautomation.com',
         partner_type: 'industrial_integrator', technology_domain: 'OT',
         company_size: 'Medium', estimated_employees: 150,
@@ -788,7 +801,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Pioneros en Manufactura 4.0, integración de capas MES y automatización industrial en LATAM.',
     },
     {
-        ...BASE, id: 'p045', company_name: 'Brute Force Security', country: 'Brazil',
+        hpe_certification: "None", ...BASE, id: 'p045', company_name: 'Brute Force Security', country: 'Brazil',
         city: 'São Paulo', region: 'LATAM', website: 'bruteforce.com.br',
         partner_type: 'managed_service_provider', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 35,
@@ -798,7 +811,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Servicios gestionados de Ciberseguridad e Infraestructura (MSSP) enfocado en resiliencia.',
     },
     {
-        ...BASE, id: 'p046', company_name: 'Fast Technologies', country: 'Argentina',
+        hpe_certification: "None", ...BASE, id: 'p046', company_name: 'Fast Technologies', country: 'Argentina',
         city: 'Buenos Aires', region: 'LATAM', website: '',
         partner_type: 'reseller', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 40,
@@ -807,7 +820,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Provisión ágil de licenciamiento e infraestructura base.',
     },
     {
-        ...BASE, id: 'p047', company_name: 'P2P Tech Solutions', country: 'Colombia',
+        hpe_certification: "None", ...BASE, id: 'p047', company_name: 'P2P Tech Solutions', country: 'Colombia',
         city: 'Bogotá', region: 'LATAM', website: 'p2pbusinesstech.com',
         partner_type: 'managed_service_provider', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 25,
@@ -816,7 +829,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Soluciones IT y soporte integral para SMBs.',
     },
     {
-        ...BASE, id: 'p048', company_name: 'IT Technology', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p048', company_name: 'IT Technology', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: '',
         partner_type: 'reseller', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 20,
@@ -825,7 +838,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Distribución y provisión de equipamiento e integraciones IT.',
     },
     {
-        ...BASE, id: 'p049', company_name: 'Linware', country: 'Argentina',
+        hpe_certification: "None", ...BASE, id: 'p049', company_name: 'Linware', country: 'Argentina',
         city: 'Buenos Aires', region: 'LATAM', website: 'linware.com.ar',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 55,
@@ -834,7 +847,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Boutique referente en Argentina para hiperconvergencia, virtualización y Veeam Backup.',
     },
     {
-        ...BASE, id: 'p050', company_name: 'Xolsa', country: 'Mexico',
+        hpe_certification: "None", ...BASE, id: 'p050', company_name: 'Xolsa', country: 'Mexico',
         city: 'Monterrey', region: 'LATAM', website: 'xolsa.com',
         partner_type: 'system_integrator', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 30,
@@ -843,7 +856,7 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Integraciones tecnológicas corporativas y conectividad de datacenters.',
     },
     {
-        ...BASE, id: 'p051', company_name: 'Data Client', country: 'Colombia',
+        hpe_certification: "None", ...BASE, id: 'p051', company_name: 'Data Client', country: 'Colombia',
         city: 'Medellín', region: 'LATAM', website: 'clientsdata.com',
         partner_type: 'consulting_firm', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 40,
@@ -853,13 +866,342 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Advisory en migraciones de datos aceleradas y gobierno de información cloud.',
     },
     {
-        ...BASE, id: 'p052', company_name: 'Adistec', country: 'United States',
+        hpe_certification: "Platinum", ...BASE, id: 'p052', company_name: 'Adistec', country: 'United States',
         city: 'Miami', region: 'LATAM', website: 'adistec.com',
         partner_type: 'reseller', technology_domain: 'IT',
         company_size: 'Enterprise', estimated_employees: 1100,
         vmware_partner: true, veeam_partner: true, cisco_partner: true, nutanix_partner: true,
         virtualization: true, backup_and_disaster_recovery: true, datacenter_infrastructure: true, hci: true, cloud_migration: true,
         description: 'Uno de los Super-Mayoristas IT (VAD) panregionales más influyentes de LATAM.',
+    },
+
+    // ── Southern Europe Partners ──────────────────────────────
+    {
+        hpe_certification: "Silver", ...BASE, id: 'p053', company_name: 'Centria Tecnología', country: 'Spain',
+        city: 'Madrid', region: 'Europe', website: 'centria.es',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 150,
+        hpe_partner: true, vmware_partner: true, veeam_partner: true,
+        virtualization: true, datacenter_infrastructure: true, cloud_migration: true,
+        finance: true, public_sector: true,
+        description: 'Official HPE partner in Spain, providing comprehensive IT infrastructure and consulting.',
+    },
+    {
+        hpe_certification: "Platinum", ...BASE, id: 'p054', company_name: 'ABAST', country: 'Spain',
+        city: 'Barcelona', region: 'Europe', website: 'abast.es',
+        partner_type: 'managed_service_provider', technology_domain: 'IT',
+        company_size: 'Large', estimated_employees: 450,
+        hpe_partner: true, dell_partner: true, vmware_partner: true, aws_partner: true,
+        virtualization: true, hybrid_cloud: true, cloud_migration: true, datacenter_infrastructure: true,
+        manufacturing: true, healthcare: true,
+        description: 'Global provider of IT services focusing on cloud migration and cybersecurity.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p055', company_name: 'MZeroNetwork Srl', country: 'Italy',
+        city: 'Milan', region: 'Europe', website: 'mzeronetwork.it',
+        partner_type: 'managed_service_provider', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 80,
+        hpe_partner: true, vmware_partner: true, microsoft_partner: true,
+        virtualization: true, backup_and_disaster_recovery: true, hybrid_cloud: true,
+        finance: true, telecommunications: true,
+        description: 'System management and consulting for corporate ICT infrastructures and Cloud.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p056', company_name: 'Ates Informatica', country: 'Italy',
+        city: 'Verona', region: 'Europe', website: 'atesinformatica.it',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 60,
+        hpe_partner: true, cisco_partner: true, vmware_partner: true,
+        virtualization: true, industrial_networking: true, datacenter_infrastructure: true,
+        manufacturing: true, transportation: true,
+        description: 'System integrator specializing in virtualization, networking, and managed IT.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p057', company_name: 'Logicalis Portugal', country: 'Portugal',
+        city: 'Lisbon', region: 'Europe', website: 'pt.logicalis.com',
+        partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
+        company_size: 'Large', estimated_employees: 250,
+        hpe_partner: true, cisco_partner: true, microsoft_partner: true,
+        virtualization: true, hybrid_cloud: true, edge_computing: true, industrial_iot: true,
+        manufacturing: true, telecommunications: true, smart_cities: true,
+        description: 'Comprehensive IT/OT services including hybrid data center and edge computing.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p058', company_name: 'IBSCY Ltd', country: 'Cyprus',
+        city: 'Limassol', region: 'Europe', website: 'ibscy.com',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 45,
+        hpe_partner: true, microsoft_partner: true, dell_partner: true,
+        virtualization: true, datacenter_infrastructure: true, hybrid_cloud: true,
+        finance: true, shipping: true, public_sector: true,
+        description: 'Leading IT infrastructure solutions provider in Cyprus and Greece.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p059', company_name: 'Digimark', country: 'Greece',
+        city: 'Athens', region: 'Europe', website: 'digimark.gr',
+        partner_type: 'managed_service_provider', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 70,
+        hpe_partner: true, cisco_partner: true, microsoft_partner: true,
+        virtualization: true, datacenter_infrastructure: true, backup_and_disaster_recovery: true,
+        retail: true, finance: true, healthcare: true,
+        description: 'Managed service provider focusing on SMB digital transformation and HPE servers.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p060', company_name: 'SinzerAD', country: 'Andorra',
+        city: 'Andorra la Vella', region: 'Europe', website: 'sinzerad.ad',
+        partner_type: 'consulting_firm', technology_domain: 'IT',
+        company_size: 'Small', estimated_employees: 15,
+        microsoft_partner: true, hpe_partner: true,
+        cloud_migration: true, datacenter_infrastructure: true,
+        retail: true, finance: true,
+        description: 'Specialized in Microsoft services and hybrid infrastructure creation in Andorra.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p061', company_name: 'SHI San Marino', country: 'San Marino',
+        city: 'San Marino', region: 'Europe', website: 'shi.com',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Small', estimated_employees: 10,
+        hpe_partner: true, dell_partner: true, vmware_partner: true,
+        virtualization: true, datacenter_infrastructure: true, backup_and_disaster_recovery: true,
+        public_sector: true, finance: true,
+        description: 'Global systems integrator serving the San Marino region with award-winning HPE coverage.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p062', company_name: 'Smart Technologies Malta', country: 'Malta',
+        city: 'Birkirkara', region: 'Europe', website: 'stmalta.com',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 55,
+        hpe_partner: true, dell_partner: true, vmware_partner: true,
+        virtualization: true, datacenter_infrastructure: true, hybrid_cloud: true,
+        finance: true, healthcare: true, tourism: true,
+        description: 'Malta leading system integrator with a strong emphasis on HPE server and storage solutions.',
+    },
+
+    // ── Middle East Partners ──────────────────────────────────
+    {
+        hpe_certification: "None", ...BASE, id: 'p063', company_name: 'Malam Team', country: 'Israel',
+        city: 'Petah Tikva', region: 'Middle East', website: 'malamteam.com',
+        partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
+        company_size: 'Enterprise', estimated_employees: 4000,
+        hpe_partner: true, dell_partner: true, vmware_partner: true, siemens_partner: true,
+        virtualization: true, scada_integration: true, industrial_cybersecurity: true, hybrid_cloud: true,
+        manufacturing: true, defense: true, energy: true, utilities: true,
+        description: 'Major Israeli IT/OT services provider with extensive GreenLake and industrial integration.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p064', company_name: 'Siraj Technologies', country: 'Israel',
+        city: 'Beersheba', region: 'Middle East', website: 'siraj-tech.com',
+        partner_type: 'industrial_integrator', technology_domain: 'OT',
+        company_size: 'Small', estimated_employees: 30,
+        industrial_iot: true, edge_computing: true, mes_integration: true, industrial_networking: true,
+        manufacturing: true, water_and_wastewater: true,
+        description: 'Specialized in seamless IIoT edge device onboarding and industrial data platforms.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p065', company_name: 'Unit One Group', country: 'Gaza Strip',
+        city: 'Gaza City', region: 'Middle East', website: 'unitone.ps',
+        partner_type: 'managed_service_provider', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 120,
+        cloud_migration: true, datacenter_infrastructure: true, virtualization: true,
+        public_sector: true, telecommunications: true,
+        description: 'Resilient IT services firm in Gaza specializing in ICT infrastructure and modernization.',
+    },
+    // ── Europe & Middle East Partners (v5.8.0 Expansion) ────────
+    // España / Andorra
+    {
+        hpe_certification: "None", ...BASE, id: 'p101', company_name: 'TD SYNNEX Spain', country: 'Spain',
+        city: 'Barcelona', region: 'Europe', website: 'es.tdsynnex.com',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Enterprise', estimated_employees: 1500,
+        vmware_partner: true, dell_partner: true, hpe_partner: true, cisco_partner: true, microsoft_partner: true,
+        virtualization: true, datacenter_infrastructure: true, hybrid_cloud: true,
+        description: 'Distribuidor global líder con amplia cobertura en España y Andorra.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p102', company_name: 'Ingram Micro Spain', country: 'Spain',
+        city: 'Madrid', region: 'Europe', website: 'es.ingrammicro.com',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Enterprise', estimated_employees: 1200,
+        vmware_partner: true, dell_partner: true, hpe_partner: true, nutanix_partner: true, cisco_partner: true,
+        virtualization: true, hci: true, datacenter_infrastructure: true,
+        description: 'Uno de los mayores mayoristas de tecnología en la península ibérica.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p103', company_name: 'Arrow ECS Spain', country: 'Spain',
+        city: 'Madrid', region: 'Europe', website: 'arrow.com/ecs/es/',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Large', estimated_employees: 500,
+        vmware_partner: true, dell_partner: true, veeam_partner: true, purestorage_partner: true,
+        virtualization: true, datacenter_infrastructure: true, backup_and_disaster_recovery: true,
+        description: 'Especialista en soluciones de infraestructura y seguridad corporativa.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p104', company_name: 'V-Valley Spain', country: 'Spain',
+        city: 'Madrid', region: 'Europe', website: 'v-valley.es',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Large', estimated_employees: 300,
+        hpe_partner: true, cisco_partner: true, veeam_partner: true,
+        datacenter_infrastructure: true, backup_and_disaster_recovery: true,
+        description: 'Mayorista de valor añadido del Grupo Esprinet especializado en soluciones complejas.',
+    },
+    // Portugal
+    {
+        hpe_certification: "None", ...BASE, id: 'p105', company_name: 'TD SYNNEX Portugal', country: 'Portugal',
+        city: 'Lisboa', region: 'Europe', website: 'pt.tdsynnex.com',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Large', estimated_employees: 400,
+        vmware_partner: true, dell_partner: true, hpe_partner: true, cisco_partner: true,
+        virtualization: true, datacenter_infrastructure: true,
+        description: 'Distribuidor tecnológico principal en el mercado portugués.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p106', company_name: 'Ingram Micro PT', country: 'Portugal',
+        city: 'Lisboa', region: 'Europe', website: 'pt.ingrammicro.com',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 250,
+        vmware_partner: true, dell_partner: true, hpe_partner: true,
+        virtualization: true, datacenter_infrastructure: true,
+        description: 'Distribuidor mayorista con fuerte presencia en soluciones de centro de datos.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p107', company_name: 'Arrow ECS Portugal', country: 'Portugal',
+        city: 'Lisboa', region: 'Europe', website: 'arrow.com/ecs/pt/',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 150,
+        veeam_partner: true, purestorage_partner: true, vmware_partner: true,
+        backup_and_disaster_recovery: true, virtualization: true,
+        description: 'Foco en servicios de valor y almacenamiento avanzado en Portugal.',
+    },
+    // Italia / San Marino
+    {
+        hpe_certification: "Platinum", ...BASE, id: 'p108', company_name: 'Computer Gross', country: 'Italy',
+        city: 'Empoli', region: 'Europe', website: 'computergross.it',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Enterprise', estimated_employees: 1000,
+        hpe_partner: true, dell_partner: true, vmware_partner: true, cisco_partner: true, microsoft_partner: true,
+        virtualization: true, datacenter_infrastructure: true, hybrid_cloud: true,
+        description: 'Líder en Italia con fuerte enfoque en soluciones de valor y HPE.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p109', company_name: 'Esprinet V-Valley', country: 'Italy',
+        city: 'Vimercate', region: 'Europe', website: 'v-valley.com',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Enterprise', estimated_employees: 1800,
+        hpe_partner: true, dell_partner: true, cisco_partner: true,
+        datacenter_infrastructure: true, virtualization: true,
+        description: 'El mayor distribuidor en el sur de Europa con operaciones extensas en Italia.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p110', company_name: 'Ingegnos-TD SYNNEX IT', country: 'Italy',
+        city: 'Milán', region: 'Europe', website: 'it.tdsynnex.com',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Enterprise', estimated_employees: 900,
+        vmware_partner: true, microsoft_partner: true, aws_partner: true,
+        cloud_migration: true, hybrid_cloud: true, virtualization: true,
+        description: 'Presencia masiva en IT tradicional y servicios cloud en Italia.',
+    },
+    // Grecia / Chipre
+    {
+        hpe_certification: "Triple Platinum Plus", ...BASE, id: 'p111', company_name: 'Logicom Public Ltd', country: 'Greece',
+        city: 'Atenas', region: 'Europe', website: 'logicom.net',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Enterprise', estimated_employees: 800,
+        hpe_partner: true, cisco_partner: true, microsoft_partner: true, dell_partner: true,
+        datacenter_infrastructure: true, cloud_migration: true,
+        description: 'Líder regional indiscutible para Grecia, Chipre y el sudeste europeo.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p112', company_name: 'Info Quest Technologies', country: 'Greece',
+        city: 'Atenas', region: 'Europe', website: 'infoquest.gr',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Large', estimated_employees: 600,
+        vmware_partner: true, dell_partner: true, microsoft_partner: true,
+        virtualization: true, hybrid_cloud: true,
+        description: 'Pionero en Grecia con fuertes capacidades de servicios gestionados e integración.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p113', company_name: 'Westnet', country: 'Greece',
+        city: 'Atenas', region: 'Europe', website: 'westnet.gr',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 200,
+        microsoft_partner: true, hpe_partner: true,
+        datacenter_infrastructure: true,
+        description: 'Distribuidor dinámico con foco en movilidad y centro de datos.',
+    },
+    // Israel
+    {
+        hpe_certification: "None", ...BASE, id: 'p114', company_name: 'C-Data', country: 'Israel',
+        city: 'Petah Tikva', region: 'Middle East', website: 'c-data.co.il',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Large', estimated_employees: 300,
+        dell_partner: true, microsoft_partner: true, hpe_partner: true, veeam_partner: true,
+        virtualization: true, datacenter_infrastructure: true,
+        description: 'Mayorista de gran escala en Israel con portafolio amplio de infraestructura.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p115', company_name: 'Visual D.G. LTD', country: 'Israel',
+        city: 'Beersheba', region: 'Middle East', website: 'visualdg.co.il',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 150,
+        vmware_partner: true, cisco_partner: true,
+        virtualization: true, datacenter_infrastructure: true,
+        description: 'Especialista en networking y virtualización para el mercado israelí.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p116', company_name: 'Safad Engineering', country: 'Israel',
+        city: 'Safed', region: 'Middle East', website: 'safad.co.il',
+        partner_type: 'engineering_company', technology_domain: 'IT_OT_HYBRID',
+        company_size: 'Small', estimated_employees: 80,
+        siemens_partner: true, scada_integration: true, industrial_networking: true,
+        manufacturing: true, energy: true,
+        description: 'Firma de ingeniería israelí enfocada en automatización y sistemas de control.',
+    },
+    // Malta
+    {
+        hpe_certification: "None", ...BASE, id: 'p117', company_name: 'Systec Ltd', country: 'Malta',
+        city: 'Birkirkara', region: 'Europe', website: 'systec.com.mt',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 100,
+        hpe_partner: true, vmware_partner: true, veeam_partner: true,
+        virtualization: true, datacenter_infrastructure: true,
+        description: 'Principal integrador en Malta con fuerte herencia en sistemas HPE.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p118', company_name: 'Fortune Technologies', country: 'Malta',
+        city: 'Santa Venera', region: 'Europe', website: 'fortunemalta.com',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Small', estimated_employees: 50,
+        microsoft_partner: true, dell_partner: true,
+        datacenter_infrastructure: true,
+        description: 'Socio de hardware y licencias para SMB en Malta.',
+    },
+    // Franja de Gaza
+    {
+        hpe_certification: "None", ...BASE, id: 'p119', company_name: 'Logicom Gaza (via Jordan)', country: 'Gaza Strip',
+        city: 'Gaza City', region: 'Middle East', website: 'logicom.net',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 40,
+        cisco_partner: true, microsoft_partner: true,
+        telecommunications: true, public_sector: true,
+        description: 'Operaciones de suministro regional para infraestructura crítica en Gaza.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p120', company_name: 'BCI Mobile Solutions', country: 'Gaza Strip',
+        city: 'Gaza City', region: 'Middle East', website: 'bcismarttech.com',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Medium', estimated_employees: 120,
+        microsoft_partner: true, hpe_partner: true,
+        telecommunications: true, healthcare: true,
+        description: 'Líder local en telecomunicaciones y soluciones de red avanzada para Palestina y Gaza.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p066', company_name: 'HexaCIT', country: 'Gaza Strip',
+        city: 'Gaza City', region: 'Middle East', website: 'hexacit.com',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Small', estimated_employees: 45,
+        microsoft_partner: true, datacenter_infrastructure: true,
+        retail: true, healthcare: true,
+        description: 'Local system integrator providing software development and IT infrastructure support.',
     },
 ];
 

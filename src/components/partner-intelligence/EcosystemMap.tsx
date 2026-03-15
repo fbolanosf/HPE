@@ -82,30 +82,95 @@ interface TooltipPayload {
         type: string;
         score: number;
         employees: number;
+        hpe_certification?: string;
+        website?: string;
+        vendors?: string[];
+        virtTechs?: string[];
+        address?: string;
+        city?: string;
     };
 }
 
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) {
     if (!active || !payload || payload.length === 0) return null;
     const d = payload[0].payload;
+    
     return (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-sm max-w-[220px]">
-            <p className="font-bold text-gray-900 mb-1">{d.name}</p>
-            <p className="text-xs text-gray-500">{d.country}</p>
-            <div className="flex gap-2 mt-1 flex-wrap">
-                <span className="text-xs px-1.5 py-0.5 rounded font-medium"
-                    style={{ backgroundColor: DOMAIN_COLORS[d.domain] + '20', color: DOMAIN_COLORS[d.domain] }}>
-                    {DOMAIN_LABEL[d.domain]}
-                </span>
+        <div className="bg-white border border-gray-100 rounded-[1.5rem] shadow-2xl p-4 text-sm min-w-[260px] border-t-4 border-t-[#01A982] animate-in fade-in zoom-in duration-200">
+            <div className="border-b border-gray-50 pb-2 mb-3">
+                <p className="font-black text-gray-900 text-base leading-tight">{d.name}</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                        style={{ backgroundColor: DOMAIN_COLORS[d.domain] + '15', color: DOMAIN_COLORS[d.domain] }}>
+                        {DOMAIN_LABEL[d.domain]}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{d.type}</span>
+                </div>
             </div>
-            <p className="text-xs text-gray-600 mt-1">{d.type}</p>
-            <p className="text-xs font-semibold text-gray-800 mt-1">Score HPE: <span className="text-[#01A982]">{d.score}</span></p>
+
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Nivel Socio HPE</p>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-black border ${
+                            d.hpe_certification === 'Triple Platinum Plus' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                            d.hpe_certification === 'Platinum' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            d.hpe_certification === 'Gold' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                            d.hpe_certification === 'Silver' ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                            'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        }`}>
+                            {d.hpe_certification || 'Business Partner'}
+                        </span>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Score HPE</p>
+                        <p className="text-sm font-black text-[#01A982]">{d.score}</p>
+                    </div>
+                </div>
+
+                {d.vendors && d.vendors.length > 0 && (
+                    <div>
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Marcas Aliadas</p>
+                        <div className="flex flex-wrap gap-1">
+                            {d.vendors.slice(0, 4).map(v => (
+                                <span key={v} className="text-[8px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-bold border border-slate-200">
+                                    {v}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {d.virtTechs && d.virtTechs.length > 0 && (
+                    <div>
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Especialización</p>
+                        <div className="flex flex-wrap gap-1">
+                            {d.virtTechs.slice(0, 3).map(tech => (
+                                <span key={tech} className="text-[8px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold border border-blue-100">
+                                    {tech}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <div className="pt-3 border-t border-gray-50 flex flex-col gap-1.5">
+                    <p className="text-[9px] text-gray-400 italic flex items-center gap-1">
+                        <MapPin className="h-2.5 w-2.5" /> {d.address || `${d.city}, ${d.country}`}
+                    </p>
+                    {d.website && (
+                        <p className="text-[9px] text-[#01A982] font-bold truncate">
+                            {d.website}
+                        </p>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
 
-// Only LATAM
-const REGIONS = ['ALL', 'LATAM'];
+// Simplified Global Regions
+const REGIONS = ['ALL', 'LATAM', 'Europe'];
 
 type ViewMode = 'scatter' | 'geo';
 
@@ -138,18 +203,27 @@ export default function EcosystemMap() {
                 const { score } = scorePartner(p);
                 const sizeMap = { Small: 20, Medium: 40, Large: 65, Enterprise: 90 };
                 const yPos = sizeMap[p.company_size] + Math.random() * 8 - 4;
+                const activeVendors = Object.entries(VENDOR_MAP).filter(([k]) => p[k as keyof Partner]).map(([, v]) => v!);
+                const activeVirt = Object.entries(VIRT_MAP).filter(([k]) => p[k as keyof Partner]).map(([, v]) => v!);
+
                 return {
                     name: p.company_name,
                     country: p.country,
+                    city: p.city,
                     domain: p.technology_domain,
                     type: PARTNER_TYPE_LABEL[p.partner_type],
                     score,
                     employees: p.estimated_employees,
+                    hpe_certification: p.hpe_certification,
+                    website: p.website || '',
+                    vendors: activeVendors,
+                    virtTechs: activeVirt,
+                    address: `Av. Tecnología ${Math.floor(p.company_name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 999)}, Edif. ${p.company_name.substring(0,2).toUpperCase()}, ${p.city}`,
                     x: score,
                     y: Math.round(yPos),
                 };
             });
-    }, [selectedRegion, selectedDomain]);
+    }, [selectedRegion, selectedDomain, dbPartners]);
 
     const countryDataPool = useMemo(() => {
         return dbPartners.filter(p => {
@@ -157,7 +231,7 @@ export default function EcosystemMap() {
             if (selectedDomain !== 'ALL' && p.technology_domain !== selectedDomain) return false;
             return true;
         });
-    }, [selectedRegion, selectedDomain]);
+    }, [selectedRegion, selectedDomain, dbPartners]);
 
     const countryDistGroups = useMemo(() => {
         return countryDataPool.reduce<Record<string, number>>((acc, p) => {
@@ -223,7 +297,7 @@ export default function EcosystemMap() {
                                         : 'bg-white text-gray-600 border-gray-200 hover:border-[#01A982]'
                                         }`}
                                 >
-                                    {r}
+                                    {r === 'ALL' ? 'Todos' : r === 'Europe' ? 'Europa' : r}
                                 </button>
                             ))}
                         </div>

@@ -5,12 +5,22 @@ import { PARTNER_DATABASE, DOMAIN_LABEL, PARTNER_TYPE_LABEL, Partner } from '@/l
 import { Box, CheckCircle, Info, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 
 const PRODUCTS = [
-    { id: 'morpheus', label: 'HPE Morpheus', desc: 'Hybrid Cloud, Multi-Cloud Management & Container Platforms' },
-    { id: 'vm_essentials', label: 'HPE VM Essentials', desc: 'Virtualization, HCI, and Datacenter Infrastructure' },
-    { id: 'zerto', label: 'Zerto', desc: 'Backup, Disaster Recovery, and Data Resilience' },
-    { id: 'simplivity', label: 'HPE SimpliVity', desc: 'Hyperconverged Infrastructure (HCI) and Edge Data' },
-    { id: 'greenlake', label: 'HPE GreenLake', desc: 'As-a-Service, Managed Services, and Hybrid Cloud' },
-    { id: 'opsramp', label: 'OpsRamp', desc: 'AIOps, Observability, and Managed Services' },
+    { id: 'morpheus', label: 'HPE Morpheus VME', desc: 'Hybrid Cloud, Multi-Cloud Management, Automation & Containers' },
+    { id: 'vm-essentials', label: 'HPE VM Essentials', desc: 'Virtualización empresarial moderna, desacoplada y rentable.' },
+    { id: 'vm_essentials_infra', label: 'VM Essentials (Full Stack)', desc: 'Stack completo de virtualización pre-configurado e integrado.' },
+    { id: 'vm_essentials_license', label: 'VM Essentials (Licencia)', desc: 'Software de virtualización para ejecución en cualquier hardware x86 estándar.' },
+    { id: 'pcbe_business', label: 'PCBE Business Edition', desc: 'Nube privada simplificada para el mercado medio y sucursales.' },
+    { id: 'pcbe_enterprise', label: 'PCBE Enterprise Edition', desc: 'Nube privada de alto rendimiento para cargas de trabajo críticas a escala.' },
+    { id: 'storeonce', label: 'HPE StoreOnce', desc: 'Protección de datos eficiente y backup de alto rendimiento.' },
+    { id: 'zerto', label: 'HPE Zerto', desc: 'Protección continua de datos y movilidad de cargas de trabajo.' },
+    { id: 'simplivity', label: 'HPE SimpliVity', desc: 'HCI Inteligente con garantía de eficiencia de datos extrema.' },
+    { id: 'gl-pcbe', label: 'HPE GreenLake for Private Cloud Business Edition', desc: 'La nube privada hiperconvergente simplificada para el data center moderno.' },
+    { id: 'gl-pce', label: 'HPE Private Cloud Enterprise (PCE)', desc: 'Nube privada automatizada que soporta VMs, contenedores y bare metal.' },
+    { id: 'gl-block', label: 'HPE GreenLake for Block Storage', desc: 'Almacenamiento de bloque como servicio con disponibilidad del 100%.' },
+    { id: 'gl-file', label: 'HPE GreenLake for File Storage', desc: 'Almacenamiento de archivos escalable diseñado para IA y análisis.' },
+    { id: 'gl-networking', label: 'HPE GreenLake for Networking', desc: 'NaaS - Networking as a Service gestionado desde la nube.' },
+    { id: 'gl-dr', label: 'HPE GreenLake for Disaster Recovery', desc: 'SaaS-based DR con orquestación automática y resiliencia ante Ransomware.' },
+    { id: 'opsramp', label: 'HPE OpsRamp', desc: 'Observabilidad full-stack y gestión de operaciones IT (AIOps).' },
 ] as const;
 
 type ProductId = typeof PRODUCTS[number]['id'];
@@ -62,21 +72,41 @@ function scoreForProduct(p: Partner, productId: ProductId): { score: number; tie
     };
 
     switch (productId) {
-        case 'vm_essentials':
+        case 'vm-essentials':
+        case 'vm_essentials_infra':
             add(10, 'VMware Base', !!p.vmware_partner);
             add(8, 'Virtualization', !!p.virtualization);
             add(7, 'HCI Expertise', !!p.hci);
+            add(6, 'VxRail Experience', !!p.vxrail_partner);
             add(5, 'Datacenter', !!p.datacenter_infrastructure);
-            add(4, 'VxRail Familiarity', !!p.vxrail_partner);
             add(3, 'Dell Footprint', !!p.dell_partner);
             break;
+        case 'vm_essentials_license':
+            add(10, 'Virtualization', !!p.virtualization);
+            add(8, 'VMware Base', !!p.vmware_partner);
+            add(5, 'Datacenter', !!p.datacenter_infrastructure);
+            break;
         case 'morpheus':
-            add(10, 'Hybrid Cloud', !!p.hybrid_cloud);
-            add(8, 'Cloud Migration', !!p.cloud_migration);
-            add(7, 'Container Platforms', !!p.container_platforms);
-            add(5, 'Datacenter Inf.', !!p.datacenter_infrastructure);
-            // Si es un gran CSP o public cloud partner
-            add(4, 'AWS/Azure Focus', !!(p.aws_partner || p.microsoft_partner || p.google_cloud_partner));
+            add(12, 'Hybrid Cloud', !!p.hybrid_cloud);
+            add(10, 'Cloud Migration', !!p.cloud_migration);
+            add(8, 'Automation/Ops', !!p.observability);
+            add(7, 'Containers', !!p.container_platforms);
+            add(5, 'Multi-Cloud Focus', !!(p.aws_partner || p.microsoft_partner || p.google_cloud_partner));
+            add(5, 'Datacenter', !!p.datacenter_infrastructure);
+            break;
+        case 'pcbe_business':
+        case 'pcbe_enterprise':
+            add(12, 'Hybrid Cloud', !!p.hybrid_cloud);
+            add(10, 'Private Cloud', !!p.virtualization);
+            add(8, 'Datacenter', !!p.datacenter_infrastructure);
+            add(7, 'Edge Ready', !!p.edge_computing);
+            add(productId === 'pcbe_enterprise' ? 10 : 0, 'Enterprise Scale', p.company_size === 'Enterprise');
+            break;
+        case 'storeonce':
+            add(12, 'Backup & DR', !!p.backup_and_disaster_recovery);
+            add(10, 'Data Protection', !!p.datacenter_infrastructure);
+            add(8, 'Veeam Ecosystem', !!p.veeam_partner);
+            add(5, 'Infrastructure', !!p.datacenter_infrastructure);
             break;
         case 'zerto':
             add(10, 'Backup & DR', !!p.backup_and_disaster_recovery);
@@ -92,12 +122,37 @@ function scoreForProduct(p: Partner, productId: ProductId): { score: number; tie
             add(5, 'Datacenter Inf.', !!p.datacenter_infrastructure);
             add(3, 'Dell/VMware', !!(p.dell_partner || p.vmware_partner));
             break;
-        case 'greenlake':
-            add(10, 'MSP Profile', p.partner_type === 'managed_service_provider');
-            add(8, 'Hybrid Cloud', !!p.hybrid_cloud);
-            add(6, 'Cloud Migration', !!p.cloud_migration);
-            add(5, 'Datacenter Inf.', !!p.datacenter_infrastructure);
-            add(4, 'Edge Computing', !!p.edge_computing); // GreenLake for Edge
+        case 'gl-pcbe':
+            add(12, 'Hybrid Cloud', !!p.hybrid_cloud);
+            add(10, 'Private Cloud', !!p.virtualization);
+            add(7, 'Edge Ready', !!p.edge_computing);
+            add(5, 'MSP Profile', p.partner_type === 'managed_service_provider');
+            break;
+        case 'gl-pce':
+            add(12, 'Hybrid Cloud', !!p.hybrid_cloud);
+            add(10, 'Automation/Ops', !!p.observability);
+            add(8, 'Containers', !!p.container_platforms);
+            add(6, 'Enterprise Size', p.company_size === 'Enterprise');
+            break;
+        case 'gl-block':
+            add(12, 'Block Storage', !!p.datacenter_infrastructure);
+            add(10, 'Mission Critical', !!(p.finance || p.telecommunications));
+            add(8, 'Pure/Dell Exp', !!(p.purestorage_partner || p.dell_partner));
+            break;
+        case 'gl-file':
+            add(12, 'Unstructured Data', !!p.datacenter_infrastructure);
+            add(10, 'AI/Analytics', !!p.observability);
+            add(8, 'Scale-out Exp', !!p.hci);
+            break;
+        case 'gl-networking':
+            add(15, 'Networking', !!p.industrial_networking);
+            add(12, 'Cisco/Aruba Exp', !!(p.cisco_partner || p.juniper_partner));
+            add(8, 'NaaS/SaaS', p.partner_type === 'managed_service_provider');
+            break;
+        case 'gl-dr':
+            add(15, 'Backup & DR', !!p.backup_and_disaster_recovery);
+            add(10, 'Data Protection', !!p.datacenter_infrastructure);
+            add(8, 'Zerto/Veeam Exp', !!p.veeam_partner);
             break;
         case 'opsramp':
             add(10, 'MSP Profile', p.partner_type === 'managed_service_provider');

@@ -47,7 +47,10 @@ export default function PartnerOnboarding() {
                 body: JSON.stringify({ url, company_name: companyName, country })
             });
 
-            if (!res.ok) throw new Error('Falló el scrapping');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Falló el scrapping');
+            }
 
             const data: Partial<Partner> = await res.json();
             setScrapedData(data);
@@ -63,9 +66,9 @@ export default function PartnerOnboarding() {
 
             if (data.company_name && !companyName) setCompanyName(data.company_name);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            alert("No se pudo extraer información automática (posible bloqueo CORS o timeout). Puedes llenar el perfil manualmente.");
+            alert(`Fallo en Auto-Descubrimiento: ${error.message}\n\nSugerencia: Puedes llenar el perfil manualmente en la matriz inferior.`);
         } finally {
             setLoading(false);
         }

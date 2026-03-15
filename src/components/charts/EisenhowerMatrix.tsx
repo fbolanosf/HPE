@@ -34,7 +34,7 @@ const SOLUTION_METADATA: Record<string, {
     'HPE Alletra 9000': { businessImpact: 90, complexity: 55, roi: 85, maturity: 90 },
     'HPE SimpliVity': { businessImpact: 75, complexity: 30, roi: 70, maturity: 85 },
     'HPE Synergy': { businessImpact: 70, complexity: 60, roi: 65, maturity: 80 },
-    'HPE Morpheus': { businessImpact: 85, complexity: 45, roi: 80, maturity: 75 },
+    'HPE Morpheus VME': { businessImpact: 85, complexity: 45, roi: 80, maturity: 75 },
     'HPE VM Essentials': { businessImpact: 80, complexity: 25, roi: 85, maturity: 70 },
     'HPE Zerto': { businessImpact: 90, complexity: 35, roi: 90, maturity: 90 },
     'HPE OpsRamp': { businessImpact: 75, complexity: 30, roi: 75, maturity: 80 },

@@ -91,7 +91,10 @@ export function generateEcosystemRelationships(partners: Partner[]): EcosystemRe
             pharmaceutical: 'Pharmaceutical',
             water_and_wastewater: 'Water & Waste',
             transportation: 'Transportation',
-            smart_cities: 'Smart Cities'
+            smart_cities: 'Smart Cities',
+            defense: 'Defense',
+            tourism: 'Tourism',
+            shipping: 'Shipping'
         };
 
         Object.entries(indMap).forEach(([key, label]) => {

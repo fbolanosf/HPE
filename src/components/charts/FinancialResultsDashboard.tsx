@@ -178,6 +178,11 @@ export default function FinancialResultsDashboard({ yearlyData, metrics }: Finan
             if (selected.includes('morpheus') || selected.includes('vmEssentials')) headers.push('Morpheus+VME');
             if (selected.includes('zerto')) headers.push('Zerto');
             if (selected.includes('opsRamp')) headers.push('OpsRamp');
+            if (selected.includes('pcbeBusiness')) headers.push('PCBE Bus');
+            if (selected.includes('pcbeEnterprise')) headers.push('PCBE Ent');
+            if (selected.includes('storeOnce')) headers.push('StoreOnce');
+            if (selected.includes('morpheusVME')) headers.push('Morph VME');
+            if (selected.includes('vmEssentialsLicense')) headers.push('VME Lic');
 
             // Dynamic Body
             const tableBody = yearlyData.map(d => {
@@ -190,6 +195,11 @@ export default function FinancialResultsDashboard({ yearlyData, metrics }: Finan
                 if (selected.includes('morpheus') || selected.includes('vmEssentials')) row.push(formatCurrency(d.morpheusIntegratedCumulative));
                 if (selected.includes('zerto')) row.push(formatCurrency(d.zertoCumulative));
                 if (selected.includes('opsRamp')) row.push(formatCurrency(d.opsRampCumulative));
+                if (selected.includes('pcbeBusiness')) row.push(formatCurrency(d.pcbeBusinessCumulative));
+                if (selected.includes('pcbeEnterprise')) row.push(formatCurrency(d.pcbeEnterpriseCumulative));
+                if (selected.includes('storeOnce')) row.push(formatCurrency(d.storeOnceCumulative));
+                if (selected.includes('morpheusVME')) row.push(formatCurrency(d.morpheusVMECumulative));
+                if (selected.includes('vmEssentialsLicense')) row.push(formatCurrency(d.vmEssentialsLicenseCumulative));
                 return row;
             });
 
@@ -203,6 +213,11 @@ export default function FinancialResultsDashboard({ yearlyData, metrics }: Finan
             if (selected.includes('morpheus') || selected.includes('vmEssentials')) totalRow.push(formatCurrency(yearlyData[4].morpheusIntegratedCumulative));
             if (selected.includes('zerto')) totalRow.push(formatCurrency(yearlyData[4].zertoCumulative));
             if (selected.includes('opsRamp')) totalRow.push(formatCurrency(yearlyData[4].opsRampCumulative));
+            if (selected.includes('pcbeBusiness')) totalRow.push(formatCurrency(yearlyData[4].pcbeBusinessCumulative));
+            if (selected.includes('pcbeEnterprise')) totalRow.push(formatCurrency(yearlyData[4].pcbeEnterpriseCumulative));
+            if (selected.includes('storeOnce')) totalRow.push(formatCurrency(yearlyData[4].storeOnceCumulative));
+            if (selected.includes('morpheusVME')) totalRow.push(formatCurrency(yearlyData[4].morpheusVMECumulative));
+            if (selected.includes('vmEssentialsLicense')) totalRow.push(formatCurrency(yearlyData[4].vmEssentialsLicenseCumulative));
 
             autoTable(pdf, {
                 startY: imgTargetHeight + 20,
@@ -289,6 +304,61 @@ export default function FinancialResultsDashboard({ yearlyData, metrics }: Finan
             tension: 0.3,
             fill: false,
             backgroundColor: 'transparent',
+        });
+    }
+
+    if (selected.includes('pcbeBusiness')) {
+        baseDatasets.push({
+            label: 'PCBE Business',
+            data: yearlyData.map(d => d.pcbeBusinessCumulative),
+            borderColor: '#14B8A6', // Teal
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            fill: false,
+        });
+    }
+
+    if (selected.includes('pcbeEnterprise')) {
+        baseDatasets.push({
+            label: 'PCBE Enterprise',
+            data: yearlyData.map(d => d.pcbeEnterpriseCumulative),
+            borderColor: '#0D9488', // Dark Teal
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            fill: false,
+        });
+    }
+
+    if (selected.includes('storeOnce')) {
+        baseDatasets.push({
+            label: 'StoreOnce',
+            data: yearlyData.map(d => d.storeOnceCumulative),
+            borderColor: '#F97316', // Orange
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            fill: false,
+        });
+    }
+
+    if (selected.includes('morpheusVME')) {
+        baseDatasets.push({
+            label: 'Morpheus VME',
+            data: yearlyData.map(d => d.morpheusVMECumulative),
+            borderColor: '#7C3AED', // Violet
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            fill: false,
+        });
+    }
+
+    if (selected.includes('vmEssentialsLicense')) {
+        baseDatasets.push({
+            label: 'VME License Only',
+            data: yearlyData.map(d => d.vmEssentialsLicenseCumulative),
+            borderColor: '#6366F1', // Indigo
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            fill: false,
         });
     }
 
@@ -448,6 +518,21 @@ export default function FinancialResultsDashboard({ yearlyData, metrics }: Finan
                             {selected.includes('opsRamp') && (
                                 <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">OpsRamp</th>
                             )}
+                            {selected.includes('pcbeBusiness') && (
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">PCBE Bus</th>
+                            )}
+                            {selected.includes('pcbeEnterprise') && (
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">PCBE Ent</th>
+                            )}
+                            {selected.includes('storeOnce') && (
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">StoreOnce</th>
+                            )}
+                            {selected.includes('morpheusVME') && (
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Morph VME</th>
+                            )}
+                            {selected.includes('vmEssentialsLicense') && (
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">VME Lic</th>
+                            )}
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -467,6 +552,21 @@ export default function FinancialResultsDashboard({ yearlyData, metrics }: Finan
                                 {selected.includes('opsRamp') && (
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(d.opsRampCumulative)}</td>
                                 )}
+                                {selected.includes('pcbeBusiness') && (
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(d.pcbeBusinessCumulative)}</td>
+                                )}
+                                {selected.includes('pcbeEnterprise') && (
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(d.pcbeEnterpriseCumulative)}</td>
+                                )}
+                                {selected.includes('storeOnce') && (
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(d.storeOnceCumulative)}</td>
+                                )}
+                                {selected.includes('morpheusVME') && (
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(d.morpheusVMECumulative)}</td>
+                                )}
+                                {selected.includes('vmEssentialsLicense') && (
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(d.vmEssentialsLicenseCumulative)}</td>
+                                )}
                             </tr>
                         ))}
                         {/* Total Row */}
@@ -484,6 +584,21 @@ export default function FinancialResultsDashboard({ yearlyData, metrics }: Finan
                             )}
                             {selected.includes('opsRamp') && (
                                 <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{formatCurrency(yearlyData[4].opsRampCumulative)}</td>
+                            )}
+                            {selected.includes('pcbeBusiness') && (
+                                <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{formatCurrency(yearlyData[4].pcbeBusinessCumulative)}</td>
+                            )}
+                            {selected.includes('pcbeEnterprise') && (
+                                <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{formatCurrency(yearlyData[4].pcbeEnterpriseCumulative)}</td>
+                            )}
+                            {selected.includes('storeOnce') && (
+                                <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{formatCurrency(yearlyData[4].storeOnceCumulative)}</td>
+                            )}
+                            {selected.includes('morpheusVME') && (
+                                <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{formatCurrency(yearlyData[4].morpheusVMECumulative)}</td>
+                            )}
+                            {selected.includes('vmEssentialsLicense') && (
+                                <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{formatCurrency(yearlyData[4].vmEssentialsLicenseCumulative)}</td>
                             )}
                         </tr>
                     </tbody>

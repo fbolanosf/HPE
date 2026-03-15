@@ -31,9 +31,14 @@ export default function FinancialInputForm({ onCalculate }: FinancialInputFormPr
         vmEssentialsMonthlyCost: 600,
         zertoMonthlyCost: 800,
         opsRampMonthlyCost: 1500,
+        pcbeBusinessMonthlyCost: 1400,
+        pcbeEnterpriseMonthlyCost: 2200,
+        storeOnceMonthlyCost: 950,
+        morpheusVMEMonthlyCost: 1100,
+        vmEssentialsLicenseMonthlyCost: 450,
 
         // Selection State (Local UI state mapped to final output)
-        selectedSolutions: ['greenlake', 'morpheus', 'vmEssentials', 'zerto', 'opsRamp'],
+        selectedSolutions: ['greenlake', 'morpheus', 'vmEssentials', 'zerto', 'opsRamp', 'pcbeBusiness', 'storeOnce'],
 
         // General
         durationYears: 5,
@@ -155,6 +160,46 @@ export default function FinancialInputForm({ onCalculate }: FinancialInputFormPr
                             onChange={handleChange}
                             checked={formData.selectedSolutions.includes('opsRamp')}
                             onCheck={(c) => handleSelectionChange('opsRamp', c)}
+                        />
+                        <SelectableInputGroup
+                            label="PCBE Business Edition"
+                            name="pcbeBusinessMonthlyCost"
+                            value={formData.pcbeBusinessMonthlyCost}
+                            onChange={handleChange}
+                            checked={formData.selectedSolutions.includes('pcbeBusiness')}
+                            onCheck={(c) => handleSelectionChange('pcbeBusiness', c)}
+                        />
+                        <SelectableInputGroup
+                            label="PCBE Enterprise Edition"
+                            name="pcbeEnterpriseMonthlyCost"
+                            value={formData.pcbeEnterpriseMonthlyCost}
+                            onChange={handleChange}
+                            checked={formData.selectedSolutions.includes('pcbeEnterprise')}
+                            onCheck={(c) => handleSelectionChange('pcbeEnterprise', c)}
+                        />
+                        <SelectableInputGroup
+                            label="StoreOnce (Protection)"
+                            name="storeOnceMonthlyCost"
+                            value={formData.storeOnceMonthlyCost}
+                            onChange={handleChange}
+                            checked={formData.selectedSolutions.includes('storeOnce')}
+                            onCheck={(c) => handleSelectionChange('storeOnce', c)}
+                        />
+                        <SelectableInputGroup
+                            label="Morpheus VME"
+                            name="morpheusVMEMonthlyCost"
+                            value={formData.morpheusVMEMonthlyCost}
+                            onChange={handleChange}
+                            checked={formData.selectedSolutions.includes('morpheusVME')}
+                            onCheck={(c) => handleSelectionChange('morpheusVME', c)}
+                        />
+                         <SelectableInputGroup
+                            label="VM Essentials (License Only)"
+                            name="vmEssentialsLicenseMonthlyCost"
+                            value={formData.vmEssentialsLicenseMonthlyCost}
+                            onChange={handleChange}
+                            checked={formData.selectedSolutions.includes('vmEssentialsLicense')}
+                            onCheck={(c) => handleSelectionChange('vmEssentialsLicense', c)}
                         />
                     </div>
                 </div>

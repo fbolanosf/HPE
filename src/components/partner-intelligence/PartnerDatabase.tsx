@@ -20,6 +20,15 @@ const TIER_COLORS = {
     Low: 'bg-red-100 text-red-800',
 };
 
+const CERT_COLORS = {
+    'Triple Platinum Plus': 'bg-purple-100 text-purple-800 border-purple-200',
+    'Platinum': 'bg-blue-100 text-blue-800 border-blue-200',
+    'Gold': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    'Silver': 'bg-gray-100 text-gray-800 border-gray-200',
+    'Business Partner': 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    'None': 'bg-gray-50 text-gray-400 border-transparent',
+};
+
 function Badge({ className, children }: { className: string; children: React.ReactNode }) {
     return (
         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${className}`}>
@@ -108,7 +117,7 @@ export default function PartnerDatabase({ preFilteredData, hideFilters }: Partne
     function handleExportXLS() {
         const headers = [
             'Empresa', 'País', 'Ciudad', 'Región', 'Tipo', 'Dominio',
-            'Empleados', 'Marcas / Vendors', 'Soluciones de Virtualización', 'Score HPE', 'Oportunidad', 'Website',
+            'Empleados', 'Certificación HPE', 'Marcas / Vendors', 'Soluciones de Virtualización', 'Score HPE', 'Oportunidad', 'Website',
         ];
         const rows = results.map((p) => {
             const { score, tier } = scorePartner(p);
@@ -119,7 +128,7 @@ export default function PartnerDatabase({ preFilteredData, hideFilters }: Partne
                 p.company_name, p.country, p.city, p.region,
                 PARTNER_TYPE_LABEL[p.partner_type],
                 DOMAIN_LABEL[p.technology_domain],
-                p.estimated_employees, activeVendors, activeVirtSolutions, score, tier, p.website,
+                p.estimated_employees, p.hpe_certification, activeVendors, activeVirtSolutions, score, tier, p.website,
             ];
         });
 
@@ -269,7 +278,7 @@ export default function PartnerDatabase({ preFilteredData, hideFilters }: Partne
                             <th className="text-left px-4 py-3 font-semibold text-gray-700">País</th>
                             <th className="text-left px-4 py-3 font-semibold text-gray-700">Dominio</th>
                             <th className="text-left px-4 py-3 font-semibold text-gray-700">Tipo</th>
-                            <th className="text-left px-4 py-3 font-semibold text-gray-700">Tamaño</th>
+                            <th className="text-left px-4 py-3 font-semibold text-gray-700">Certificación HPE</th>
                             <th className="text-left px-4 py-3 font-semibold text-gray-700">Marcas</th>
                             <th className="text-left px-4 py-3 font-semibold text-gray-700">Virtualización</th>
                             <th className="text-right px-4 py-3 font-semibold text-gray-700">Score HPE</th>
@@ -309,7 +318,11 @@ export default function PartnerDatabase({ preFilteredData, hideFilters }: Partne
                                     <td className="px-4 py-3 text-gray-600 text-xs">
                                         {PARTNER_TYPE_LABEL[p.partner_type]}
                                     </td>
-                                    <td className="px-4 py-3 text-gray-600 text-xs">{p.company_size}</td>
+                                    <td className="px-4 py-3">
+                                        <Badge className={`border ${CERT_COLORS[p.hpe_certification]}`}>
+                                            {p.hpe_certification}
+                                        </Badge>
+                                    </td>
                                     <td className="px-4 py-3">
                                         <div className="flex flex-wrap gap-1 max-w-[120px]">
                                             {activeVendors.length > 0 ? activeVendors.map(v => (
@@ -378,6 +391,21 @@ export default function PartnerDatabase({ preFilteredData, hideFilters }: Partne
                                             <option value="Medium">Medium</option>
                                             <option value="Large">Large</option>
                                             <option value="Enterprise">Enterprise</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">Certificación HPE</label>
+                                        <select
+                                            value={editProfile.hpe_certification || 'None'}
+                                            onChange={e => setEditProfile(prev => ({ ...prev, hpe_certification: e.target.value as any }))}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-[#01A982]"
+                                        >
+                                            <option value="None">Sin Certificación</option>
+                                            <option value="Business Partner">Business Partner</option>
+                                            <option value="Silver">Silver</option>
+                                            <option value="Gold">Gold</option>
+                                            <option value="Platinum">Platinum</option>
+                                            <option value="Triple Platinum Plus">Triple Platinum Plus</option>
                                         </select>
                                     </div>
                                     <div>

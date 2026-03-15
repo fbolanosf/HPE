@@ -85,11 +85,6 @@ export default function PartnerIntelligencePage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="hidden sm:flex items-center gap-2">
-                            <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-medium">IT Ecosystem</span>
-                            <span className="text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded font-medium">OT Ecosystem</span>
-                            <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded font-medium">IT/OT Hybrid</span>
-                        </div>
                     </div>
                 </div>
             </header>

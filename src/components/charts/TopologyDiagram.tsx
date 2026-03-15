@@ -80,9 +80,23 @@ export default function TopologyDiagram({ selectedSolutionId, selectedCompetitor
                         "{topology.summary}"
                     </p>
 
-                    <div className="flex flex-col gap-3 flex-grow justify-end">
+                    <div className="flex flex-col gap-3 flex-grow justify-start">
                         {/* Render layers from top to bottom */}
                         {topology.layers.map((layer: any, idx: number) => {
+                            if (layer.name === 'spacer') {
+                                return (
+                                    <div 
+                                        key={idx} 
+                                        className="relative flex flex-col p-3 rounded-lg"
+                                        style={{ 
+                                            visibility: 'hidden', 
+                                            minHeight: '80px', // Matches base layer height roughly
+                                            border: '1px solid transparent'
+                                        }}
+                                    />
+                                );
+                            }
+
                             const Icon = LAYER_ICONS[layer.name] || Layers;
                             // Explicit Hex fallback
                             const borderColor = isHpe && layer.color ? layer.color : isHpe ? '#01A982' : '#d1d5db';
@@ -96,7 +110,8 @@ export default function TopologyDiagram({ selectedSolutionId, selectedCompetitor
                                     style={{
                                         border: `1px solid ${borderColor}`,
                                         backgroundColor: bgColor,
-                                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                                        minHeight: '80px' // Added for better alignment
                                     }}
                                 >
                                     <div className="flex items-center mb-1">

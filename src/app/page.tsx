@@ -8,10 +8,10 @@ export default function Home() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <div className="bg-[#01A982] w-10 h-10 flex items-center justify-center text-white font-bold rounded">HPE</div>
-            <h1 className="text-xl font-bold text-gray-900">Sales Specialist Toolkit</h1>
+            <div className="bg-[#01A982] w-10 h-10 flex items-center justify-center text-white font-bold rounded">RPO</div>
+            <h1 className="text-xl font-bold text-gray-900">Global Sales Specialist Toolkit</h1>
           </div>
-          <div className="text-sm text-gray-500">v1.0.0</div>
+          <div className="text-sm text-gray-500">v1.1.0</div>
         </div>
       </header>
 
@@ -19,12 +19,12 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-            Channel <span className="text-[#01A982]">Virtualization</span> and Data Solutions Sales Toolkit
+            Channel <span className="text-[#01A982]">RPO</span> and Data Solutions Sales Toolkit
           </h2>
           <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
-            Herramientas para evaluación y mapeo de soluciones de virtualizacion, storage y data HPE.
+            Global assessment and partner intelligence platform for virtualization, storage, and HPE data solutions.
           </p>
-          <p className="mt-3 text-xs text-gray-400 tracking-widest uppercase">By Francisco Bolaños</p>
+          <p className="mt-3 text-xs text-gray-400 tracking-widest uppercase">Powered by RPO Engine · Managed by Francisco Bolaños</p>
         </div>
 
         {/* Modules Grid */}
@@ -122,11 +122,6 @@ export default function Home() {
               <p className="mt-2 text-sm text-gray-500">
                 Mapa global de integradores IT y OT. Scoring automático de oportunidades HPE, análisis de ecosistemas de virtualización, automatización industrial e infraestructura edge.
               </p>
-              <div className="mt-3 flex gap-1 flex-wrap">
-                <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">IT Ecosystem</span>
-                <span className="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-medium">OT / SCADA</span>
-                <span className="text-[10px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded font-medium">IIoT / Edge</span>
-              </div>
             </div>
           </Link>
 
