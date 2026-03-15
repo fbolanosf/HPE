@@ -78,10 +78,10 @@ function CustomerCard({ customer, onClose }: { customer: ScoredCustomer; onClose
                     <div className="text-gray-800 font-medium text-right text-[10px]">{customer.cloud_adoption}</div>
 
                     <div className="flex items-center gap-1.5 text-gray-500"><Monitor className="h-3 w-3 text-gray-400" /><span>Servidores</span></div>
-                    <div className="text-gray-800 font-medium text-right">{customer.estimated_servers.toLocaleString()}</div>
+                    <div className="text-gray-800 font-medium text-right">{customer.estimated_servers.toLocaleString('en-US')}</div>
 
                     <div className="flex items-center gap-1.5 text-gray-500"><Users className="h-3 w-3 text-gray-400" /><span>Empleados</span></div>
-                    <div className="text-gray-800 font-medium text-right">{customer.estimated_employees.toLocaleString()}</div>
+                    <div className="text-gray-800 font-medium text-right">{customer.estimated_employees.toLocaleString('en-US')}</div>
                 </div>
 
                 {/* Signals */}

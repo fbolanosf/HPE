@@ -184,7 +184,7 @@ export default function CustomerDatabase({ filterRegion }: Props) {
                                                 {c.current_hypervisor}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-2.5 text-right text-gray-600">{c.estimated_employees.toLocaleString()}</td>
+                                        <td className="px-4 py-2.5 text-right text-gray-600">{c.estimated_employees.toLocaleString('en-US')}</td>
                                         <td className="px-4 py-2.5 text-center">
                                             <div className="flex items-center justify-center gap-1.5">
                                                 <span className="font-bold text-gray-900">{c.score}</span>
@@ -215,8 +215,8 @@ export default function CustomerDatabase({ filterRegion }: Props) {
                                                         <div className="space-y-0.5 text-gray-600">
                                                             <div><span className="text-gray-400">Hypervisor:</span> {c.current_hypervisor}</div>
                                                             <div><span className="text-gray-400">Cloud:</span> {c.cloud_adoption}</div>
-                                                            <div><span className="text-gray-400">Servidores est.:</span> {c.estimated_servers.toLocaleString()}</div>
-                                                            <div><span className="text-gray-400">Empleados:</span> {c.estimated_employees.toLocaleString()}</div>
+                                                            <div><span className="text-gray-400">Servidores est.:</span> {c.estimated_servers.toLocaleString('en-US')}</div>
+                                                            <div><span className="text-gray-400">Empleados:</span> {c.estimated_employees.toLocaleString('en-US')}</div>
                                                         </div>
                                                     </div>
                                                     <div>

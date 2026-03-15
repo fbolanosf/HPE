@@ -248,7 +248,7 @@ export default function CustomerDashboard() {
                                             {c.current_hypervisor}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-2 text-center text-gray-600">{c.estimated_employees.toLocaleString()}</td>
+                                    <td className="px-4 py-2 text-center text-gray-600">{c.estimated_employees.toLocaleString('en-US')}</td>
                                     <td className="px-4 py-2 text-center font-bold text-gray-900">{c.score}</td>
                                     <td className="px-4 py-2 text-center">
                                         <Badge className={TIER_COLORS[c.tier]}>{c.tier}</Badge>
