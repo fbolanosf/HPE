@@ -161,29 +161,11 @@ export default function CustomerGeoMap({ filterRegion }: Props) {
                 zoomControl: true,
             });
 
-            // Natural Earth-like tile: blue ocean, green countries
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            // OpenStreetMap Humanitarian style — blue ocean, clear land colors, no API key needed
+            L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://hot.openstreetmap.org">HOT</a>',
                 maxZoom: 18,
             }).addTo(map);
-
-            // CSS filter overlay to recolor: blue ocean, green countries
-            // We use a styled overlay via pane filter for the natural look
-            const mapEl = mapRef.current!;
-            mapEl.style.background = '#b3d1f5';
-
-            // Style the tile layer to look like it has green land
-            const style = document.createElement('style');
-            style.id = 'customer-map-style';
-            style.textContent = `
-                .customer-map-container .leaflet-tile-pane {
-                    filter: hue-rotate(145deg) saturate(0.75) brightness(0.95);
-                }
-            `;
-            if (!document.getElementById('customer-map-style')) {
-                document.head.appendChild(style);
-            }
-            mapEl.classList.add('customer-map-container');
 
             customers.forEach(c => {
                 const color = TIER_COLORS[c.tier] ?? '#6b7280';
