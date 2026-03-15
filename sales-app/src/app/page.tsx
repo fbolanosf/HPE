@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BarChart3, Calculator, FileText, Server, Network } from 'lucide-react';
+import { BarChart3, Calculator, FileText, Server, Network, Users } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
             <div className="bg-[#01A982] w-10 h-10 flex items-center justify-center text-white font-bold rounded">RPO</div>
             <h1 className="text-xl font-bold text-gray-900">Global Sales Specialist Toolkit</h1>
           </div>
-          <div className="text-sm text-gray-500">v1.1.0</div>
+          <div className="text-sm text-gray-500">v7.0.0</div>
         </div>
       </header>
 
@@ -121,6 +121,25 @@ export default function Home() {
               </h3>
               <p className="mt-2 text-sm text-gray-500">
                 Mapa global de integradores IT y OT. Scoring automático de oportunidades HPE, análisis de ecosistemas de virtualización, automatización industrial e infraestructura edge.
+              </p>
+            </div>
+          </Link>
+
+          {/* Customer Intelligence Module */}
+          <Link href="/customer-intelligence" className="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-cyan-500 rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-100 hover:border-cyan-500">
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-cyan-50 text-cyan-600 ring-4 ring-white">
+                <Users className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <span className="absolute top-4 right-4 bg-cyan-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">NUEVO v7.0</span>
+            </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-medium text-gray-900 group-hover:text-cyan-600 transition-colors">
+                <span className="absolute inset-0" aria-hidden="true" />
+                Customer Intelligence (End Users)
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Base de datos de clientes finales potenciales para HPE VM Essentials. Identifica empresas afectadas por precios Broadcom, con VMware en EOL o buscando alternativas de virtualización.
               </p>
             </div>
           </Link>

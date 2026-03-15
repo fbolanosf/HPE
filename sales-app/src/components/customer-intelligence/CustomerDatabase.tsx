@@ -1,0 +1,263 @@
+'use client';
+
+import { useState, useMemo } from 'react';
+import {
+    CUSTOMER_DATABASE, scoreCustomer, searchCustomers,
+    CustomerFilters, HypervisorInUse, CustomerSize, CloudAdoption
+} from '@/lib/customer-intelligence-data';
+import { Search, X, AlertTriangle, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import * as XLSX from 'xlsx';
+
+const TIER_COLORS: Record<string, string> = {
+    Hot: 'bg-red-100 text-red-700 border border-red-200',
+    Warm: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+    Cold: 'bg-blue-100 text-blue-700 border border-blue-200',
+};
+
+function Badge({ className, children }: { className: string; children: React.ReactNode }) {
+    return <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${className}`}>{children}</span>;
+}
+
+interface Props { filterRegion?: string; }
+
+export default function CustomerDatabase({ filterRegion }: Props) {
+    const [filters, setFilters] = useState<CustomerFilters>({});
+    const [query, setQuery] = useState('');
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [sortKey, setSortKey] = useState<'score' | 'company_name' | 'estimated_employees'>('score');
+    const [sortAsc, setSortAsc] = useState(false);
+
+    const allFilters: CustomerFilters = {
+        ...filters,
+        query: query || undefined,
+        region: filterRegion && filterRegion !== 'ALL' ? filterRegion : undefined,
+    };
+
+    const results = useMemo(() => {
+        const base = searchCustomers(CUSTOMER_DATABASE, allFilters);
+        return base.map(c => ({ ...c, ...scoreCustomer(c) })).sort((a, b) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const va = (a as any)[sortKey]; const vb = (b as any)[sortKey];
+            if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+            return sortAsc ? va - vb : vb - va;
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters, query, filterRegion, sortKey, sortAsc]);
+
+    function handleSort(key: typeof sortKey) {
+        if (sortKey === key) setSortAsc(a => !a);
+        else { setSortKey(key); setSortAsc(false); }
+    }
+
+    function SortIcon({ k }: { k: typeof sortKey }) {
+        if (sortKey !== k) return null;
+        return sortAsc ? <ChevronUp className="h-3 w-3 inline" /> : <ChevronDown className="h-3 w-3 inline" />;
+    }
+
+    function handleExport() {
+        const headers = ['Empresa', 'País', 'Industria', 'Tamaño', 'Empleados', 'Servidores', 'Hypervisor', 'Cloud', 'Score', 'Prioridad', 'Broadcom', 'HPE Hardware', 'Website'];
+        const rows = results.map(c => [
+            c.company_name, c.country, c.industry, c.company_size, c.estimated_employees,
+            c.estimated_servers, c.current_hypervisor, c.cloud_adoption, c.score, c.tier,
+            c.broadcom_pricing_impact ? 'Sí' : 'No', c.existing_hpe_hardware ? 'Sí' : 'No', c.website,
+        ]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Prospects');
+        XLSX.writeFile(wb, 'hpe-customer-intelligence.xlsx');
+    }
+
+    return (
+        <div className="space-y-4">
+            {/* Search & Filters */}
+            <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input type="text" value={query} onChange={e => setQuery(e.target.value)}
+                            placeholder="Buscar empresa, país, industria..."
+                            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500" />
+                        {query && <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2"><X className="h-3.5 w-3.5 text-gray-400" /></button>}
+                    </div>
+                    <button onClick={handleExport}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-cyan-600 text-white rounded-lg text-xs font-semibold hover:bg-cyan-700 transition-colors whitespace-nowrap">
+                        <Download className="h-3.5 w-3.5" /> Exportar XLS
+                    </button>
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                    {/* Tier */}
+                    <select value={filters.tier ?? 'ALL'} onChange={e => setFilters(f => ({ ...f, tier: e.target.value === 'ALL' ? undefined : e.target.value as never }))}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        <option value="ALL">Prioridad: Todas</option>
+                        <option value="Hot">🔴 Hot</option>
+                        <option value="Warm">🟡 Warm</option>
+                        <option value="Cold">🔵 Cold</option>
+                    </select>
+
+                    {/* Hypervisor */}
+                    <select value={filters.current_hypervisor ?? 'ALL'} onChange={e => setFilters(f => ({ ...f, current_hypervisor: e.target.value === 'ALL' ? undefined : e.target.value as HypervisorInUse }))}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        <option value="ALL">Hypervisor: Todos</option>
+                        {['VMware', 'Hyper-V', 'Nutanix', 'KVM/OpenStack', 'Mixed', 'None/Bare Metal'].map(h => (
+                            <option key={h} value={h}>{h}</option>
+                        ))}
+                    </select>
+
+                    {/* Size */}
+                    <select value={filters.company_size ?? 'ALL'} onChange={e => setFilters(f => ({ ...f, company_size: e.target.value === 'ALL' ? undefined : e.target.value as CustomerSize }))}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        <option value="ALL">Tamaño: Todos</option>
+                        <option value="SMB">SMB</option>
+                        <option value="Mid-Market">Mid-Market</option>
+                        <option value="Enterprise">Enterprise</option>
+                        <option value="Large Enterprise">Large Enterprise</option>
+                    </select>
+
+                    {/* Cloud */}
+                    <select value={filters.cloud_adoption ?? 'ALL'} onChange={e => setFilters(f => ({ ...f, cloud_adoption: e.target.value === 'ALL' ? undefined : e.target.value as CloudAdoption }))}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        <option value="ALL">Cloud: Todos</option>
+                        {['On-Premise Only', 'Hybrid', 'Multi-Cloud', 'Cloud-First'].map(c => (
+                            <option key={c} value={c}>{c}</option>
+                        ))}
+                    </select>
+
+                    {/* Broadcom toggle */}
+                    <button onClick={() => setFilters(f => ({ ...f, broadcom_impact: !f.broadcom_impact }))}
+                        className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium border transition-colors ${filters.broadcom_impact ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-600 border-gray-200 hover:border-orange-400'}`}>
+                        <AlertTriangle className="h-3.5 w-3.5" /> Solo Broadcom
+                    </button>
+
+                    {/* HPE hardware toggle */}
+                    <button onClick={() => setFilters(f => ({ ...f, has_hpe_hardware: !f.has_hpe_hardware }))}
+                        className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium border transition-colors ${filters.has_hpe_hardware ? 'bg-[#01A982] text-white border-[#01A982]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#01A982]'}`}>
+                        HPE Hardware Exist.
+                    </button>
+                </div>
+            </div>
+
+            {/* Results count */}
+            <div className="flex items-center justify-between px-1">
+                <p className="text-xs text-gray-500">{results.length} prospects encontrados</p>
+                {(Object.keys(filters).length > 0 || query) && (
+                    <button onClick={() => { setFilters({}); setQuery(''); }} className="text-xs text-cyan-600 underline hover:text-cyan-800">Limpiar filtros</button>
+                )}
+            </div>
+
+            {/* Table */}
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                        <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                            <tr>
+                                <th className="px-4 py-2.5 font-semibold text-gray-600 cursor-pointer hover:text-gray-900" onClick={() => handleSort('company_name')}>
+                                    Empresa <SortIcon k="company_name" />
+                                </th>
+                                <th className="px-4 py-2.5 font-semibold text-gray-600">País</th>
+                                <th className="px-4 py-2.5 font-semibold text-gray-600">Industria</th>
+                                <th className="px-4 py-2.5 font-semibold text-gray-600">Hypervisor</th>
+                                <th className="px-4 py-2.5 font-semibold text-gray-600 cursor-pointer hover:text-gray-900 text-right" onClick={() => handleSort('estimated_employees')}>
+                                    Empleados <SortIcon k="estimated_employees" />
+                                </th>
+                                <th className="px-4 py-2.5 font-semibold text-gray-600 text-center cursor-pointer hover:text-gray-900" onClick={() => handleSort('score')}>
+                                    Score <SortIcon k="score" />
+                                </th>
+                                <th className="px-4 py-2.5 font-semibold text-gray-600 text-center">Prioridad</th>
+                                <th className="px-4 py-2.5 font-semibold text-gray-600 text-center">Señales</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {results.map(c => (
+                                <>
+                                    <tr key={c.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}>
+                                        <td className="px-4 py-2.5">
+                                            <div className="font-semibold text-gray-900">{c.company_name}</div>
+                                            <div className="text-[10px] text-gray-400">{c.city}</div>
+                                        </td>
+                                        <td className="px-4 py-2.5 text-gray-600">{c.country}</td>
+                                        <td className="px-4 py-2.5 text-gray-600 max-w-[140px]">
+                                            <span className="truncate block">{c.industry}</span>
+                                        </td>
+                                        <td className="px-4 py-2.5">
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${c.current_hypervisor === 'VMware' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                                                {c.current_hypervisor}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-2.5 text-right text-gray-600">{c.estimated_employees.toLocaleString()}</td>
+                                        <td className="px-4 py-2.5 text-center">
+                                            <div className="flex items-center justify-center gap-1.5">
+                                                <span className="font-bold text-gray-900">{c.score}</span>
+                                                <div className="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500"
+                                                        style={{ width: `${Math.min(100, (c.score / 35) * 100)}%` }} />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-2.5 text-center"><Badge className={TIER_COLORS[c.tier]}>{c.tier}</Badge></td>
+                                        <td className="px-4 py-2.5 text-center">
+                                            <div className="flex gap-1 justify-center">
+                                                {c.broadcom_pricing_impact && <span title="Impacto Broadcom" className="text-orange-500">⚡</span>}
+                                                {c.existing_hpe_hardware && <span title="HPE Hardware" className="text-[#01A982]">🖥️</span>}
+                                                {c.vmware_license_renewal_due && <span title="Renovación VMware" className="text-blue-500">🔄</span>}
+                                                {c.cloud_repatriation_interest && <span title="Repatriación Cloud" className="text-purple-500">☁️</span>}
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    {/* Expanded detail row */}
+                                    {expandedId === c.id && (
+                                        <tr key={`${c.id}-detail`}>
+                                            <td colSpan={8} className="px-4 py-3 bg-cyan-50 border-b border-cyan-100">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                                    <div>
+                                                        <div className="font-bold text-gray-700 mb-1">Infraestructura Actual</div>
+                                                        <div className="space-y-0.5 text-gray-600">
+                                                            <div><span className="text-gray-400">Hypervisor:</span> {c.current_hypervisor}</div>
+                                                            <div><span className="text-gray-400">Cloud:</span> {c.cloud_adoption}</div>
+                                                            <div><span className="text-gray-400">Servidores est.:</span> {c.estimated_servers.toLocaleString()}</div>
+                                                            <div><span className="text-gray-400">Empleados:</span> {c.estimated_employees.toLocaleString()}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-gray-700 mb-1">Señales de Oportunidad</div>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {c.broadcom_pricing_impact && <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px]">⚡ Broadcom Impact</span>}
+                                                            {c.vmware_license_renewal_due && <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]">🔄 Renovación VMware</span>}
+                                                            {c.vmware_version_eol && <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px]">⛔ VMware EOL</span>}
+                                                            {c.datacenter_refresh_cycle && <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px]">🔧 Refresh Pendiente</span>}
+                                                            {c.existing_hpe_hardware && <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px]">✅ HPE Hardware</span>}
+                                                            {c.cloud_repatriation_interest && <span className="bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded text-[10px]">☁️ Cloud Repatriation</span>}
+                                                            {c.hpe_greenlake_interest && <span className="bg-[#e6f7f2] text-[#01A982] px-1.5 py-0.5 rounded text-[10px]">🌱 GreenLake Interest</span>}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-gray-700 mb-1">Pain Points</div>
+                                                        <ul className="space-y-0.5 text-gray-600">
+                                                            {(c.pain_points ?? ['No documentados']).map((p, i) => (
+                                                                <li key={i} className="flex items-start gap-1"><span className="text-red-400 mt-0.5">•</span>{p}</li>
+                                                            ))}
+                                                        </ul>
+                                                        {c.description && <p className="mt-2 text-gray-500 italic text-[10px]">{c.description}</p>}
+                                                        <a href={`https://${c.website}`} target="_blank" rel="noopener" className="text-cyan-600 underline text-[10px] mt-1 block">{c.website}</a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    {results.length === 0 && (
+                        <div className="py-16 text-center text-gray-400 text-sm">
+                            <Search className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                            <p>No se encontraron prospects con los filtros actuales.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
