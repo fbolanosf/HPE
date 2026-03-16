@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     CUSTOMER_DATABASE, scoreCustomer, searchCustomers,
-    CustomerFilters, HypervisorInUse, CustomerSize, CloudAdoption
+    CustomerFilters, HypervisorInUse, CustomerSize, CloudAdoption, Customer
 } from '@/lib/customer-intelligence-data';
 import { Search, X, AlertTriangle, Download, ChevronDown, ChevronUp, Zap, Monitor, RefreshCcw, CloudOff, Check, Database as DatabaseIcon, Activity, Minus } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -18,9 +18,9 @@ function Badge({ className, children }: { className: string; children: React.Rea
     return <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${className}`}>{children}</span>;
 }
 
-interface Props { filterRegion?: string; }
+interface Props { filterRegion?: string; onEdit?: (c: Customer) => void; }
 
-export default function CustomerDatabase({ filterRegion }: Props) {
+export default function CustomerDatabase({ filterRegion, onEdit }: Props) {
     const [filters, setFilters] = useState<CustomerFilters>({});
     const [query, setQuery] = useState('');
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -165,12 +165,13 @@ export default function CustomerDatabase({ filterRegion }: Props) {
                                 </th>
                                 <th className="px-4 py-2.5 font-semibold text-gray-600 text-center">Prioridad</th>
                                 <th className="px-4 py-2.5 font-semibold text-gray-600 text-center">Señales</th>
+                                <th className="px-4 py-2.5 font-semibold text-gray-600 text-right text-[10px] uppercase">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {results.map(c => (
-                                <>
-                                    <tr key={c.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}>
+                                <React.Fragment key={c.id}>
+                                    <tr className="hover:bg-slate-50 cursor-pointer" onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}>
                                         <td className="px-4 py-2.5">
                                             <div className="font-semibold text-gray-900">{c.company_name}</div>
                                             <div className="text-[10px] text-gray-400">{c.city}</div>
@@ -203,12 +204,20 @@ export default function CustomerDatabase({ filterRegion }: Props) {
                                                 {c.cloud_repatriation_interest && <span title="Interés en repatriar cloud" className="inline-flex items-center gap-0.5 text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1 py-0.5 rounded font-medium"><CloudOff className="h-2.5 w-2.5" />Rpt</span>}
                                             </div>
                                         </td>
+                                        <td className="px-4 py-2.5 text-right">
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); onEdit?.(c as Customer); }}
+                                                className="text-[10px] bg-gray-100 hover:bg-cyan-600 hover:text-white text-gray-600 px-2 py-1 rounded font-bold transition-colors"
+                                            >
+                                                Editar
+                                            </button>
+                                        </td>
                                     </tr>
 
                                     {/* Expanded detail row */}
                                     {expandedId === c.id && (
                                         <tr key={`${c.id}-detail`}>
-                                            <td colSpan={8} className="px-4 py-3 bg-cyan-50 border-b border-cyan-100">
+                                            <td colSpan={9} className="px-4 py-3 bg-cyan-50 border-b border-cyan-100">
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                                                     <div>
                                                         <div className="font-bold text-gray-700 mb-1">Infraestructura Actual</div>
@@ -217,6 +226,9 @@ export default function CustomerDatabase({ filterRegion }: Props) {
                                                             <div><span className="text-gray-400">Cloud:</span> {c.cloud_adoption}</div>
                                                             <div><span className="text-gray-400">Servidores est.:</span> {c.estimated_servers.toLocaleString('en-US')}</div>
                                                             <div><span className="text-gray-400">Empleados:</span> {c.estimated_employees.toLocaleString('en-US')}</div>
+                                                            {c.contact_name && <div className="mt-2 pt-2 border-t border-cyan-100"><span className="text-gray-400">Contacto:</span> {c.contact_name}</div>}
+                                                            {c.contact_email && <div><span className="text-gray-400">Email:</span> {c.contact_email}</div>}
+                                                            {c.contact_phone && <div><span className="text-gray-400">Tel:</span> {c.contact_phone}</div>}
                                                         </div>
                                                     </div>
                                                     <div>
@@ -245,7 +257,7 @@ export default function CustomerDatabase({ filterRegion }: Props) {
                                             </td>
                                         </tr>
                                     )}
-                                </>
+                                </React.Fragment>
                             ))}
                         </tbody>
                     </table>

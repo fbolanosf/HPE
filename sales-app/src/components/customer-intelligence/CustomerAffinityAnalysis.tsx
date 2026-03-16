@@ -1,8 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CUSTOMER_DATABASE } from '@/lib/customer-intelligence-data';
-import { BarChart2, CheckCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { BarChart2, CheckCircle, TrendingUp, TrendingDown, Minus, X, Briefcase, Target, ClipboardList, Info, ExternalLink } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Same product list used in Partner Intelligence > Product Affinity
@@ -166,25 +169,138 @@ function scoreCustomerForProduct(c: typeof CUSTOMER_DATABASE[number], pid: Produ
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CustomerAffinityAnalysis() {
-    const [selectedProduct, setSelectedProduct] = useState<ProductId>('vm-essentials');
+// Work Plan Generator Helper
+// ─────────────────────────────────────────────────────────────────────────────
+function generateWorkPlan(customer: any, product: typeof PRODUCTS[number]) {
+    const plan = [];
+    
+    // Phase 1: Preparation
+    plan.push({
+        title: "Evaluación Técnica Inicial",
+        steps: [
+            `Analizar infraestructura actual (${customer.current_hypervisor}) para viabilidad técnica de ${product.label}.`,
+            customer.broadcom_pricing_impact ? "Cuantificación financiera del impacto Broadcom para caso de negocio inicial." : "Evaluación de costos operativos actuales vs proyección HPE.",
+            customer.vmware_version_eol ? "Auditoría de versiones críticas de VMware cercanas a EOL a mitigar." : "Inventario de activos de virtualización críticos."
+        ]
+    });
+
+    // Phase 2: Technical Value Prop
+    const technicalSteps = [];
+    if (product.id.includes('vm-essentials')) {
+        technicalSteps.push("Demo de coexistencia: Ejecutar VM Essentials en hardware HPE existente.");
+        technicalSteps.push("Plan de migración 'Zero Downtime' para cargas de trabajo críticas.");
+    } else if (product.id.includes('gl')) {
+        technicalSteps.push("Taller de modelado financiero 'Pay-per-use' vs CapEx tradicional.");
+        technicalSteps.push("Evaluación de conectividad para gestión desde GreenLake Cloud Portal.");
+    } else {
+        technicalSteps.push(`Deep-dive técnico: Arquitectura de referencia de ${product.label}.`);
+        technicalSteps.push("Prueba de concepto (PoC) sobre necesidades de datacenter refresh.");
+    }
+    plan.push({ title: "Propuesta de Valor Técnica", steps: technicalSteps });
+
+    // Phase 3: Sales Motion
+    plan.push({
+        title: "Estrategia de Cierre Comercial",
+        steps: [
+            `Presentar ROI basado en la eliminación de ${customer.broadcom_pricing_impact ? 'sobrecostos de licenciamiento' : 'ineficiencias operativas'}.`,
+            "Alinear con el partner estratégico local para la implementación del servicio.",
+            `Agenda de reunión ejecutiva con stakeholders de ${customer.industry.split('/')[0].trim()}.`
+        ]
+    });
+    return plan;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+export default function CustomerAffinityAnalysis({ filterRegion }: { filterRegion?: string }) {
+    const [selectedProduct, setSelectedProduct] = useState<ProductId>(PRODUCTS[0].id);
+    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
     const activeProduct = PRODUCTS.find(p => p.id === selectedProduct)!;
-
     const ranked = useMemo(() => {
         return CUSTOMER_DATABASE
-            .map(c => {
+            .filter((c: any) => !filterRegion || c.region === filterRegion || c.country === filterRegion)
+            .map((c: any) => {
                 const { score, tier, breakdown } = scoreCustomerForProduct(c, selectedProduct);
                 return { ...c, score, tier, breakdown };
             })
-            .filter(c => c.score > 0)
-            .sort((a, b) => b.score - a.score);
-    }, [selectedProduct]);
+            .filter((c: any) => c.score > 0)
+            .sort((a: any, b: any) => b.score - a.score);
+    }, [selectedProduct, filterRegion]);
+
+    const selectedCustomer = useMemo(() =>
+        selectedCustomerId ? ranked.find((c: any) => c.id === selectedCustomerId) : null
+    , [selectedCustomerId, ranked]);
 
     const byTier = {
-        High:   ranked.filter(c => c.tier === 'High'),
-        Medium: ranked.filter(c => c.tier === 'Medium'),
-        Low:    ranked.filter(c => c.tier === 'Low'),
+        High:   ranked.filter((c: any) => c.tier === 'High'),
+        Medium: ranked.filter((c: any) => c.tier === 'Medium'),
+        Low:    ranked.filter((c: any) => c.tier === 'Low'),
+    };
+
+    const handleExportPDF = () => {
+        if (!selectedCustomer || !activeProduct) return;
+
+        const doc = new jsPDF();
+        const customer = selectedCustomer;
+        const product = activeProduct;
+
+        // Header
+        doc.setFillColor(1, 169, 130);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.text("Plan de Trabajo HPE", 20, 25);
+        doc.setFontSize(10);
+        doc.text(`Cliente: ${customer.company_name} | Producto: ${product.label}`, 20, 33);
+
+        let y = 50;
+
+        // Section: Profile
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text("Perfil Técnico del Cliente", 20, y);
+        y += 10;
+        
+        autoTable(doc, {
+            startY: y,
+            head: [['Parámetro', 'Valor']],
+            body: [
+                ['Hypervisor Actual', customer.current_hypervisor],
+                ['Adopción Cloud', customer.cloud_adoption],
+                ['Servidores Estimados', customer.estimated_servers.toLocaleString('en-US')],
+                ['Tamaño de Cia.', customer.company_size],
+                ['Industria', customer.industry]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [1, 169, 130] }
+        });
+        
+        y = (doc as any).lastAutoTable.finalY + 15;
+
+        // Section: Work Plan
+        doc.setFontSize(14);
+        doc.text("Plan de Trabajo Proyectado", 20, y);
+        y += 10;
+        
+        const phases = generateWorkPlan(customer, product);
+        phases.forEach(phase => {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.setFontSize(11);
+            doc.setTextColor(1, 169, 130);
+            doc.text(phase.title, 20, y);
+            y += 6;
+            doc.setTextColor(60, 60, 60);
+            doc.setFontSize(9);
+            phase.steps.forEach(step => {
+                const lines = doc.splitTextToSize(`• ${step}`, 170);
+                if (y + (lines.length * 5) > 280) { doc.addPage(); y = 20; }
+                doc.text(lines, 25, y);
+                y += (lines.length * 5);
+            });
+            y += 5;
+        });
+
+        doc.save(`Plan_HPE_${customer.company_name.replace(/\s+/g, '_')}.pdf`);
     };
 
     return (
@@ -256,8 +372,12 @@ export default function CustomerAffinityAnalysis() {
                             {cfg.label} ({customers.length})
                         </h3>
                         <div className="space-y-3">
-                            {customers.map((c, idx) => (
-                                <div key={c.id} className={`${cfg.bg} ${cfg.border} border rounded-xl p-4 hover:-translate-y-0.5 hover:shadow-sm transition-all`}>
+                            {customers.map((c: any, idx: number) => (
+                                <div 
+                                    key={c.id} 
+                                    onClick={() => setSelectedCustomerId(c.id)}
+                                    className={`${cfg.bg} ${cfg.border} border rounded-xl p-4 hover:-translate-y-0.5 hover:shadow-md cursor-pointer transition-all ${selectedCustomerId === c.id ? 'ring-2 ring-[#01A982] border-transparent' : ''}`}
+                                >
                                     <div className="flex items-start gap-4">
                                         {/* Rank */}
                                         <div className={`${cfg.scoreBg} text-white text-xs font-bold rounded-lg w-8 h-8 flex items-center justify-center flex-shrink-0`}>
@@ -266,14 +386,14 @@ export default function CustomerAffinityAnalysis() {
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                <span className="font-semibold text-gray-900">{c.company_name}</span>
+                                                <span className="font-semibold text-gray-900 truncate max-w-[200px]">{c.company_name}</span>
                                                 <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5">{c.country}</span>
                                                 <span className="text-xs px-2 py-0.5 rounded font-medium bg-gray-100 text-gray-600">{c.industry.split('/')[0].trim()}</span>
                                                 <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${c.current_hypervisor === 'VMware' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>{c.current_hypervisor}</span>
                                             </div>
                                             {/* Signal breakdown pills */}
                                             <div className="flex flex-wrap gap-1 mt-2">
-                                                {c.breakdown.map((b, i) => (
+                                                {c.breakdown.map((b: any, i: number) => (
                                                     <span key={i} className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
                                                         +{b.value} {b.label}
                                                     </span>
@@ -292,6 +412,134 @@ export default function CustomerAffinityAnalysis() {
                     </div>
                 );
             })}
+            {/* Opportunity Detail Side Panel */}
+            <AnimatePresence>
+                {selectedCustomer && (
+                    <>
+                        {/* Overlay */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedCustomerId(null)}
+                            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
+                        />
+                        {/* Panel */}
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto border-l border-gray-100"
+                        >
+                            {/* Panel Header */}
+                            <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b p-6 z-10 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-black text-gray-900">{selectedCustomer.company_name}</h2>
+                                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                                        <Briefcase className="h-3.5 w-3.5" />
+                                        Oportunidad detectada para {activeProduct.label}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedCustomerId(null)}
+                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                >
+                                    <X className="h-6 w-6 text-gray-400" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-8">
+                                {/* Customer Snapshot */}
+                                <section>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="p-1.5 bg-blue-50 rounded-lg">
+                                            <Info className="h-4 w-4 text-blue-600" />
+                                        </div>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Perfíl Técnico del Cliente</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                            <div className="text-[10px] text-gray-400 uppercase font-black mb-1">Entorno Actual</div>
+                                            <div className="font-bold text-gray-900">{selectedCustomer.current_hypervisor}</div>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                            <div className="text-[10px] text-gray-400 uppercase font-black mb-1">Adopción Cloud</div>
+                                            <div className="font-bold text-gray-900">{selectedCustomer.cloud_adoption}</div>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                            <div className="text-[10px] text-gray-400 uppercase font-black mb-1">Capacidad Infra.</div>
+                                            <div className="font-bold text-gray-900">{selectedCustomer.estimated_servers.toLocaleString('en-US')} Srv.</div>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                            <div className="text-[10px] text-gray-400 uppercase font-black mb-1">Tamaño Cía.</div>
+                                            <div className="font-bold text-gray-900">{selectedCustomer.company_size}</div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* Affinity Justification */}
+                                <section>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="p-1.5 bg-emerald-50 rounded-lg">
+                                            <Target className="h-4 w-4 text-emerald-600" />
+                                        </div>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Justificación de Afinidad</h3>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {selectedCustomer.breakdown.map((item: any, i: number) => (
+                                            <div key={i} className="flex items-center justify-between p-3 bg-emerald-50/50 rounded-lg border border-emerald-100">
+                                                <span className="text-sm text-emerald-800 font-medium">{item.label}</span>
+                                                <span className="text-sm font-black text-emerald-600">+{item.value} pts</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {/* Work Plan */}
+                                <section>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="p-1.5 bg-[#01A982]/10 rounded-lg">
+                                            <ClipboardList className="h-4 w-4 text-[#01A982]" />
+                                        </div>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Plan de Trabajo Sugerido</h3>
+                                    </div>
+                                    <div className="space-y-6">
+                                        {generateWorkPlan(selectedCustomer, activeProduct).map((phase, i) => (
+                                            <div key={i} className="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-px before:bg-gray-200 last:before:hidden">
+                                                <div className="absolute left-[-4px] top-1.5 w-2 h-2 rounded-full bg-[#01A982] border-2 border-white" />
+                                                <h4 className="text-sm font-bold text-gray-900 mb-3">{phase.title}</h4>
+                                                <ul className="space-y-3">
+                                                    {phase.steps.map((step, j) => (
+                                                        <li key={j} className="text-sm text-gray-600 flex gap-2">
+                                                            <div className="mt-1.5 w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
+                                                            {step}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {/* External Actions */}
+                                <div className="pt-4 flex gap-3">
+                                    <button 
+                                        onClick={handleExportPDF}
+                                        className="flex-1 bg-[#01A982] text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-[#01A982]/20 hover:bg-[#018e6c] transition-all flex items-center justify-center gap-2"
+                                    >
+                                        Exportar Plan (PDF)
+                                        <ExternalLink className="h-4 w-4" />
+                                    </button>
+                                    <button className="px-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
+                                        <Target className="h-4 w-4 text-gray-400" />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

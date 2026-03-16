@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { Map, LayoutDashboard, Database, UserPlus, Globe, Filter, X, BarChart2, Zap } from 'lucide-react';
+import { Customer } from '@/lib/customer-intelligence-data';
 import CustomerDashboard from '@/components/customer-intelligence/CustomerDashboard';
 import CustomerDatabase from '@/components/customer-intelligence/CustomerDatabase';
 import CustomerOnboarding from '@/components/customer-intelligence/CustomerOnboarding';
@@ -28,6 +29,12 @@ const REGIONS = ['ALL', 'LATAM', 'Europe', 'North America', 'APAC', 'Middle East
 export default function CustomerIntelligencePage() {
     const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
     const [region, setRegion] = useState<string>('ALL');
+    const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+
+    function handleEdit(c: Customer) {
+        setEditingCustomer(c);
+        setActiveTab('add');
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
@@ -72,7 +79,10 @@ export default function CustomerIntelligencePage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex gap-1 border-t border-gray-100 pt-0">
                         {TABS.map(({ key, label, icon: Icon }) => (
-                            <button key={key} onClick={() => setActiveTab(key)}
+                            <button key={key} onClick={() => {
+                                if (key === 'add') setEditingCustomer(null);
+                                setActiveTab(key);
+                            }}
                                 className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === key
                                     ? 'border-cyan-600 text-cyan-700'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
@@ -96,7 +106,7 @@ export default function CustomerIntelligencePage() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-                {activeTab === 'dashboard' && <CustomerDashboard />}
+                {activeTab === 'dashboard' && <CustomerDashboard filterRegion={region !== 'ALL' ? region : undefined} />}
                 {activeTab === 'map' && (
                     <div className="space-y-4">
                         <div className="bg-white border border-gray-200 rounded-xl p-4">
@@ -109,9 +119,17 @@ export default function CustomerIntelligencePage() {
                         <CustomerGeoMap filterRegion={region !== 'ALL' ? region : undefined} />
                     </div>
                 )}
-                {activeTab === 'affinity' && <CustomerAffinityAnalysis />}
-                {activeTab === 'database' && <CustomerDatabase filterRegion={region !== 'ALL' ? region : undefined} />}
-                {activeTab === 'add' && <CustomerOnboarding />}
+                {activeTab === 'affinity' && <CustomerAffinityAnalysis filterRegion={region !== 'ALL' ? region : undefined} />}
+                {activeTab === 'database' && <CustomerDatabase filterRegion={region !== 'ALL' ? region : undefined} onEdit={handleEdit} />}
+                {activeTab === 'add' && (
+                    <CustomerOnboarding 
+                        editItem={editingCustomer} 
+                        onCancelEdit={() => {
+                            setEditingCustomer(null);
+                            setActiveTab('database');
+                        }} 
+                    />
+                )}
             </main>
         </div>
     );
