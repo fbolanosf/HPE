@@ -1,9 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PRODUCT_PORTFOLIO } from "./product-portfolio-data";
 
-// Configuración de la API Key - Prioriza variable de entorno sobre Hardcoded
-const HARDCODED_KEY = "AIzaSyDry2SFGC82-wK3zul0fz7uk29d_S8BV6c";
-const API_KEY = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_GEMINI_API_KEY) || HARDCODED_KEY;
+// Configuración de la API Key - Usar estrictamente variable de entorno por seguridad
+const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
+
+if (!API_KEY) {
+    console.warn("⚠️ NEXT_PUBLIC_GEMINI_API_KEY no detectada. Por favor, configúrala en el archivo .env.local.");
+}
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
