@@ -42,7 +42,12 @@ if (typeof window !== 'undefined') {
             fontSize: '14px',
             clusterBkg: '#f8fafc',
             clusterBorder: '#cbd5e1',
-            edgeLabelBackground: '#ffffff'
+            edgeLabelBackground: '#ffffff',
+            // Gantt Specifics
+            ganttFontSize: '12px',
+            ganttBarHeight: 30,
+            ganttSectionFontSize: '14px',
+            ganttLabelFontSize: '12px'
         },
         themeCSS: `
             .node rect, .node circle, .node polygon, .node path { 
@@ -67,6 +72,27 @@ if (typeof window !== 'undefined') {
                 letter-spacing: -0.01em !important;
                 fill: #1e293b !important;
             }
+            .sectionText, .taskText {
+                font-family: 'Inter', sans-serif !important;
+                font-weight: 700 !important;
+                fill: #1e293b !important;
+            }
+            .grid line {
+                stroke: #e2e8f0 !important;
+                stroke-width: 1px !important;
+            }
+            .bar {
+                stroke-width: 0 !important;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            }
+            .task0 { fill: #01A982 !important; } /* HPE Green */
+            .task1 { fill: #425563 !important; } /* HPE Blue Gray */
+            .task2 { fill: #FF8300 !important; } /* HPE Accent Orange */
+            .task3 { fill: #6DA0E0 !important; } /* HPE Soft Blue */
+            .section {
+                fill: #f1f5f9 !important;
+                stroke: #e2e8f0 !important;
+            }
         `,
         flowchart: {
             htmlLabels: false, // Ensure robust SVG-to-Canvas capture
@@ -77,6 +103,17 @@ if (typeof window !== 'undefined') {
             nodeSpacing: 160, // Horizontal space for symmetry
             ranker: 'network-simplex',
             defaultInterpolation: 'step'
+        } as any,
+        gantt: {
+            titlePadding: 20,
+            barHeight: 30,
+            barGap: 8,
+            topPadding: 50,
+            sidePadding: 100,
+            fontSize: 12,
+            sectionFontSize: 14,
+            numberSectionStyles: 4,
+            useMaxWidth: true,
         } as any,
         securityLevel: 'loose'
     } as any);
