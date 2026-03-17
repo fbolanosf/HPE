@@ -55,6 +55,7 @@ if (typeof window !== 'undefined') {
                 stroke-width: 2px !important;
                 stroke-dasharray: 4 !important;
                 rx: 16px !important;
+                margin: 20px !important;
             }
             .edgePath path {
                 stroke-width: 3.5px !important;
@@ -69,11 +70,11 @@ if (typeof window !== 'undefined') {
         `,
         flowchart: {
             htmlLabels: false, // Ensure robust SVG-to-Canvas capture
-            curve: 'step',
-            padding: 24,
+            curve: 'stepAfter', // Clean orthogonal lines
+            padding: 40, // Breathing room for labels
             useMaxWidth: true,
-            rankSpacing: 150,
-            nodeSpacing: 150, // More space to avoid horizontal shortcuts
+            rankSpacing: 180, // Vertical space to avoid overlaps
+            nodeSpacing: 160, // Horizontal space for symmetry
             ranker: 'network-simplex',
             defaultInterpolation: 'step'
         } as any,

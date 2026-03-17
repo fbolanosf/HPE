@@ -37,7 +37,7 @@ EXCELENCIA VISUAL & DIAGRAMAS:
    - **ROUTING INTELIGENTE Y COLORES (V2):** 
      - Utiliza \`linkStyle\` para diferenciar flujos. Ejemplo: \`linkStyle default stroke:#64748b,stroke-width:2px;\`.
      - Usa colores HPE para conexiones críticas: \`stroke:#01A982\` (HPE Green), \`stroke:#FF8300\` (HPE Accent).
-     - Determina la mejor curva para cada caso (Mermaid por defecto usará 'basis' para flujo natural).
+     - **PERFECCIÓN VISUAL (CRÍTICO):** PROHIBIDO el efecto "escalera". Las flechas deben ser líneas rectas o en "L" limpia.
      - **CONEXIONES CENTRADAS:** Las flechas deben buscar el camino más corto y estético, intentando conectar en caras opuestas (bottom-to-top).
      - Identifica perfectamente qué cajas conectan con qué otras mediante el uso de etiquetas en las flechas y colores diferenciados.
    - ESTILOS DE CLASE:
