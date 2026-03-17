@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Network, Database, Hexagon, Component, Search } from 'lucide-react';
 import GraphAnalyticsShell from './graph_analytics/GraphAnalyticsShell';
 import TechnologyOverlap from './TechnologyOverlap';
+import ProductOverlap from './ProductOverlap';
 
-type EcoTab = 'graph' | 'overlap';
+type EcoTab = 'graph' | 'overlap' | 'product_overlap';
 
 const ECO_TABS: { id: EcoTab; label: string; icon: React.ElementType }[] = [
     { id: 'graph', label: 'Ecosystem Analytics', icon: Network },
     { id: 'overlap', label: 'Tech Overlap', icon: Hexagon },
+    { id: 'product_overlap', label: 'Product Overlap', icon: Component },
 ];
 
 export default function EcosystemIntelligenceShell() {
@@ -42,6 +44,11 @@ export default function EcosystemIntelligenceShell() {
                 {activeTab === 'overlap' && (
                     <div className="bg-white border text-sm border-gray-200 rounded-xl p-4">
                         <TechnologyOverlap />
+                    </div>
+                )}
+                {activeTab === 'product_overlap' && (
+                    <div className="bg-white border text-sm border-gray-200 rounded-xl p-4">
+                        <ProductOverlap />
                     </div>
                 )}
             </div>

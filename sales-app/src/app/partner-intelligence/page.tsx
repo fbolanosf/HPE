@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Database, Star, Map, BarChart2, Network, UserPlus } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useEffect } from 'react';
+import { syncPartnerDatabase } from '@/lib/partner-intelligence-data';
 
 // Dynamic imports to avoid SSR chart issues
 const PartnerDatabase = dynamic(() => import('@/components/partner-intelligence/PartnerDatabase'), { ssr: false });
@@ -56,6 +58,10 @@ const TABS: { id: Tab; label: string; icon: React.ElementType; description: stri
 
 export default function PartnerIntelligencePage() {
     const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+
+    useEffect(() => {
+        syncPartnerDatabase();
+    }, []);
 
     const activeTabData = TABS.find((t) => t.id === activeTab)!;
     const ActiveIcon = activeTabData.icon;

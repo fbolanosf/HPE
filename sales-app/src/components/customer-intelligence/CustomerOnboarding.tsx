@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { CUSTOMER_DATABASE, Customer, HypervisorInUse, CloudAdoption, CustomerSize } from '@/lib/customer-intelligence-data';
-import { CheckCircle2, PlusCircle, Search, Sparkles, Loader2, Globe, AlertTriangle, X } from 'lucide-react';
+import { PersistenceService } from '@/lib/persistence-service';
+import { CheckCircle2, PlusCircle, Search, Sparkles, Loader2, Globe, AlertTriangle, X, Trash2 } from 'lucide-react';
 
 const INITIAL: Omit<Customer, 'id'> = {
     company_name: '', country: '', city: '', region: 'LATAM',
@@ -23,7 +24,8 @@ const INITIAL: Omit<Customer, 'id'> = {
     smart_cities: false, retail: false, healthcare: false, finance: false,
     telecommunications: false, public_sector: false, education: false, media: false,
     description: '',
-    contact_name: '', contact_email: '', contact_phone: ''
+    contacts: [],
+    contact_name: '', contact_title: '', contact_email: '', contact_phone: ''
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -121,16 +123,20 @@ export default function CustomerOnboarding({ editItem, onCancelEdit }: { editIte
         }
     }
 
-    function handleSave() {
+    async function handleSave() {
         if (editItem) {
             const idx = CUSTOMER_DATABASE.findIndex(c => c.id === editItem.id);
             if (idx !== -1) {
-                CUSTOMER_DATABASE[idx] = { ...editItem, ...form };
+                CUSTOMER_DATABASE[idx] = { ...editItem, ...form } as Customer;
             }
         } else {
-            const id = `c${(CUSTOMER_DATABASE.length + 1).toString().padStart(3, '0')}_custom`;
+            // Robust ID generation: use timestamp + prefix to avoid collisions with static data
+            const id = `c_custom_${Date.now()}`;
             CUSTOMER_DATABASE.push({ id, ...form } as Customer);
         }
+        
+        // Persist to server and local storage
+        await PersistenceService.save('customers', CUSTOMER_DATABASE);
         
         setSaved(true);
         
@@ -143,7 +149,7 @@ export default function CustomerOnboarding({ editItem, onCancelEdit }: { editIte
                 setLastSearch('');
                 setSaved(false);
             }
-        }, 3000);
+        }, 2000);
     }
 
     function handleEditExisting() {
@@ -254,20 +260,115 @@ export default function CustomerOnboarding({ editItem, onCancelEdit }: { editIte
                         </div>
                     )}
 
-                    {/* Contact Info - NEW SECTION */}
+                    {/* Contact Directory */}
                     <section>
-                        <h3 className="text-sm font-bold text-gray-800 mb-3 pb-1 border-b border-gray-100 uppercase tracking-wider text-[11px]">Información de Contacto</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <Field label="Nombre de Contacto">
-                                <input className={inputCls} value={form.contact_name || ''} onChange={e => set('contact_name', e.target.value)} placeholder="Ej. Juan Pérez" />
-                            </Field>
-                            <Field label="Email">
-                                <input className={inputCls} value={form.contact_email || ''} onChange={e => set('contact_email', e.target.value)} placeholder="juan@empresa.com" />
-                            </Field>
-                            <Field label="Teléfono">
-                                <input className={inputCls} value={form.contact_phone || ''} onChange={e => set('contact_phone', e.target.value)} placeholder="+52 55..." />
-                            </Field>
+                        <div className="flex items-center justify-between mb-3 pb-1 border-b border-gray-100">
+                            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider text-[11px]">Directorio de Contactos</h3>
+                            <button 
+                                onClick={() => {
+                                    const newContact = { 
+                                        id: Date.now().toString(), 
+                                        name: '', 
+                                        title: '', 
+                                        email: '', 
+                                        phone: '' 
+                                    };
+                                    set('contacts', [...(form.contacts || []), newContact]);
+                                }}
+                                className="text-[10px] font-bold text-cyan-600 hover:text-cyan-700 flex items-center gap-1 bg-cyan-50 px-2 py-1 rounded-md transition-all"
+                            >
+                                <PlusCircle className="h-3 w-3" /> Agregar Contacto
+                            </button>
                         </div>
+
+                        {(!form.contacts || form.contacts.length === 0) ? (
+                            <div className="text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                <p className="text-xs text-gray-400">No hay contactos registrados para este prospecto.</p>
+                                <button 
+                                    onClick={() => {
+                                        const newContact = { 
+                                            id: Date.now().toString(), 
+                                            name: form.contact_name || '', 
+                                            title: form.contact_title || '', 
+                                            email: form.contact_email || '', 
+                                            phone: form.contact_phone || '' 
+                                        };
+                                        set('contacts', [newContact]);
+                                    }}
+                                    className="mt-2 text-[10px] font-bold text-cyan-600 underline"
+                                >
+                                    Comenzar directorio
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {form.contacts.map((contact, index) => (
+                                    <div key={contact.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100 relative group animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <button 
+                                            onClick={() => {
+                                                const next = [...(form.contacts || [])];
+                                                next.splice(index, 1);
+                                                set('contacts', next);
+                                            }}
+                                            className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                            title="Borrar contacto"
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <Field label="Nombre">
+                                                <input 
+                                                    className={inputCls} 
+                                                    value={contact.name} 
+                                                    onChange={e => {
+                                                        const next = [...(form.contacts || [])];
+                                                        next[index] = { ...contact, name: e.target.value };
+                                                        set('contacts', next);
+                                                    }} 
+                                                    placeholder="Ej. Juan Pérez" 
+                                                />
+                                            </Field>
+                                            <Field label="Puesto / Cargo">
+                                                <input 
+                                                    className={inputCls} 
+                                                    value={contact.title} 
+                                                    onChange={e => {
+                                                        const next = [...(form.contacts || [])];
+                                                        next[index] = { ...contact, title: e.target.value };
+                                                        set('contacts', next);
+                                                    }} 
+                                                    placeholder="Ej. Director de IT" 
+                                                />
+                                            </Field>
+                                            <Field label="Email">
+                                                <input 
+                                                    className={inputCls} 
+                                                    value={contact.email} 
+                                                    onChange={e => {
+                                                        const next = [...(form.contacts || [])];
+                                                        next[index] = { ...contact, email: e.target.value };
+                                                        set('contacts', next);
+                                                    }} 
+                                                    placeholder="juan@empresa.com" 
+                                                />
+                                            </Field>
+                                            <Field label="Teléfono">
+                                                <input 
+                                                    className={inputCls} 
+                                                    value={contact.phone} 
+                                                    onChange={e => {
+                                                        const next = [...(form.contacts || [])];
+                                                        next[index] = { ...contact, phone: e.target.value };
+                                                        set('contacts', next);
+                                                    }} 
+                                                    placeholder="+52 55..." 
+                                                />
+                                            </Field>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </section>
 
                     {/* Intelligence Summary - NEW SECTION */}

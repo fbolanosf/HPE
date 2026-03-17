@@ -6,10 +6,14 @@
 export type TechnologyDomain = 'IT' | 'OT' | 'IT_OT_HYBRID';
 
 export type PartnerType =
+    | 'vendor'
+    | 'distributor'
     | 'system_integrator'
     | 'reseller'
-    | 'consulting_firm'
     | 'managed_service_provider'
+    | 'consultancy'
+    | 'csp'
+    | 'retailer'
     | 'industrial_integrator'
     | 'engineering_company'
     | 'automation_integrator';
@@ -23,6 +27,8 @@ export type HPECertification =
     | 'None';
 
 export type OpportunityTier = 'High' | 'Medium' | 'Low';
+
+import { PersistenceService } from './persistence-service';
 
 export interface Partner {
     // ── Identity ──────────────────────────────────────────────
@@ -109,6 +115,11 @@ export interface Partner {
     hpe_certification: HPECertification;
     description?: string;
     key_projects?: string[];
+
+    // ── Expansion v8.1 (OEM & Portfolio) ──────────────────────
+    other_oem_brands?: string;
+    hpe_virtualization_products?: string;
+    tech_brands_by_category?: string;
 }
 
 // ============================================================
@@ -308,7 +319,7 @@ export function searchPartners(
         if (filters.excludeHPEPartners && p.hpe_partner) return false;
 
         return true;
-    });
+    }).sort((a, b) => a.company_name.localeCompare(b.company_name));
 }
 
 // ============================================================
@@ -340,6 +351,9 @@ export const BASE: Omit<Partner,
     retail: false, healthcare: false, finance: false,
     telecommunications: false, public_sector: false,
     defense: false, tourism: false, shipping: false,
+    other_oem_brands: '',
+    hpe_virtualization_products: '',
+    tech_brands_by_category: '',
 };
 
 export const PARTNER_DATABASE: Partner[] = [
@@ -379,6 +393,17 @@ export const PARTNER_DATABASE: Partner[] = [
         description: 'Distribuidor mayorista con amplio portafolio IT incluyendo HPE.',
     },
     {
+        hpe_certification: "None", ...BASE, id: 'p_ingram_mx', company_name: 'Ingram Micro México', country: 'Mexico',
+        city: 'Mexico City', region: 'LATAM', website: 'ingrammicro.com.mx',
+        partner_type: 'reseller', technology_domain: 'IT',
+        company_size: 'Enterprise', estimated_employees: 1500,
+        vmware_partner: true, dell_partner: true, hpe_partner: true, cisco_partner: true,
+        other_oem_brands: 'VERITAS, Cisco, Dell, Microsoft, VMware',
+        hpe_virtualization_products: 'HPE VM Essentials, HPE GreenLake, HPE Alletra Storage MP',
+        tech_brands_by_category: 'VERITAS para Disaster Recovery, Cisco para Networking',
+        description: 'Mayorista líder con capacidades avanzadas en virtualización y protección de datos.',
+    },
+    {
         hpe_certification: "Silver", ...BASE, id: 'p004', company_name: 'Sievert TI', country: 'Brazil',
         city: 'São Paulo', region: 'LATAM', website: 'sievert.com.br',
         partner_type: 'system_integrator', technology_domain: 'IT',
@@ -392,7 +417,7 @@ export const PARTNER_DATABASE: Partner[] = [
     {
         hpe_certification: "None", ...BASE, id: 'p005', company_name: 'Globant Infrastructure', country: 'Argentina',
         city: 'Buenos Aires', region: 'LATAM', website: 'globant.com',
-        partner_type: 'consulting_firm', technology_domain: 'IT',
+        partner_type: 'consultancy', technology_domain: 'IT',
         company_size: 'Enterprise', estimated_employees: 25000,
         aws_partner: true, google_cloud_partner: true, microsoft_partner: true,
         hybrid_cloud: true, cloud_migration: true, container_platforms: true,
@@ -513,7 +538,7 @@ export const PARTNER_DATABASE: Partner[] = [
     {
         hpe_certification: "None", ...BASE, id: 'p016', company_name: 'Grupo Assa Latam', country: 'Colombia',
         city: 'Bogotá', region: 'LATAM', website: 'grupoassa.com',
-        partner_type: 'consulting_firm', technology_domain: 'IT_OT_HYBRID',
+        partner_type: 'consultancy', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Large', estimated_employees: 1800,
         microsoft_partner: true, aws_partner: true, siemens_partner: true,
         aveva_partner: true,
@@ -557,7 +582,7 @@ export const PARTNER_DATABASE: Partner[] = [
     {
         hpe_certification: "None", ...BASE, id: 'p020', company_name: 'CyberOT Chile', country: 'Chile',
         city: 'Santiago', region: 'LATAM', website: 'cyberot.cl',
-        partner_type: 'consulting_firm', technology_domain: 'IT_OT_HYBRID',
+        partner_type: 'consultancy', technology_domain: 'IT_OT_HYBRID',
         company_size: 'Small', estimated_employees: 55,
         industrial_cybersecurity: true, scada_integration: true, industrial_networking: true,
         datacenter_infrastructure: true, observability: true,
@@ -690,7 +715,7 @@ export const PARTNER_DATABASE: Partner[] = [
     {
         hpe_certification: "None", ...BASE, id: 'p033', company_name: 'eSoft', country: 'Peru',
         city: 'Lima', region: 'LATAM', website: 'esoftglobaltech.com',
-        partner_type: 'consulting_firm', technology_domain: 'IT',
+        partner_type: 'consultancy', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 50,
         microsoft_partner: true, aws_partner: true,
         cloud_migration: true,
@@ -699,7 +724,7 @@ export const PARTNER_DATABASE: Partner[] = [
     {
         hpe_certification: "None", ...BASE, id: 'p034', company_name: 'Andes Digital', country: 'Chile',
         city: 'Santiago', region: 'LATAM', website: 'andesdigital.com',
-        partner_type: 'consulting_firm', technology_domain: 'IT',
+        partner_type: 'consultancy', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 80,
         aws_partner: true, vmware_partner: true,
         cloud_migration: true, hybrid_cloud: true, container_platforms: true,
@@ -708,7 +733,7 @@ export const PARTNER_DATABASE: Partner[] = [
     {
         hpe_certification: "None", ...BASE, id: 'p035', company_name: 'Green ITS', country: 'Mexico',
         city: 'Mexico City', region: 'LATAM', website: 'greenits.com',
-        partner_type: 'consulting_firm', technology_domain: 'IT',
+        partner_type: 'consultancy', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 30,
         cisco_partner: true,
         datacenter_infrastructure: true,
@@ -775,7 +800,7 @@ export const PARTNER_DATABASE: Partner[] = [
     {
         hpe_certification: "None", ...BASE, id: 'p042', company_name: 'INT / Intelligence & Technology', country: 'Mexico',
         city: 'Monterrey', region: 'LATAM', website: 'int.com.mx',
-        partner_type: 'consulting_firm', technology_domain: 'IT',
+        partner_type: 'consultancy', technology_domain: 'IT',
         company_size: 'Medium', estimated_employees: 120,
         aws_partner: true, microsoft_partner: true,
         hybrid_cloud: true, cloud_migration: true,
@@ -858,7 +883,7 @@ export const PARTNER_DATABASE: Partner[] = [
     {
         hpe_certification: "None", ...BASE, id: 'p051', company_name: 'Data Client', country: 'Colombia',
         city: 'Medellín', region: 'LATAM', website: 'clientsdata.com',
-        partner_type: 'consulting_firm', technology_domain: 'IT',
+        partner_type: 'consultancy', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 40,
         aws_partner: true, microsoft_partner: true,
         hybrid_cloud: true, cloud_migration: true,
@@ -949,7 +974,7 @@ export const PARTNER_DATABASE: Partner[] = [
     {
         hpe_certification: "None", ...BASE, id: 'p060', company_name: 'SinzerAD', country: 'Andorra',
         city: 'Andorra la Vella', region: 'Europe', website: 'sinzerad.ad',
-        partner_type: 'consulting_firm', technology_domain: 'IT',
+        partner_type: 'consultancy', technology_domain: 'IT',
         company_size: 'Small', estimated_employees: 15,
         microsoft_partner: true, hpe_partner: true,
         cloud_migration: true, datacenter_infrastructure: true,
@@ -1203,6 +1228,67 @@ export const PARTNER_DATABASE: Partner[] = [
         retail: true, healthcare: true,
         description: 'Local system integrator providing software development and IT infrastructure support.',
     },
+    // ── Batch Intake (v5.8.1) ─────────────────────────────────
+    {
+        hpe_certification: "Platinum", ...BASE, id: 'p121', company_name: 'Seidor', country: 'Spain',
+        city: 'Barcelona', region: 'Europe', website: 'seidor.com',
+        partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
+        company_size: 'Enterprise', estimated_employees: 7500,
+        hpe_partner: true, microsoft_partner: true, aws_partner: true,
+        virtualization: true, hybrid_cloud: true, cloud_migration: true, datacenter_infrastructure: true,
+        manufacturing: true, retail: true, healthcare: true,
+        description: 'Consultora tecnológica global con fuerte especialización en SAP (S/4HANA), Cloud y Transformación Digital.',
+    },
+    {
+        hpe_certification: "Platinum", ...BASE, id: 'p122', company_name: 'Ibermática (Ayesa)', country: 'Spain',
+        city: 'San Sebastián', region: 'Europe', website: 'ibermatica.com',
+        partner_type: 'managed_service_provider', technology_domain: 'IT',
+        company_size: 'Enterprise', estimated_employees: 12000,
+        hpe_partner: true, dell_partner: true, microsoft_partner: true, vmware_partner: true,
+        virtualization: true, backup_and_disaster_recovery: true, hybrid_cloud: true,
+        public_sector: true, finance: true, manufacturing: true,
+        description: 'Líder en servicios IT y digitalización en España, parte del grupo Ayesa, con amplia herencia en HPE.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p123', company_name: 'Lutech', country: 'Italy',
+        city: 'Milan', region: 'Europe', website: 'lutech.group',
+        partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
+        company_size: 'Large', estimated_employees: 3500,
+        hpe_partner: true, cisco_partner: true, vmware_partner: true,
+        virtualization: true, industrial_networking: true, hybrid_cloud: true, industrial_cybersecurity: true,
+        manufacturing: true, finance: true, telecommunications: true,
+        description: 'Líder italiano en transformación digital con fuerte foco en Cloud, Ciberseguridad e Infraestructura.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p124', company_name: 'Var Group', country: 'Italy',
+        city: 'Empoli', region: 'Europe', website: 'vargroup.it',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Large', estimated_employees: 3700,
+        hpe_partner: true, dell_partner: true, microsoft_partner: true,
+        virtualization: true, datacenter_infrastructure: true, cloud_migration: true,
+        retail: true, manufacturing: true, food_and_beverage: true,
+        description: 'Socio estratégico para la digitalización de empresas en Italia (SAP, IT, Cloud y Digital Workspace).',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p125', company_name: 'UniSystems', country: 'Greece',
+        city: 'Athens', region: 'Europe', website: 'unisystems.com',
+        partner_type: 'system_integrator', technology_domain: 'IT',
+        company_size: 'Large', estimated_employees: 1200,
+        hpe_partner: true, dell_partner: true, cisco_partner: true, microsoft_partner: true,
+        virtualization: true, datacenter_infrastructure: true, hybrid_cloud: true,
+        finance: true, public_sector: true, telecommunications: true,
+        description: 'Principal integrador de sistemas en Grecia especializado en banca, finanzas y sector público.',
+    },
+    {
+        hpe_certification: "None", ...BASE, id: 'p126', company_name: 'Bynet', country: 'Israel',
+        city: 'Tel Aviv', region: 'Middle East', website: 'bynet.co.il',
+        partner_type: 'system_integrator', technology_domain: 'IT_OT_HYBRID',
+        company_size: 'Large', estimated_employees: 1300,
+        hpe_partner: true, cisco_partner: true, juniper_partner: true,
+        virtualization: true, industrial_networking: true, hybrid_cloud: true, datacenter_infrastructure: true,
+        defense: true, telecommunications: true, healthcare: true,
+        description: 'Líder israelí en integración de redes, seguridad y computación para infraestructuras críticas.',
+    },
 ];
 
 // Utility helpers
@@ -1237,33 +1323,34 @@ export const DOMAIN_LABEL: Record<TechnologyDomain, string> = {
     IT: 'IT', OT: 'OT', IT_OT_HYBRID: 'IT/OT Hybrid',
 };
 
-export const PARTNER_TYPE_LABEL: Record<PartnerType, string> = {
-    system_integrator: 'System Integrator',
-    reseller: 'Reseller',
-    consulting_firm: 'Consulting Firm',
-    managed_service_provider: 'MSP',
-    industrial_integrator: 'Industrial Integrator',
-    engineering_company: 'Engineering Company',
-    automation_integrator: 'Automation Integrator',
+export const PARTNER_TYPE_LABEL: Record<string, string> = {
+    vendor: 'Fabricante (OEM / Vendor)',
+    distributor: 'Distribuidor Mayorista (DISTI)',
+    system_integrator: 'Integrador de Sistemas (SI)',
+    reseller: 'Revendedor de Valor Agregado (VAR)',
+    managed_service_provider: 'Proveedor de Servicios Gestionados (MSP)',
+    consultancy: 'Consultoría Tecnológica',
+    csp: 'Proveedor de Servicios en la Nube (CSP / SaaS)',
+    retailer: 'Minorista / Retail',
+    industrial_integrator: 'Integrador Industrial',
+    engineering_company: 'Firma de Ingeniería',
+    automation_integrator: 'Integrador de Automatización',
+};
+
+export const PARTNER_TYPE_DESCRIPTIONS: Record<string, string> = {
+    vendor: 'Quien diseña y produce el hardware o software (ej. Dell, SAP).',
+    distributor: 'El intermediario logístico y financiero que vende a otras empresas, no al usuario final.',
+    system_integrator: 'Quien combina productos de varios fabricantes para crear una solución a medida (proyectos complejos).',
+    reseller: 'Venta de productos con un servicio extra sencillo (instalación o soporte inicial).',
+    managed_service_provider: 'Empresa que administra de forma remota la infraestructura de TI del cliente (mantenimiento continuo).',
+    consultancy: 'Enfocada en estrategia y diseño de soluciones, a veces sin vender el equipo físico.',
+    csp: 'Empresas que venden acceso a software o infraestructura por suscripción.',
+    retailer: 'Venta directa al consumidor final o pequeñas empresas sin servicios complejos (ej. tiendas de computación).',
 };
 
 export const addPartnerToDatabase = (partner: Partner) => {
     PARTNER_DATABASE.unshift(partner); // Add to top of memory list
-
-    // Persist to LocalStorage
-    if (typeof window !== 'undefined') {
-        try {
-            const stored = localStorage.getItem('hpe_custom_partners');
-            let custom: Partner[] = [];
-            if (stored) {
-                custom = JSON.parse(stored);
-            }
-            custom.unshift(partner);
-            localStorage.setItem('hpe_custom_partners', JSON.stringify(custom));
-        } catch (e) {
-            console.error('Error saving to LocalStorage', e);
-        }
-    }
+    PersistenceService.save('partners', PARTNER_DATABASE);
 };
 
 export const updatePartnerInDatabase = (id: string, updatedFields: Partial<Partner>) => {
@@ -1271,30 +1358,18 @@ export const updatePartnerInDatabase = (id: string, updatedFields: Partial<Partn
     const index = PARTNER_DATABASE.findIndex(p => p.id === id);
     if (index !== -1) {
         PARTNER_DATABASE[index] = { ...PARTNER_DATABASE[index], ...updatedFields };
-    }
-
-    // 2. Persist to LocalStorage (Overwrite)
-    if (typeof window !== 'undefined') {
-        try {
-            const stored = localStorage.getItem('hpe_custom_partners');
-            if (stored) {
-                let custom: Partner[] = JSON.parse(stored);
-                const customIndex = custom.findIndex(p => p.id === id);
-                if (customIndex !== -1) {
-                    custom[customIndex] = { ...custom[customIndex], ...updatedFields };
-                    localStorage.setItem('hpe_custom_partners', JSON.stringify(custom));
-                } else if (index !== -1) {
-                    // Si el partner era del base mock inicial pero el usuario lo editó
-                    // lo clonamos hacia los custom_partners para que la edición sobreviva recargas.
-                    custom.unshift(PARTNER_DATABASE[index]);
-                    localStorage.setItem('hpe_custom_partners', JSON.stringify(custom));
-                }
-            } else if (index !== -1) {
-                // Instanciar local storage si el primero que editaron fue un mock base
-                localStorage.setItem('hpe_custom_partners', JSON.stringify([PARTNER_DATABASE[index]]));
-            }
-        } catch (e) {
-            console.error('Error updating LocalStorage', e);
-        }
+        PersistenceService.save('partners', PARTNER_DATABASE);
     }
 };
+
+/**
+ * Initializes the database from persistent storage.
+ */
+export async function syncPartnerDatabase() {
+    const persisted = await PersistenceService.load<Partner>('partners');
+    if (persisted && persisted.length > 0) {
+        // Update the in-memory array content without replacing the reference
+        PARTNER_DATABASE.splice(0, PARTNER_DATABASE.length, ...persisted);
+        console.log(`[Persistence] Partner database synced: ${persisted.length} items.`);
+    }
+}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BarChart3, Calculator, FileText, Server, Network, Users } from 'lucide-react';
+import { BarChart3, Calculator, FileText, Server, Network, Users, Brain, Library } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
             <div className="bg-[#01A982] w-10 h-10 flex items-center justify-center text-white font-bold rounded">RPO</div>
             <h1 className="text-xl font-bold text-gray-900">Global Sales Specialist Toolkit</h1>
           </div>
-          <div className="text-sm text-gray-500">v7.0.0</div>
+          <div className="text-sm text-gray-500">v8.0.0</div>
         </div>
       </header>
 
@@ -131,7 +131,7 @@ export default function Home() {
               <span className="rounded-lg inline-flex p-3 bg-cyan-50 text-cyan-600 ring-4 ring-white">
                 <Users className="h-6 w-6" aria-hidden="true" />
               </span>
-              <span className="absolute top-4 right-4 bg-cyan-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">NUEVO v7.0</span>
+              <span className="absolute top-4 right-4 bg-cyan-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">v7.0</span>
             </div>
             <div className="mt-8">
               <h3 className="text-lg font-medium text-gray-900 group-hover:text-cyan-600 transition-colors">
@@ -139,11 +139,30 @@ export default function Home() {
                 Customer Intelligence (End Users)
               </h3>
               <p className="mt-2 text-sm text-gray-500">
-                Base de datos de clientes finales potenciales para HPE VM Essentials. Identifica empresas afectadas por precios Broadcom, con VMware en EOL o buscando alternativas de virtualización.
+                Base de datos de clientes potenciales para HPE VM Essentials. Identifica empresas afectadas por Broadcom o con VMware en EOL.
               </p>
             </div>
           </Link>
 
+          {/* RESTORED: Chatbot de Estrategia IA */}
+          <Link href="/product-intelligence" className="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-teal-500 rounded-xl shadow-md hover:shadow-lg transition-all border-2 border-dashed border-teal-100 hover:border-teal-500 bg-gradient-to-br from-white to-teal-50/30">
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-teal-50 text-teal-600 ring-4 ring-white shadow-sm">
+                <Brain className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <span className="absolute top-4 right-4 bg-teal-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full animate-pulse">CHATBOT v8.3</span>
+            </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-medium text-gray-900 group-hover:text-teal-600 transition-colors flex items-center gap-2">
+                <span className="absolute inset-0" aria-hidden="true" />
+                Chatbot de Estrategia IA
+                <Library className="h-4 w-4 text-teal-400" />
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Interfaz de conversación estratégica para análisis técnico y financiero de soluciones HPE con generación de diagramas Mermaid.
+              </p>
+            </div>
+          </Link>
         </div>
       </main>
 

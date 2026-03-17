@@ -5,8 +5,9 @@ import {
     CUSTOMER_DATABASE, scoreCustomer, searchCustomers,
     CustomerFilters, HypervisorInUse, CustomerSize, CloudAdoption, Customer
 } from '@/lib/customer-intelligence-data';
-import { Search, X, AlertTriangle, Download, ChevronDown, ChevronUp, Zap, Monitor, RefreshCcw, CloudOff, Check, Database as DatabaseIcon, Activity, Minus } from 'lucide-react';
+import { Search, X, AlertTriangle, Download, ChevronDown, ChevronUp, Zap, Monitor, RefreshCcw, CloudOff, Check, Database as DatabaseIcon, Activity, Minus, Shield } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import HPEIntelligenceCenter from './HPEIntelligenceCenter';
 
 const TIER_COLORS: Record<string, string> = {
     Hot: 'bg-green-100 text-green-700 border border-green-200',
@@ -24,8 +25,9 @@ export default function CustomerDatabase({ filterRegion, onEdit }: Props) {
     const [filters, setFilters] = useState<CustomerFilters>({});
     const [query, setQuery] = useState('');
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [sortKey, setSortKey] = useState<'score' | 'company_name' | 'estimated_employees'>('score');
-    const [sortAsc, setSortAsc] = useState(false);
+    const [sortKey, setSortKey] = useState<'score' | 'company_name' | 'estimated_employees'>('company_name');
+    const [sortAsc, setSortAsc] = useState(true);
+    const [intelligenceCustomer, setIntelligenceCustomer] = useState<Customer | null>(null);
 
     const allFilters: CustomerFilters = {
         ...filters,
@@ -204,10 +206,18 @@ export default function CustomerDatabase({ filterRegion, onEdit }: Props) {
                                                 {c.cloud_repatriation_interest && <span title="Interés en repatriar cloud" className="inline-flex items-center gap-0.5 text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1 py-0.5 rounded font-medium"><CloudOff className="h-2.5 w-2.5" />Rpt</span>}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-2.5 text-right">
+                                        <td className="px-4 py-2.5 text-right flex items-center justify-end gap-2">
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); setIntelligenceCustomer(c as Customer); }}
+                                                className="text-[10px] bg-cyan-50 hover:bg-cyan-600 hover:text-white text-cyan-600 p-1.5 rounded-lg font-bold transition-all border border-cyan-100 flex items-center gap-1 shadow-sm"
+                                                title="HPE Intelligence Center"
+                                            >
+                                                <Shield className="h-3 w-3" />
+                                                <span className="hidden lg:inline">Intelligence</span>
+                                            </button>
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); onEdit?.(c as Customer); }}
-                                                className="text-[10px] bg-gray-100 hover:bg-cyan-600 hover:text-white text-gray-600 px-2 py-1 rounded font-bold transition-colors"
+                                                className="text-[10px] bg-gray-50 hover:bg-slate-200 text-gray-600 p-1.5 rounded-lg font-bold transition-colors border border-gray-100"
                                             >
                                                 Editar
                                             </button>
@@ -226,9 +236,34 @@ export default function CustomerDatabase({ filterRegion, onEdit }: Props) {
                                                             <div><span className="text-gray-400">Cloud:</span> {c.cloud_adoption}</div>
                                                             <div><span className="text-gray-400">Servidores est.:</span> {c.estimated_servers.toLocaleString('en-US')}</div>
                                                             <div><span className="text-gray-400">Empleados:</span> {c.estimated_employees.toLocaleString('en-US')}</div>
-                                                            {c.contact_name && <div className="mt-2 pt-2 border-t border-cyan-100"><span className="text-gray-400">Contacto:</span> {c.contact_name}</div>}
-                                                            {c.contact_email && <div><span className="text-gray-400">Email:</span> {c.contact_email}</div>}
-                                                            {c.contact_phone && <div><span className="text-gray-400">Tel:</span> {c.contact_phone}</div>}
+                                                            <div className="mt-2 pt-2 border-t border-cyan-100 flex items-center justify-between">
+                                                                <span className="font-bold text-gray-700">Directorio de Contactos</span>
+                                                                {c.contacts && c.contacts.length > 0 && <span className="text-[10px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full">{c.contacts.length}</span>}
+                                                            </div>
+                                                            <div className="space-y-3 mt-2">
+                                                                {c.contacts && c.contacts.length > 0 ? (
+                                                                    c.contacts.map((contact) => (
+                                                                        <div key={contact.id} className="bg-white/50 p-2 rounded border border-cyan-100/50">
+                                                                            <div className="font-bold text-cyan-800">{contact.name}</div>
+                                                                            {contact.title && <div className="text-[10px] text-gray-500 font-medium">{contact.title}</div>}
+                                                                            <div className="flex gap-2 mt-1">
+                                                                                {contact.email && <a href={`mailto:${contact.email}`} className="text-cyan-600 hover:underline">{contact.email}</a>}
+                                                                                {contact.phone && <span className="text-gray-400">{contact.phone}</span>}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))
+                                                                ) : (
+                                                                    <>
+                                                                        {c.contact_name && <div className="font-bold text-cyan-800">{c.contact_name}</div>}
+                                                                        {c.contact_title && <div className="text-[10px] text-gray-500 font-medium">{c.contact_title}</div>}
+                                                                        <div className="flex gap-2 mt-1">
+                                                                            {c.contact_email && <a href={`mailto:${c.contact_email}`} className="text-cyan-600 hover:underline">{c.contact_email}</a>}
+                                                                            {c.contact_phone && <span className="text-gray-400">{c.contact_phone}</span>}
+                                                                        </div>
+                                                                        {!c.contact_name && <div className="text-gray-400 italic">Sin contactos registrados</div>}
+                                                                    </>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div>
@@ -250,8 +285,16 @@ export default function CustomerDatabase({ filterRegion, onEdit }: Props) {
                                                                 <li key={i} className="flex items-start gap-1"><span className="text-red-400 mt-0.5">•</span>{p}</li>
                                                             ))}
                                                         </ul>
-                                                        {c.description && <p className="mt-2 text-gray-500 italic text-[10px]">{c.description}</p>}
-                                                        <a href={`https://${c.website}`} target="_blank" rel="noopener" className="text-cyan-600 underline text-[10px] mt-1 block">{c.website}</a>
+                                                        <div className="mt-4 pt-4 border-t border-cyan-100 flex items-center justify-between">
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); setIntelligenceCustomer(c as Customer); }}
+                                                                className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-lg shadow-cyan-600/20 active:scale-95 transition-all"
+                                                            >
+                                                                <Shield className="h-3 w-3" />
+                                                                Deep Intelligence (Apollo.io)
+                                                            </button>
+                                                            <a href={`https://${c.website}`} target="_blank" rel="noopener" className="text-cyan-600 underline text-[10px]">{c.website}</a>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -270,6 +313,14 @@ export default function CustomerDatabase({ filterRegion, onEdit }: Props) {
                     )}
                 </div>
             </div>
+
+            {/* Intelligence Modal */}
+            {intelligenceCustomer && (
+                <HPEIntelligenceCenter 
+                    customer={intelligenceCustomer} 
+                    onClose={() => setIntelligenceCustomer(null)} 
+                />
+            )}
         </div>
     );
 }

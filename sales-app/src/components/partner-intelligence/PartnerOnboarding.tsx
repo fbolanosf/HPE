@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { BASE, Partner, addPartnerToDatabase, UNIQUE_COUNTRIES } from '@/lib/partner-intelligence-data';
-import { Globe, Search, Save, CheckCircle2, ChevronRight, Loader2, Building2, MapPin, Link as LinkIcon } from 'lucide-react';
+import { BASE, Partner, addPartnerToDatabase, UNIQUE_COUNTRIES, PARTNER_TYPE_LABEL, PARTNER_TYPE_DESCRIPTIONS } from '@/lib/partner-intelligence-data';
+import { Globe, Search, Save, CheckCircle2, ChevronRight, Loader2, Building2, MapPin, Link as LinkIcon, Star, Info } from 'lucide-react';
 
 export default function PartnerOnboarding() {
     const [loading, setLoading] = useState(false);
@@ -92,6 +92,9 @@ export default function PartnerOnboarding() {
             technology_domain: profile.technology_domain || 'IT',
             company_size: profile.company_size || 'Medium',
             estimated_employees: profile.estimated_employees || 50,
+            other_oem_brands: profile.other_oem_brands || '',
+            hpe_virtualization_products: profile.hpe_virtualization_products || '',
+            tech_brands_by_category: profile.tech_brands_by_category || '',
         } as Partner;
 
         addPartnerToDatabase(newPartner);
@@ -156,6 +159,41 @@ export default function PartnerOnboarding() {
                                 <option value="Otro">Otro (LATAM)</option>
                             </select>
                         </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300">
+                        <label className="block text-xs font-bold text-gray-600 mb-3 flex items-center gap-2">
+                            <Building2 className="w-4 h-4" /> Clasificación del Partner (Tipo de Negocio)
+                        </label>
+                        <div className="space-y-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
+                            {Object.entries(PARTNER_TYPE_LABEL).map(([key, label]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setProfile(prev => ({ ...prev, partner_type: key as any }))}
+                                    className={`w-full text-left p-2.5 rounded-lg border transition-all flex flex-col gap-1 ${
+                                        profile.partner_type === key 
+                                        ? 'bg-emerald-50 border-[#01A982] ring-1 ring-[#01A982]' 
+                                        : 'bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span className={`text-sm font-bold ${profile.partner_type === key ? 'text-[#01A982]' : 'text-gray-700'}`}>{label}</span>
+                                        {profile.partner_type === key && <CheckCircle2 className="w-4 h-4 text-[#01A982]" />}
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 leading-tight">
+                                        {PARTNER_TYPE_DESCRIPTIONS[key] || 'Descripción no disponible.'}
+                                    </p>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <p className="text-sm text-gray-500 italic mt-8">
+                            * Selecciona el tipo de partner para habilitar recomendaciones personalizadas.
+                        </p>
                     </div>
                 </div>
 
@@ -265,6 +303,42 @@ export default function PartnerOnboarding() {
                         </div>
                     </div>
 
+                </div>
+
+                {/* OEM & Sales Intelligence (Expansion v8.1) */}
+                <div className="mt-8 pt-6 border-t border-gray-100 col-span-full">
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                        <Star className="w-5 h-5 text-amber-500" /> Inteligencia Comercial y Alianzas
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Otras Marcas OEM Representadas</label>
+                            <textarea 
+                                value={profile.other_oem_brands || ''} 
+                                onChange={e => setProfile(prev => ({ ...prev, other_oem_brands: e.target.value }))}
+                                placeholder="Ej. Cisco, Dell, Microsoft, Lenovo..."
+                                className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-[#01A982] h-20"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Productos Portafolio Virtualización HPE</label>
+                            <textarea 
+                                value={profile.hpe_virtualization_products || ''} 
+                                onChange={e => setProfile(prev => ({ ...prev, hpe_virtualization_products: e.target.value }))}
+                                placeholder="Ej. HPE VM Essentials, Zerto, GreenLake..."
+                                className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-[#01A982] h-20"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Marcas por Tecnología (Especialización)</label>
+                            <textarea 
+                                value={profile.tech_brands_by_category || ''} 
+                                onChange={e => setProfile(prev => ({ ...prev, tech_brands_by_category: e.target.value }))}
+                                placeholder="Ej. VERITAS para Disaster Recovery, Veeam para Backup..."
+                                className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-[#01A982] h-20"
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Save Block */}

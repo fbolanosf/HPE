@@ -8,16 +8,20 @@ import CustomerDashboard from '@/components/customer-intelligence/CustomerDashbo
 import CustomerDatabase from '@/components/customer-intelligence/CustomerDatabase';
 import CustomerOnboarding from '@/components/customer-intelligence/CustomerOnboarding';
 import CustomerAffinityAnalysis from '@/components/customer-intelligence/CustomerAffinityAnalysis';
+import { syncCustomerDatabase } from '@/lib/customer-intelligence-data';
+import { useEffect } from 'react';
 
 const CustomerGeoMap = dynamic(
     () => import('@/components/customer-intelligence/CustomerGeoMap'),
     { ssr: false, loading: () => <div className="w-full h-96 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm">Cargando mapa...</div> }
 );
+const MarketIntelligence = dynamic(() => import('@/components/customer-intelligence/MarketIntelligence'), { ssr: false });
 
-type TabKey = 'dashboard' | 'map' | 'affinity' | 'database' | 'add';
+type TabKey = 'dashboard' | 'market' | 'map' | 'affinity' | 'database' | 'add';
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { key: 'market', label: 'Market Intelligence', icon: Globe },
     { key: 'map', label: 'Mapa Global', icon: Map },
     { key: 'affinity', label: 'Afinidad HPE', icon: BarChart2 },
     { key: 'database', label: 'Base de Datos', icon: Database },
@@ -30,6 +34,10 @@ export default function CustomerIntelligencePage() {
     const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
     const [region, setRegion] = useState<string>('ALL');
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+
+    useEffect(() => {
+        syncCustomerDatabase();
+    }, []);
 
     function handleEdit(c: Customer) {
         setEditingCustomer(c);
@@ -107,6 +115,7 @@ export default function CustomerIntelligencePage() {
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
                 {activeTab === 'dashboard' && <CustomerDashboard filterRegion={region !== 'ALL' ? region : undefined} />}
+                {activeTab === 'market' && <MarketIntelligence />}
                 {activeTab === 'map' && (
                     <div className="space-y-4">
                         <div className="bg-white border border-gray-200 rounded-xl p-4">
